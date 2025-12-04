@@ -19,6 +19,8 @@ const DaySummaryScreen: React.FC = () => {
   const { theme, currency } = useSettings();
   const router = useRouter();
 
+  const isDark = theme === "dark";
+
   const dateStr = typeof date === "string" ? date : "";
 
   const dayTrades = useMemo(
@@ -40,6 +42,14 @@ const DaySummaryScreen: React.FC = () => {
     month: "long",
     year: "numeric",
   });
+
+  const textMainColor = isDark ? "#e5e7eb" : "#0f172a";
+  const textSubColor = isDark ? "#9ca3af" : "#6b7280";
+  const neutralPnlColor = isDark ? "#e5e7eb" : "#0f172a";
+  const borderColor = isDark ? "#e5e7eb" : "#0f172a";
+
+  const totalPnlColor =
+    totalPnl > 0 ? "#22c55e" : totalPnl < 0 ? "#ef4444" : neutralPnlColor;
 
   const handleAddTrade = () => {
     router.push({ pathname: "/trade", params: { date: dateStr } });
@@ -77,13 +87,32 @@ const DaySummaryScreen: React.FC = () => {
 
   const renderTradeItem = ({ item }: { item: Trade }) => {
     const pnlColor =
-      item.pnl > 0 ? "#22c55e" : item.pnl < 0 ? "#ef4444" : "#e5e7eb";
+      item.pnl > 0
+        ? "#22c55e"
+        : item.pnl < 0
+        ? "#ef4444"
+        : neutralPnlColor;
 
     return (
       <TouchableOpacity onPress={() => handlePressTrade(item)}>
-        <View style={styles.tradeCard}>
+        <View
+          style={[
+            styles.tradeCard,
+            {
+              backgroundColor: isDark ? "#020617" : "#ffffff",
+              borderColor: isDark ? "#111827" : "#e5e7eb",
+            },
+          ]}
+        >
           <View style={styles.tradeRow}>
-            <Text style={styles.instrument}>{item.instrument}</Text>
+            <Text
+              style={[
+                styles.instrument,
+                { color: textMainColor },
+              ]}
+            >
+              {item.instrument}
+            </Text>
             <Text
               style={[
                 styles.direction,
@@ -100,26 +129,58 @@ const DaySummaryScreen: React.FC = () => {
               {item.pnl.toFixed(2)} {currency}
             </Text>
             {typeof item.rr === "number" && (
-              <Text style={styles.rr}>RR {item.rr.toFixed(2)}</Text>
+              <Text
+                style={[
+                  styles.rr,
+                  { color: textSubColor },
+                ]}
+              >
+                RR {item.rr.toFixed(2)}
+              </Text>
             )}
           </View>
 
           <View style={styles.tradeRow}>
             {item.emotion && (
-              <Text style={styles.meta}>Émotion : {item.emotion}</Text>
+              <Text
+                style={[
+                  styles.meta,
+                  { color: textSubColor },
+                ]}
+              >
+                Émotion : {item.emotion}
+              </Text>
             )}
             {item.quality && (
-              <Text style={styles.meta}>Qualité : {item.quality}</Text>
+              <Text
+                style={[
+                  styles.meta,
+                  { color: textSubColor },
+                ]}
+              >
+                Qualité : {item.quality}
+              </Text>
             )}
             {typeof item.respectPlan === "boolean" && (
-              <Text style={styles.meta}>
+              <Text
+                style={[
+                  styles.meta,
+                  { color: textSubColor },
+                ]}
+              >
                 Plan {item.respectPlan ? "✅" : "❌"}
               </Text>
             )}
           </View>
 
           {item.comment && (
-            <Text style={styles.comment} numberOfLines={2}>
+            <Text
+              style={[
+                styles.comment,
+                { color: textSubColor },
+              ]}
+              numberOfLines={2}
+            >
               {item.comment}
             </Text>
           )}
@@ -128,9 +189,19 @@ const DaySummaryScreen: React.FC = () => {
             <View style={styles.screenshotRow}>
               <Image
                 source={{ uri: item.screenshotUri }}
-                style={styles.screenshotThumb}
+                style={[
+                  styles.screenshotThumb,
+                  {
+                    borderColor: isDark ? "#111827" : "#e5e7eb",
+                  },
+                ]}
               />
-              <Text style={styles.screenshotLabel}>
+              <Text
+                style={[
+                  styles.screenshotLabel,
+                  { color: textSubColor },
+                ]}
+              >
                 Screenshot enregistré
               </Text>
             </View>
@@ -150,36 +221,66 @@ const DaySummaryScreen: React.FC = () => {
     >
       <View style={styles.header}>
         <View style={styles.headerTextBlock}>
-          <Text style={styles.dateLabel}>{dateLabel}</Text>
-          <Text style={styles.summaryText}>
+          <Text
+            style={[
+              styles.dateLabel,
+              { color: textMainColor },
+            ]}
+          >
+            {dateLabel}
+          </Text>
+          <Text
+            style={[
+              styles.summaryText,
+              { color: textSubColor },
+            ]}
+          >
             Résultat total :{" "}
             <Text
               style={{
-                color:
-                  totalPnl > 0
-                    ? "#22c55e"
-                    : totalPnl < 0
-                    ? "#ef4444"
-                    : "#e5e7eb",
+                color: totalPnlColor,
               }}
             >
               {totalPnl > 0 ? "+" : ""}
               {totalPnl.toFixed(2)} {currency}
             </Text>
           </Text>
-          <Text style={styles.summaryText}>
+          <Text
+            style={[
+              styles.summaryText,
+              { color: textSubColor },
+            ]}
+          >
             RR moyen : {avgRr.toFixed(2)} | Trades : {dayTrades.length}
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddTrade}>
-          <Text style={styles.addButtonText}>+</Text>
+        <TouchableOpacity
+          style={[
+            styles.addButton,
+            { borderColor },
+          ]}
+          onPress={handleAddTrade}
+        >
+          <Text
+            style={[
+              styles.addButtonText,
+              { color: borderColor },
+            ]}
+          >
+            +
+          </Text>
         </TouchableOpacity>
       </View>
 
       {dayTrades.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>
+          <Text
+            style={[
+              styles.emptyText,
+              { color: textSubColor },
+            ]}
+          >
             Aucun trade ce jour. Appuie sur "+" pour ajouter un trade.
           </Text>
         </View>

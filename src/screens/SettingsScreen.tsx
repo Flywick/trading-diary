@@ -68,6 +68,13 @@ const SettingsScreen: React.FC = () => {
     logout,
   } = useAccount();
   const { language, setLanguage } = useLanguage();
+  const isDark = theme === "dark";
+  const bgColor = isDark ? "#020617" : "#f9fafb";
+  const cardBackground = isDark ? "#020617" : "#ffffff";
+  const cardBorder = isDark ? "#111827" : "#e5e7eb";
+  const textPrimary = isDark ? "#e5e7eb" : "#0f172a";
+  const textSecondary = isDark ? "#9ca3af" : "#6b7280";
+  const inputBackground = isDark ? "#020617" : "#ffffff";
 
   const [usernameInput, setUsernameInput] = useState(activeAccount?.username ?? "");
   const [birthdateInput, setBirthdateInput] = useState(activeAccount?.birthdate ?? "");
@@ -80,30 +87,27 @@ const SettingsScreen: React.FC = () => {
   const [newPasswordInput, setNewPasswordInput] = useState("");
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
 
+  const [liveAge, setLiveAge] = useState<number | null>(null);
+
   useEffect(() => {
-    setUsernameInput(activeAccount?.username ?? "");
-    setBirthdateInput(activeAccount?.birthdate ?? "");
-    setEmailInput(activeAccount?.email ?? "");
-    setIsEditingAccount(false);
-    setIsEditingPassword(false);
-    setCurrentPasswordInput("");
-    setNewPasswordInput("");
-    setConfirmPasswordInput("");
+    if (birthdateInput) {
+      const age = getAgeFromBirthdate(birthdateInput);
+      setLiveAge(age);
+    } else {
+      setLiveAge(null);
+    }
+  }, [birthdateInput]);
+
+  useEffect(() => {
+    if (activeAccount) {
+      setUsernameInput(activeAccount.username);
+      setBirthdateInput(activeAccount.birthdate);
+      setEmailInput(activeAccount.email);
+    }
   }, [activeAccount]);
 
-  const liveAge = getAgeFromBirthdate(birthdateInput);
-  const accountAge = activeAccount
-    ? getAgeFromBirthdate(activeAccount.birthdate)
-    : null;
-
   const handleSaveAccount = () => {
-    if (!activeAccount) {
-      Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
-      );
-      return;
-    }
+    if (!activeAccount) return;
 
     const username = usernameInput.trim();
     const birthdate = birthdateInput.trim();
@@ -120,31 +124,24 @@ const SettingsScreen: React.FC = () => {
     const birthdateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!birthdateRegex.test(birthdate)) {
       Alert.alert(
-        "Format de date invalide",
-        "Merci d'entrer la date de naissance au format AAAA-MM-JJ (ex : 1995-04-23)."
+        "Date invalide",
+        "La date de naissance doit être au format AAAA-MM-JJ."
       );
       return;
     }
 
     const age = getAgeFromBirthdate(birthdate);
-    if (age === null) {
-      Alert.alert("Date invalide", "La date de naissance ne semble pas valide.");
-      return;
-    }
-    if (age < 18) {
+    if (age === null || age < 18) {
       Alert.alert(
-        "Âge insuffisant",
-        "Tu dois avoir au moins 18 ans pour utiliser cette application."
+        "Âge invalide",
+        "Tu dois avoir au moins 18 ans pour utiliser l'application."
       );
       return;
     }
 
-    const emailRegex = /.+@.+\..+/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert(
-        "Email invalide",
-        "Merci d'entrer une adresse email valide."
-      );
+      Alert.alert("Email invalide", "L'adresse email n'est pas valide.");
       return;
     }
 
@@ -152,41 +149,29 @@ const SettingsScreen: React.FC = () => {
       username,
       birthdate,
       email,
-    });
+    } as any);
+
+    Alert.alert("Compte mis à jour", "Tes informations ont été enregistrées.");
     setIsEditingAccount(false);
-    Alert.alert(
-      "Compte mis à jour",
-      "Les informations du compte ont été mises à jour."
-    );
   };
 
   const handleChangePassword = () => {
-    if (!activeAccount) {
-      Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
-      );
-      return;
-    }
+    if (!activeAccount) return;
 
-    const currentPassword = currentPasswordInput.trim();
-    const newPassword = newPasswordInput.trim();
-    const confirmPassword = confirmPasswordInput.trim();
+    const current = currentPasswordInput.trim();
+    const next = newPasswordInput.trim();
+    const confirm = confirmPasswordInput.trim();
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!current || !next || !confirm) {
       Alert.alert(
         "Champs manquants",
-        "Merci de remplir tous les champs de mot de passe."
+        "Tous les champs de mot de passe sont obligatoires."
       );
       return;
     }
 
-    // Pour éviter l'erreur TypeScript sur "password" on caste en any.
-    const currentStoredPassword = (activeAccount as any).password as
-      | string
-      | undefined;
-
-    if (currentStoredPassword && currentPassword !== currentStoredPassword) {
+    const storedPassword = (activeAccount as any).password;
+    if (storedPassword !== current) {
       Alert.alert(
         "Mot de passe incorrect",
         "L'ancien mot de passe ne correspond pas."
@@ -194,7 +179,7 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (next.length < 6) {
       Alert.alert(
         "Mot de passe trop court",
         "Le nouveau mot de passe doit contenir au moins 6 caractères."
@@ -202,7 +187,7 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (next !== confirm) {
       Alert.alert(
         "Confirmation incorrecte",
         "La confirmation du mot de passe ne correspond pas."
@@ -210,32 +195,30 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    // idem, cast en any pour éviter l'erreur de type si password n'est pas encore dans l'interface Account
-    updateActiveAccount({ password: newPassword } as any);
+    updateActiveAccount({
+      password: next,
+    } as any);
 
-    setIsEditingPassword(false);
     setCurrentPasswordInput("");
     setNewPasswordInput("");
     setConfirmPasswordInput("");
+    setIsEditingPassword(false);
 
-    Alert.alert("Mot de passe mis à jour", "Ton mot de passe a été modifié.");
+    Alert.alert("Mot de passe mis à jour", "Ton mot de passe a été changé.");
   };
 
-  const handleResetApp = () => {
+  const handleResetTrades = () => {
     Alert.alert(
-      "Réinitialiser l'application",
-      "Tu es sur le point de supprimer toutes les données de l'application (trades, stats, etc.), mais ton compte sera conservé. Cette action est irréversible. Continuer ?",
+      "Réinitialiser les trades",
+      "Cette action va supprimer tous les trades de ce compte (tous journaux confondus). Tu es sûr ?",
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: "Oui, réinitialiser",
+          text: "Oui, supprimer",
           style: "destructive",
           onPress: () => {
             resetTrades();
-            Alert.alert(
-              "Réinitialisé",
-              "Toutes les données (hors compte) ont été effacées."
-            );
+            Alert.alert("Trades supprimés", "Tous les trades ont été effacés.");
           },
         },
       ]
@@ -243,26 +226,20 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    if (!activeAccount) {
-      Alert.alert("Aucun compte", "Il n'y a aucun compte à supprimer.");
-      return;
-    }
+    if (!activeAccount) return;
 
     Alert.alert(
       "Supprimer le compte",
-      "Cette action va supprimer ton compte et toutes les données associées (trades, stats, paramètres). Rien ne sera conservé. Es-tu sûr de vouloir continuer ?",
+      "Cette action est définitive : le compte et tous les trades associés seront supprimés. Tu es sûr ?",
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: "Supprimer tout",
+          text: "Oui, supprimer",
           style: "destructive",
           onPress: () => {
             resetTrades();
             deleteActiveAccount();
-            Alert.alert(
-              "Compte supprimé",
-              "Le compte et toutes les données ont été effacés."
-            );
+            Alert.alert("Compte supprimé", "Le compte a été supprimé.");
           },
         },
       ]
@@ -270,26 +247,20 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-    if (!activeAccount) {
-      Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
-      return;
-    }
-    Alert.alert(
-      "Déconnexion",
-      "Tu vas être déconnecté de ce compte. Tes trades et tes stats resteront liés à ce compte sur cet appareil. Continuer ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Se déconnecter",
-          style: "destructive",
-          onPress: () => {
-            logout();
-            Alert.alert("Déconnecté", "Tu es maintenant déconnecté.");
-          },
-        },
-      ]
-    );
+    Alert.alert("Déconnexion", "Tu veux vraiment te déconnecter ?", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Oui, déconnecter",
+        style: "destructive",
+        onPress: () => logout(),
+      },
+    ]);
   };
+
+  const accountAge =
+    activeAccount && activeAccount.birthdate
+      ? getAgeFromBirthdate(activeAccount.birthdate)
+      : null;
 
   const getInitial = (name: string | undefined) => {
     if (!name || name.length === 0) return "?";
@@ -298,35 +269,35 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <ScrollView
-      style={{ backgroundColor: theme === "dark" ? "#020617" : "#f1f5f9" }}
+      style={{ backgroundColor: bgColor }}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
       {/* SECTION COMPTE */}
-      <Text style={styles.sectionTitle}>Compte</Text>
+      <Text style={[styles.sectionTitle, { color: textPrimary }]}>Compte</Text>
 
       {!activeAccount ? (
-        <View style={styles.card}>
-          <Text style={styles.value}>
+        <View style={[styles.card, { backgroundColor: cardBackground, borderColor: cardBorder }]}>
+          <Text style={[styles.value, { color: textPrimary }]}>
             Aucun compte connecté. Va sur l'écran d'accueil (Agenda) pour créer
             un compte ou te connecter.
           </Text>
         </View>
       ) : isEditingAccount ? (
         // --- ÉDITION COMPTE ---
-        <View style={styles.card}>
-          <Text style={styles.label}>Pseudo *</Text>
+        <View style={[styles.card, { backgroundColor: cardBackground, borderColor: cardBorder }]}>
+          <Text style={[styles.label, { color: textSecondary }]}>Pseudo *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: inputBackground, color: textPrimary, borderColor: cardBorder }]}
             placeholder="Ton pseudo"
             placeholderTextColor="#6b7280"
             value={usernameInput}
             onChangeText={setUsernameInput}
           />
 
-          <Text style={styles.label}>Date de naissance * (AAAA-MM-JJ)</Text>
+          <Text style={[styles.label, { color: textSecondary }]}>Date de naissance * (AAAA-MM-JJ)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: inputBackground, color: textPrimary, borderColor: cardBorder }]}
             placeholder="1995-04-23"
             placeholderTextColor="#6b7280"
             value={birthdateInput}
@@ -334,12 +305,12 @@ const SettingsScreen: React.FC = () => {
             keyboardType="numeric"
           />
           {liveAge !== null && (
-            <Text style={styles.value}>{liveAge} ans</Text>
+            <Text style={[styles.value, { color: textPrimary }]}>{liveAge} ans</Text>
           )}
 
-          <Text style={styles.label}>Email *</Text>
+          <Text style={[styles.label, { color: textSecondary }]}>Email *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: inputBackground, color: textPrimary, borderColor: cardBorder }]}
             placeholder="email@example.com"
             placeholderTextColor="#6b7280"
             value={emailInput}
@@ -363,10 +334,10 @@ const SettingsScreen: React.FC = () => {
         </View>
       ) : isEditingPassword ? (
         // --- ÉDITION MOT DE PASSE ---
-        <View style={styles.card}>
-          <Text style={styles.label}>Ancien mot de passe *</Text>
+        <View style={[styles.card, { backgroundColor: cardBackground, borderColor: cardBorder }]}>
+          <Text style={[styles.label, { color: textSecondary }]}>Ancien mot de passe *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: inputBackground, color: textPrimary, borderColor: cardBorder }]}
             placeholder="Ancien mot de passe"
             placeholderTextColor="#6b7280"
             value={currentPasswordInput}
@@ -374,19 +345,19 @@ const SettingsScreen: React.FC = () => {
             secureTextEntry
           />
 
-          <Text style={styles.label}>Nouveau mot de passe *</Text>
+          <Text style={[styles.label, { color: textSecondary }]}>Nouveau mot de passe *</Text>
           <TextInput
-            style={styles.input}
-            placeholder="Nouveau mot de passe"
+            style={[styles.input, { backgroundColor: inputBackground, color: textPrimary, borderColor: cardBorder }]}
+            placeholder="Nouveau mot de passe (min. 6 caractères)"
             placeholderTextColor="#6b7280"
             value={newPasswordInput}
             onChangeText={setNewPasswordInput}
             secureTextEntry
           />
 
-          <Text style={styles.label}>Confirmer le mot de passe *</Text>
+          <Text style={[styles.label, { color: textSecondary }]}>Confirmer le mot de passe *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: inputBackground, color: textPrimary, borderColor: cardBorder }]}
             placeholder="Confirme le mot de passe"
             placeholderTextColor="#6b7280"
             value={confirmPasswordInput}
@@ -409,8 +380,8 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        // --- VUE COMPTE CLASSIQUE ---
-        <View style={styles.card}>
+        // --- VUE NORMALE COMPTE ---
+        <View style={[styles.card, { backgroundColor: cardBackground, borderColor: cardBorder }]}>
           {/* Header avatar + pseudo + email */}
           <View style={styles.accountHeaderRow}>
             <View style={styles.avatar}>
@@ -419,10 +390,10 @@ const SettingsScreen: React.FC = () => {
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.accountUsername}>
+              <Text style={[styles.accountUsername, { color: textPrimary }]}>
                 {activeAccount.username}
               </Text>
-              <Text style={styles.accountEmail}>
+              <Text style={[styles.accountEmail, { color: textSecondary }]}>
                 {activeAccount.email}
               </Text>
             </View>
@@ -431,24 +402,24 @@ const SettingsScreen: React.FC = () => {
           {/* Infos détaillées */}
           <View style={styles.accountInfoRow}>
             <View style={styles.infoTextBlock}>
-              <Text style={styles.label}>Date de naissance</Text>
-              <Text style={styles.value}>{activeAccount.birthdate}</Text>
+              <Text style={[styles.label, { color: textSecondary }]}>Date de naissance</Text>
+              <Text style={[styles.value, { color: textPrimary }]}>{activeAccount.birthdate}</Text>
             </View>
           </View>
 
           {accountAge !== null && (
             <View style={styles.accountInfoRow}>
               <View style={styles.infoTextBlock}>
-                <Text style={styles.label}>Âge</Text>
-                <Text style={styles.value}>{accountAge} ans</Text>
+                <Text style={[styles.label, { color: textSecondary }]}>Âge</Text>
+                <Text style={[styles.value, { color: textPrimary }]}>{accountAge} ans</Text>
               </View>
             </View>
           )}
 
           <View style={styles.accountInfoRow}>
             <View style={styles.infoTextBlock}>
-              <Text style={styles.label}>Compte créé le</Text>
-              <Text style={styles.value}>
+              <Text style={[styles.label, { color: textSecondary }]}>Compte créé le</Text>
+              <Text style={[styles.value, { color: textPrimary }]}>
                 {new Date(activeAccount.createdAt).toLocaleDateString("fr-FR", {
                   day: "2-digit",
                   month: "long",
@@ -483,9 +454,9 @@ const SettingsScreen: React.FC = () => {
       )}
 
       {/* SECTION PRÉFÉRENCES */}
-      <Text style={styles.sectionTitle}>Préférences</Text>
+      <Text style={[styles.sectionTitle, { color: textPrimary }]}>Préférences</Text>
 
-      <Text style={styles.subTitle}>Langue</Text>
+      <Text style={[styles.subTitle, { color: textSecondary }]}>Langue</Text>
       <View style={styles.row}>
         <TouchableOpacity
           style={[
@@ -494,7 +465,7 @@ const SettingsScreen: React.FC = () => {
           ]}
           onPress={() => setLanguage("fr")}
         >
-          <Text style={styles.chipText}>Français</Text>
+          <Text style={[styles.chipText, { color: textPrimary }]}>Français</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -503,11 +474,11 @@ const SettingsScreen: React.FC = () => {
           ]}
           onPress={() => setLanguage("en")}
         >
-          <Text style={styles.chipText}>English</Text>
+          <Text style={[styles.chipText, { color: textPrimary }]}>English</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.subTitle}>Devise</Text>
+      <Text style={[styles.subTitle, { color: textSecondary }]}>Devise</Text>
       <View style={styles.row}>
         {["EUR", "USD", "GBP", "JPY"].map((c) => (
           <TouchableOpacity
@@ -518,12 +489,12 @@ const SettingsScreen: React.FC = () => {
             ]}
             onPress={() => setCurrency(c as any)}
           >
-            <Text style={styles.chipText}>{c}</Text>
+            <Text style={[styles.chipText, { color: textPrimary }]}>{c}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.subTitle}>Thème</Text>
+      <Text style={[styles.subTitle, { color: textSecondary }]}>Thème</Text>
       <View style={styles.row}>
         <TouchableOpacity
           style={[
@@ -532,20 +503,20 @@ const SettingsScreen: React.FC = () => {
           ]}
           onPress={() => setTheme("dark")}
         >
-          <Text style={styles.chipText}>Sombre</Text>
+          <Text style={[styles.chipText, { color: textPrimary }]}>Sombre</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.chip,
-            theme === "light" && styles.chipActive,
+          theme === "light" && styles.chipActive,
           ]}
           onPress={() => setTheme("light")}
         >
-          <Text style={styles.chipText}>Clair</Text>
+          <Text style={[styles.chipText, { color: textPrimary }]}>Clair</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.subTitle}>Format de l'heure</Text>
+      <Text style={[styles.subTitle, { color: textSecondary }]}>Format de l'heure</Text>
       <View style={styles.row}>
         <TouchableOpacity
           style={[
@@ -554,7 +525,7 @@ const SettingsScreen: React.FC = () => {
           ]}
           onPress={() => setTimeFormat24h(true)}
         >
-          <Text style={styles.chipText}>24h</Text>
+          <Text style={[styles.chipText, { color: textPrimary }]}>24h</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -563,72 +534,45 @@ const SettingsScreen: React.FC = () => {
           ]}
           onPress={() => setTimeFormat24h(false)}
         >
-          <Text style={styles.chipText}>12h</Text>
+          <Text style={[styles.chipText, { color: textPrimary }]}>12h</Text>
         </TouchableOpacity>
       </View>
 
-      {/* SECTION ABONNEMENT */}
-      <Text style={styles.sectionTitle}>Abonnement</Text>
-      <View style={styles.card}>
-        <Text style={styles.label}>Formule actuelle</Text>
-        <Text
-          style={[
-            styles.value,
-            { fontWeight: "600", marginBottom: 4 },
-          ]}
-        >
-          Trading Diary Free
+      {/* SECTION ABONNEMENT (placeholder futur) */}
+      <Text style={[styles.sectionTitle, { color: textPrimary }]}>Abonnement</Text>
+      <View style={[styles.card, { backgroundColor: cardBackground, borderColor: cardBorder }]}>
+        <Text style={[styles.label, { color: textSecondary }]}>Formule actuelle</Text>
+        <Text style={[styles.value, { color: textPrimary }]}>Version gratuite</Text>
+        <Text style={[styles.label, { marginTop: 6, color: textSecondary }]}>
+          À l'avenir, tu pourras peut-être débloquer :
         </Text>
-        <Text style={styles.label}>
-          Notes tes trades en illimité sur cet appareil. Sauvegarde locale, sans
-          compte en ligne obligatoire.
+        <Text style={styles.helperText}>
+          • Plus de journaux / profils{"\n"}• Export avancé{"\n"}• Statistiques
+          supplémentaires
         </Text>
-        <Text style={[styles.label, { marginTop: 6 }]}>
-          La version Pro (sauvegarde cloud, multi-appareils, export avancé, etc.)
-          arrivera plus tard.
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.button, styles.buttonSecondaryLight, { marginTop: 12 }]}
-          activeOpacity={0.7}
-          onPress={() => {
-            Alert.alert(
-              "Trading Diary Pro",
-              "La version Pro (avec sauvegarde cloud, multi-appareils et d'autres options) sera disponible dans une future mise à jour."
-            );
-          }}
-        >
-          <Text style={styles.buttonText}>Trading Diary Pro (bientôt)</Text>
-        </TouchableOpacity>
       </View>
 
       {/* SECTION RÉINITIALISATION */}
-      <Text style={styles.sectionTitle}>Données et réinitialisation</Text>
+      <Text style={[styles.sectionTitle, { color: textPrimary }]}>Données et réinitialisation</Text>
+      <View style={[styles.card, { backgroundColor: cardBackground, borderColor: cardBorder }]}>
+        <TouchableOpacity
+          style={[styles.button, styles.buttonWarning]}
+          onPress={handleResetTrades}
+        >
+          <Text style={styles.buttonText}>Réinitialiser les trades</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.buttonWarning]}
-        onPress={handleResetApp}
-      >
-        <Text style={styles.buttonText}>
-          Réinitialiser l'application (garder le compte)
-        </Text>
-      </TouchableOpacity>
-      <Text style={styles.helperText}>
-        Supprime tous les trades et les statistiques mais conserve ton compte.
-      </Text>
+        <TouchableOpacity
+          style={[styles.button, styles.buttonDanger]}
+          onPress={handleDeleteAccount}
+        >
+          <Text style={styles.buttonText}>Supprimer le compte</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.buttonDanger]}
-        onPress={handleDeleteAccount}
-      >
-        <Text style={styles.buttonText}>
-          ⚠️ Supprimer le compte et toutes les données ⚠️
+        <Text style={styles.helperTextDanger}>
+          Attention, ces actions sont définitives.
         </Text>
-      </TouchableOpacity>
-      <Text style={styles.helperTextDanger}>
-        Action définitive : supprime le compte, les trades, les statistiques et
-        les paramètres. Impossible de revenir en arrière.
-      </Text>
+      </View>
     </ScrollView>
   );
 };
@@ -655,13 +599,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#020617",
     borderRadius: 12,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "#111827",
   },
   label: {
     color: "#9ca3af",
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 6,
     marginBottom: 2,
   },
@@ -692,15 +636,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#4b5563",
     marginRight: 8,
-    marginTop: 4,
-  },
-  chipActive: {
-    backgroundColor: "#1d4ed8",
-    borderColor: "#60a5fa",
+    marginBottom: 8,
   },
   chipText: {
     color: "#e5e7eb",
-    fontSize: 12,
+    fontSize: 13,
+  },
+  chipActive: {
+    backgroundColor: "rgba(52,211,153,0.18)",
+    borderColor: "#34d399",
   },
   button: {
     marginTop: 10,
@@ -735,12 +679,19 @@ const styles = StyleSheet.create({
   },
   buttonGhostText: {
     color: "#9ca3af",
-    fontWeight: "500",
     fontSize: 13,
     textAlign: "center",
   },
-
-  // Compte : header + avatar
+  helperText: {
+    color: "#9ca3af",
+    fontSize: 12,
+    marginTop: 6,
+  },
+  helperTextDanger: {
+    color: "#fca5a5",
+    fontSize: 12,
+    marginTop: 6,
+  },
   accountHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -777,14 +728,13 @@ const styles = StyleSheet.create({
   infoTextBlock: {
     flex: 1,
   },
-
-  helperText: {
+  helperTextCenter: {
     color: "#9ca3af",
     fontSize: 11,
     marginTop: 4,
     textAlign: "center",
   },
-  helperTextDanger: {
+  helperTextDangerCenter: {
     color: "#fca5a5",
     fontSize: 11,
     marginTop: 4,

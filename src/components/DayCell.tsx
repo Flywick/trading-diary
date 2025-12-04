@@ -8,7 +8,7 @@ type DayCellProps = {
   pnl?: number;
   rr?: number;
   onPress: () => void;
-  isToday?: boolean; // ✅ nouveau
+  isToday?: boolean;
 };
 
 const DayCell: React.FC<DayCellProps> = ({
@@ -20,12 +20,16 @@ const DayCell: React.FC<DayCellProps> = ({
   isToday = false,
 }) => {
   const { theme, currency } = useSettings();
+  const isDark = theme === "dark";
 
   const getBackgroundColor = () => {
-    if (!hasTrades) return theme === "dark" ? "#111827" : "#e5e7eb";
+    if (!hasTrades) {
+      // Cellule neutre (sans trades)
+      return isDark ? "#111827" : "#e5e7eb";
+    }
     if ((pnl ?? 0) > 0) return "#16a34a"; // vert
     if ((pnl ?? 0) < 0) return "#dc2626"; // rouge
-    return "#2563eb"; // neutre
+    return "#2563eb"; // neutre (PnL = 0)
   };
 
   const currencySymbol =
@@ -37,36 +41,53 @@ const DayCell: React.FC<DayCellProps> = ({
       ? "£"
       : currency;
 
+  // Couleurs de texte : plus contrastées en mode clair sur les cases grises
+  const dayNumberColor = hasTrades
+    ? "#f9fafb"
+    : isDark
+    ? "#e5e7eb"
+    : "#0f172a";
+
+  const pnlTextColor = hasTrades
+    ? "#f9fafb"
+    : isDark
+    ? "#e5e7eb"
+    : "#0f172a";
+
+  const rrTextColor = hasTrades
+    ? "#e5e7eb"
+    : isDark
+    ? "#9ca3af"
+    : "#6b7280";
+
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.container,
         { backgroundColor: getBackgroundColor() },
-        isToday && styles.todayOutline, // ✅ surbrillance du jour actuel
+        isToday && styles.todayOutline,
       ]}
     >
       {/* Ligne du haut : numéro du jour */}
       <View style={styles.topRow}>
-        <Text style={styles.dayNumber}>{dayNumber}</Text>
+        <Text style={[styles.dayNumber, { color: dayNumberColor }]}>
+          {dayNumber}
+        </Text>
       </View>
 
-      {/* Ligne du bas : PnL et RR */}
+      {/* Ligne du bas : PnL et RR si trades */}
       {hasTrades && (
         <View style={styles.bottomRow}>
           <Text
-            style={styles.pnlText}
+            style={[styles.pnlText, { color: pnlTextColor }]}
             numberOfLines={1}
             adjustsFontSizeToFit
           >
             {pnl! > 0 ? "+" : ""}
             {pnl?.toFixed(2)} {currencySymbol}
           </Text>
-          <Text
-            style={styles.rrText}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-          >
+          <Text style={[styles.rrText, { color: rrTextColor }]}>
             RR {rr?.toFixed(2) ?? "0.00"}
           </Text>
         </View>
@@ -84,13 +105,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "space-between",
   },
-
-  // ✅ halo autour du jour actuel
   todayOutline: {
     borderWidth: 2,
-    borderColor: "#38bdf8", // bleu clair
+    borderColor: "#38bdf8",
   },
-
   topRow: {
     width: "100%",
     alignItems: "flex-start",
@@ -100,17 +118,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   dayNumber: {
-    color: "#f9fafb",
     fontWeight: "700",
     fontSize: 14,
   },
   pnlText: {
-    color: "#f9fafb",
     fontSize: 11,
     fontWeight: "500",
   },
   rrText: {
-    color: "#e5e7eb",
     fontSize: 10,
   },
 });

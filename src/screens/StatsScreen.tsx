@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+// src/screens/StatsScreen.tsx
+import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, {
   Circle,
@@ -14,9 +15,75 @@ import { Trade, useTrades } from "../context/TradesContext";
 type MonthAgg = {
   key: string; // "2025-01"
   year: number;
-  month: number; // 1-12
+  month: number; // 1–12
   pnl: number;
   count: number;
+};
+
+const monthsFr = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+];
+
+const monthsEn = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const monthsShortFr = [
+  "Jan",
+  "Fév",
+  "Mar",
+  "Avr",
+  "Mai",
+  "Jui",
+  "Juil",
+  "Aoû",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Déc",
+];
+
+const monthsShortEn = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const formatMonthLabel = (year: number, month: number, language: string) => {
+  const arr = language === "en" ? monthsEn : monthsFr;
+  const label = arr[month - 1] || `${month}`;
+  return `${label} ${year}`;
 };
 
 const StatsScreen: React.FC = () => {
@@ -27,80 +94,21 @@ const StatsScreen: React.FC = () => {
 
   const isDark = theme === "dark";
 
+  const bgColor = isDark ? "#020617" : "#f1f5f9";
+  const cardBackground = isDark ? "#020617" : "#ffffff";
+  const cardBorder = isDark ? "#111827" : "#e5e7eb";
+  const textMain = isDark ? "#e5e7eb" : "#0f172a";
+  const textSub = isDark ? "#9ca3af" : "#6b7280";
+
   const t = (fr: string, en: string) => (language === "en" ? en : fr);
 
-  const formatNumber = (n: number, decimals = 2) => {
-    return n.toFixed(decimals).replace(".", ",");
-  };
+  const formatNumber = (n: number, decimals = 2) =>
+    n.toFixed(decimals).replace(".", ",");
 
-  const formatSigned = (n: number, decimals = 2) => {
-    return (n >= 0 ? "+" : "") + formatNumber(n, decimals);
-  };
+  const formatSigned = (n: number, decimals = 2) =>
+    (n >= 0 ? "+" : "") + formatNumber(n, decimals);
 
-  const monthsFr = [
-    "Janvier",
-    "Février",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juillet",
-    "Août",
-    "Septembre",
-    "Octobre",
-    "Novembre",
-    "Décembre",
-  ];
-  const monthsEn = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const monthsShortFr = [
-    "Jan",
-    "Fév",
-    "Mar",
-    "Avr",
-    "Mai",
-    "Jui",
-    "Juil",
-    "Aoû",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Déc",
-  ];
-  const monthsShortEn = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const formatMonthLabel = (year: number, month: number) => {
-    const arr = language === "en" ? monthsEn : monthsFr;
-    const label = arr[month - 1] || `${month}`;
-    return `${label} ${year}`;
-  };
-
-  // ✅ PnL cumulatif trade par trade (pour la courbe)
+  // ✅ PnL cumulatif trade par trade (courbe equity)
   const equityCurve = useMemo(() => {
     let total = 0;
     return trades.map((t) => {
@@ -109,7 +117,7 @@ const StatsScreen: React.FC = () => {
     });
   }, [trades]);
 
-  // ✅ Stats globales + agrégations par mois + tri actifs
+  // ✅ Stats globales + agrégations
   const stats = useMemo(() => {
     if (trades.length === 0) {
       return {
@@ -159,22 +167,20 @@ const StatsScreen: React.FC = () => {
         )
       : undefined;
 
+    // Par instrument
     const byInstrumentMap = new Map<
       string,
       { instrument: string; count: number; pnl: number }
     >();
 
+    // Par mois
     const monthMap = new Map<string, MonthAgg>();
 
     for (const t of trades) {
-      const keyInst = t.instrument || "Inconnu";
-      const existingInst = byInstrumentMap.get(keyInst);
+      const inst = t.instrument || "Inconnu";
+      const existingInst = byInstrumentMap.get(inst);
       if (!existingInst) {
-        byInstrumentMap.set(keyInst, {
-          instrument: keyInst,
-          count: 1,
-          pnl: t.pnl,
-        });
+        byInstrumentMap.set(inst, { instrument: inst, count: 1, pnl: t.pnl });
       } else {
         existingInst.count += 1;
         existingInst.pnl += t.pnl;
@@ -184,11 +190,11 @@ const StatsScreen: React.FC = () => {
         const parts = t.date.split("-").map((p) => parseInt(p, 10));
         if (parts.length === 3 && !parts.some((n) => isNaN(n))) {
           const [y, m] = parts;
-          const monthKey = `${y}-${String(m).padStart(2, "0")}`;
-          const existingMonth = monthMap.get(monthKey);
+          const key = `${y}-${String(m).padStart(2, "0")}`;
+          const existingMonth = monthMap.get(key);
           if (!existingMonth) {
-            monthMap.set(monthKey, {
-              key: monthKey,
+            monthMap.set(key, {
+              key,
               year: y,
               month: m,
               pnl: t.pnl,
@@ -234,10 +240,24 @@ const StatsScreen: React.FC = () => {
       months,
       topMonths,
     };
-  }, [trades, language]);
+  }, [trades]);
 
+  // ✅ Courbe : segments green/red + points
   const chartData = equityCurve;
   const hasCurve = chartData.length > 0;
+
+  const [chartWidthPx, setChartWidthPx] = useState<number | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<{
+    x: number;
+    y: number;
+    cumulative: number;
+    tradePnl: number;
+  } | null>(null);
+
+  const width = 100;
+  const height = 100;
+  const padding = 10;
+  const drawableHeight = height - padding * 2;
 
   let minVal = 0;
   let maxVal = 0;
@@ -251,11 +271,6 @@ const StatsScreen: React.FC = () => {
     tradePnl: number;
     key: string;
   }[] = [];
-
-  const width = 100;
-  const height = 100;
-  const padding = 10;
-  const drawableHeight = height - padding * 2;
 
   if (hasCurve) {
     minVal = Math.min(...chartData, 0);
@@ -291,60 +306,44 @@ const StatsScreen: React.FC = () => {
 
       if (v1 >= 0 && v2 >= 0) {
         segmentsGreen.push({
-          points: `${p1.x},${p1.y} ${p2.x},${p2.y}`,
           key: `g-${i}`,
-        });
-        continue;
-      }
-
-      if (v1 < 0 && v2 < 0) {
-        segmentsRed.push({
           points: `${p1.x},${p1.y} ${p2.x},${p2.y}`,
+        });
+      } else if (v1 <= 0 && v2 <= 0) {
+        segmentsRed.push({
           key: `r-${i}`,
+          points: `${p1.x},${p1.y} ${p2.x},${p2.y}`,
         });
-        continue;
-      }
+      } else {
+        const tZero = (0 - v1) / (v2 - v1);
+        const zeroX = p1.x + tZero * (p2.x - p1.x);
+        const zeroYCross = p1.y + tZero * (p2.y - p1.y);
 
-      const tRatio = (0 - v1) / (v2 - v1 || 1);
-      const xZero = p1.x + tRatio * (p2.x - p1.x);
-      const yZero = p1.y + tRatio * (p2.y - p1.y);
-      const pZero = { x: xZero, y: yZero };
-
-      if (v1 >= 0 && v2 < 0) {
-        segmentsGreen.push({
-          points: `${p1.x},${p1.y} ${pZero.x},${pZero.y}`,
-          key: `g-${i}-split`,
-        });
-        segmentsRed.push({
-          points: `${pZero.x},${pZero.y} ${p2.x},${p2.y}`,
-          key: `r-${i}-split`,
-        });
-      } else if (v1 < 0 && v2 >= 0) {
-        segmentsRed.push({
-          points: `${p1.x},${p1.y} ${pZero.x},${pZero.y}`,
-          key: `r-${i}-split`,
-        });
-        segmentsGreen.push({
-          points: `${pZero.x},${pZero.y} ${p2.x},${p2.y}`,
-          key: `g-${i}-split`,
-        });
+        if (v1 >= 0) {
+          segmentsGreen.push({
+            key: `g-${i}-1`,
+            points: `${p1.x},${p1.y} ${zeroX},${zeroYCross}`,
+          });
+          segmentsRed.push({
+            key: `r-${i}-2`,
+            points: `${zeroX},${zeroYCross} ${p2.x},${p2.y}`,
+          });
+        } else {
+          segmentsRed.push({
+            key: `r-${i}-1`,
+            points: `${p1.x},${p1.y} ${zeroX},${zeroYCross}`,
+          });
+          segmentsGreen.push({
+            key: `g-${i}-2`,
+            points: `${zeroX},${zeroYCross} ${p2.x},${p2.y}`,
+          });
+        }
       }
     }
 
     greenSegments = segmentsGreen;
     redSegments = segmentsRed;
   }
-
-  const isPositive = stats.total > 0 && stats.totalPnl > 0;
-  const isNegative = stats.total > 0 && stats.totalPnl < 0;
-
-  const [chartWidthPx, setChartWidthPx] = useState<number | null>(null);
-  const [selectedPoint, setSelectedPoint] = useState<{
-    x: number;
-    y: number;
-    cumulative: number;
-    tradePnl: number;
-  } | null>(null);
 
   const handleChartPress = (event: any) => {
     if (!hasCurve || pointCoords.length === 0 || !chartWidthPx) return;
@@ -371,77 +370,72 @@ const StatsScreen: React.FC = () => {
     });
   };
 
-  const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
+  // ✅ Détail mensuel
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(
+    null
+  );
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [pickerYear, setPickerYear] = useState<number | null>(null);
 
-  const currentYear = new Date().getFullYear();
-  const minYear = 2000;
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const [pickerYear, setPickerYear] = useState<number | null>(currentYear);
+  const [showAllInstruments, setShowAllInstruments] = useState(false);
 
-  useEffect(() => {
-    if (stats.months.length > 0 && !selectedMonthKey) {
-      const last = stats.months[stats.months.length - 1];
-      setSelectedMonthKey(last.key);
-      setPickerYear(last.year);
-    }
+  const displayedInstruments =
+    showAllInstruments || stats.byInstrument.length <= 3
+      ? stats.byInstrument
+      : stats.byInstrument.slice(0, 3);
+
+
+  const selectedMonth: MonthAgg | undefined = useMemo(() => {
+    if (!selectedMonthKey) return undefined;
+    return stats.months.find((m) => m.key === selectedMonthKey);
   }, [stats.months, selectedMonthKey]);
-
-  useEffect(() => {
-    if (!pickerYear && selectedMonthKey) {
-      const found = stats.months.find((m) => m.key === selectedMonthKey);
-      if (found) {
-        setPickerYear(found.year);
-      }
-    }
-  }, [pickerYear, selectedMonthKey, stats.months]);
-
-  const selectedMonth: MonthAgg | null =
-    stats.months.find((m) => m.key === selectedMonthKey) || null;
 
   const changeYear = (delta: number) => {
     setPickerYear((prev) => {
       const base = prev ?? currentYear;
-      let next = base + delta;
-      if (next < minYear) next = minYear;
-      if (next > currentYear) next = currentYear;
-      return next;
+      return base + delta;
     });
   };
 
+  const openMonthPicker = () => {
+    if (stats.months.length === 0) return;
+    setShowMonthPicker((prev) => !prev);
+  };
+
   const handleSelectMonth = (monthIndex: number) => {
-    if (!pickerYear) return;
-    const monthNumber = monthIndex + 1;
-    const key = `${pickerYear}-${String(monthNumber).padStart(2, "0")}`;
+    const year = pickerYear ?? currentYear;
+    const key = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
     setSelectedMonthKey(key);
     setShowMonthPicker(false);
   };
 
-  const [showAllInstruments, setShowAllInstruments] = useState(false);
-  const instrumentsToShow = showAllInstruments
-    ? stats.byInstrument
-    : stats.byInstrument.slice(0, 3);
-
   return (
     <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: isDark ? "#020617" : "#f1f5f9" },
-      ]}
+      style={[styles.container, { backgroundColor: bgColor }]}
       contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
     >
-      {/* Titre + profil actif */}
+      {/* Titre + profil */}
       <View style={styles.titleRow}>
-        <Text style={styles.title}>{t("Statistiques", "Statistics")}</Text>
+        <Text style={[styles.title, { color: textMain }]}>
+          {t("Statistiques", "Statistics")}
+        </Text>
         {activeJournal && (
-          <Text style={styles.titleProfile}>
+          <Text style={[styles.titleProfile, { color: textSub }]}>
             {activeJournal.name}
           </Text>
         )}
       </View>
 
       {stats.total === 0 ? (
-        <View style={styles.card}>
-          <Text style={styles.value}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBackground, borderColor: cardBorder },
+          ]}
+        >
+          <Text style={[styles.value, { color: textMain }]}>
             {t(
               "Pas encore de trades. Ajoute quelques trades pour voir tes stats.",
               "No trades yet. Add some trades to see your stats."
@@ -451,8 +445,13 @@ const StatsScreen: React.FC = () => {
       ) : (
         <>
           {/* Courbe equity */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: textMain }]}>
               {t("Évolution des trades", "Trades performance")} ({currency})
             </Text>
 
@@ -476,7 +475,8 @@ const StatsScreen: React.FC = () => {
                         x2={100}
                         y2={zeroY}
                         stroke="#4b5563"
-                        strokeWidth={0.6}
+                        strokeDasharray="2 2"
+                        strokeWidth={0.4}
                       />
 
                       {greenSegments.map((seg) => (
@@ -527,7 +527,7 @@ const StatsScreen: React.FC = () => {
                             x={selectedPoint.x}
                             y={Math.max(selectedPoint.y - 6, 8)}
                             fontSize={4}
-                            fill="#e5e7eb"
+                            fill={isDark ? "#e5e7eb" : "#0f172a"}
                             textAnchor="middle"
                           >
                             {`${formatSigned(
@@ -550,16 +550,16 @@ const StatsScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.rowBetween}>
-                  <Text style={styles.label}>
+                  <Text style={[styles.label, { color: textSub }]}>
                     {t("Min", "Min")}: {formatNumber(minVal, 2)}
                   </Text>
-                  <Text style={styles.label}>
+                  <Text style={[styles.label, { color: textSub }]}>
                     {t("Max", "Max")}: {formatNumber(maxVal, 2)}
                   </Text>
                 </View>
               </>
             ) : (
-              <Text style={styles.value}>
+              <Text style={[styles.label, { marginTop: 8, color: textSub }]}>
                 {t(
                   "Pas assez de données pour afficher la courbe.",
                   "Not enough data to display the curve."
@@ -568,138 +568,221 @@ const StatsScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Vue d’ensemble */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
+          {/* Vue d'ensemble */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: textMain }]}>
               {t("Vue d'ensemble", "Overview")}
             </Text>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>{t("Total trades", "Total trades")}</Text>
-              <Text style={styles.value}>{stats.total}</Text>
+              <Text style={[styles.label, { color: textSub }]}>
+                {t("Nombre de trades", "Total trades")}
+              </Text>
+              <Text style={[styles.value, { color: textMain }]}>
+                {stats.total}
+              </Text>
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>{t("Gagnants", "Winners")}</Text>
+              <Text style={[styles.label, { color: textSub }]}>
+                {t("Gagnants", "Winners")}
+              </Text>
               <Text style={[styles.value, { color: "#22c55e" }]}>
                 {stats.wins}
               </Text>
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>{t("Perdants", "Losers")}</Text>
+              <Text style={[styles.label, { color: textSub }]}>
+                {t("Perdants", "Losers")}
+              </Text>
               <Text style={[styles.value, { color: "#ef4444" }]}>
                 {stats.losses}
               </Text>
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>{t("Neutres", "Breakeven")}</Text>
-              <Text style={styles.value}>{stats.breakeven}</Text>
+              <Text style={[styles.label, { color: textSub }]}>
+                {t("Neutres", "Breakeven")}
+              </Text>
+              <Text style={[styles.value, { color: textMain }]}>
+                {stats.breakeven}
+              </Text>
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>{t("Winrate", "Winrate")}</Text>
-              <Text style={styles.value}>
+              <Text style={[styles.label, { color: textSub }]}>
+                {t("Winrate", "Winrate")}
+              </Text>
+              <Text style={[styles.value, { color: textMain }]}>
                 {formatNumber(stats.winrate, 1)} %
               </Text>
             </View>
           </View>
 
           {/* PnL global */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Résultat (PnL)</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: textMain }]}>
+              Résultat (PnL)
+            </Text>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>
+              <Text style={[styles.label, { color: textSub }]}>
                 {t("PnL total", "Total PnL")} ({currency})
               </Text>
               <Text
                 style={[
                   styles.value,
-                  isPositive && { color: "#22c55e" },
-                  isNegative && { color: "#ef4444" },
+                  stats.totalPnl > 0 && { color: "#22c55e" },
+                  stats.totalPnl < 0 && { color: "#ef4444" },
+                  stats.totalPnl === 0 && { color: textMain },
                 ]}
               >
                 {formatNumber(stats.totalPnl, 2)}
               </Text>
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>
+              <Text style={[styles.label, { color: textSub }]}>
                 {t("PnL moyen / trade", "Avg PnL / trade")} ({currency})
               </Text>
-              <Text style={styles.value}>
+              <Text style={[styles.value, { color: textMain }]}>
                 {formatNumber(stats.avgPnl, 2)}
               </Text>
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>
+              <Text style={[styles.label, { color: textSub }]}>
                 {t("RR moyen (si renseigné)", "Avg RR (if filled)")}
               </Text>
-              <Text style={styles.value}>
+              <Text style={[styles.value, { color: textMain }]}>
                 {formatNumber(stats.avgRr, 2)}
               </Text>
             </View>
           </View>
 
           {/* Meilleur / pire trade */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
-              {t("Meilleur / pire trade", "Best / worst trade")}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: textMain }]}>
+              {t("Meilleur & pire trade", "Best & worst trade")}
             </Text>
-            <View style={styles.rowBetween}>
-              <Text style={styles.label}>
-                {t("Meilleur trade", "Best trade")}
+            {stats.bestTrade ? (
+              <View style={styles.rowBetween}>
+                <View>
+                  <Text style={[styles.label, { color: textSub }]}>
+                    {t("Meilleur", "Best")}
+                  </Text>
+                  <Text style={[styles.value, { color: textMain }]}>
+                    {stats.bestTrade.instrument} ({stats.bestTrade.direction})
+                  </Text>
+                </View>
+                <Text style={[styles.value, { color: "#22c55e" }]}>
+                  {formatSigned(stats.bestTrade.pnl, 2)} {currency}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[styles.label, { marginTop: 4, color: textSub }]}>
+                {t("Pas de trade gagnant.", "No winning trade yet.")}
               </Text>
-              <Text style={[styles.value, { color: "#22c55e" }]}>
-                {stats.bestTrade
-                  ? formatSigned(stats.bestTrade.pnl, 2)
-                  : "-"}
+            )}
+
+            {stats.worstTrade ? (
+              <View style={styles.rowBetween}>
+                <View>
+                  <Text style={[styles.label, { color: textSub }]}>
+                    {t("Pire", "Worst")}
+                  </Text>
+                  <Text style={[styles.value, { color: textMain }]}>
+                    {stats.worstTrade.instrument} (
+                    {stats.worstTrade.direction})
+                  </Text>
+                </View>
+                <Text style={[styles.value, { color: "#ef4444" }]}>
+                  {formatSigned(stats.worstTrade.pnl, 2)} {currency}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[styles.label, { marginTop: 4, color: textSub }]}>
+                {t(
+                  "Pas encore de trade perdant (ou aucun trade).",
+                  "No losing trade yet (or no trades)."
+                )}
               </Text>
-            </View>
-            <View style={styles.rowBetween}>
-              <Text style={styles.label}>
-                {t("Pire trade", "Worst trade")}
-              </Text>
-              <Text style={[styles.value, { color: "#ef4444" }]}>
-                {stats.worstTrade
-                  ? formatSigned(stats.worstTrade.pnl, 2)
-                  : "-"}
-              </Text>
-            </View>
+            )}
           </View>
 
-          {/* Par actif / paire */}
-          <View style={styles.card}>
+                    {/* Par instrument */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
             <View style={styles.rowBetween}>
-              <Text style={styles.cardTitle}>
-                {t("Par actif / paire", "By asset / pair")}
+              <Text style={[styles.cardTitle, { color: textMain }]}>
+                {t("Par instrument", "By instrument")}
               </Text>
+
               {stats.byInstrument.length > 3 && (
                 <Pressable
-                  onPress={() => setShowAllInstruments((prev) => !prev)}
+                  onPress={() =>
+                    setShowAllInstruments((prev) => !prev)
+                  }
                 >
                   <Text
-                    style={{
-                      color: "#60a5fa",
-                      fontSize: 12,
-                    }}
+                    style={[
+                      styles.label,
+                      { color: "#38bdf8" },
+                    ]}
                   >
                     {showAllInstruments
-                      ? t("Voir moins", "Show less")
+                      ? t("Réduire", "Show less")
                       : t("Voir tout", "Show all")}
                   </Text>
                 </Pressable>
               )}
             </View>
 
-            {stats.byInstrument.length === 0 ? (
-              <Text style={styles.value}>
-                {t("Aucun actif / paire.", "No asset / pair.")}
+            {displayedInstruments.length === 0 ? (
+              <Text
+                style={[
+                  styles.label,
+                  { marginTop: 4, color: textSub },
+                ]}
+              >
+                {t("Aucun instrument", "No instruments")}
               </Text>
             ) : (
-              instrumentsToShow.map((item) => {
+              displayedInstruments.map((item) => {
                 const positive = item.pnl > 0;
                 const negative = item.pnl < 0;
                 return (
-                  <View key={item.instrument} style={styles.rowBetween}>
+                  <View
+                    key={item.instrument}
+                    style={styles.rowBetween}
+                  >
                     <View>
-                      <Text style={styles.value}>{item.instrument}</Text>
-                      <Text style={styles.label}>
+                      <Text
+                        style={[
+                          styles.value,
+                          { color: textMain },
+                        ]}
+                      >
+                        {item.instrument}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.label,
+                          { color: textSub },
+                        ]}
+                      >
                         {item.count} {t("trades", "trades")}
                       </Text>
                     </View>
@@ -708,6 +791,8 @@ const StatsScreen: React.FC = () => {
                         styles.value,
                         positive && { color: "#22c55e" },
                         negative && { color: "#ef4444" },
+                        !positive &&
+                          !negative && { color: textMain },
                       ]}
                     >
                       {formatSigned(item.pnl, 2)}
@@ -718,124 +803,160 @@ const StatsScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Performance par mois */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
-              {t("Performance par mois", "Monthly performance")}
+
+          {/* Détail par mois + top mois */}
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: textMain }]}>
+              {t("Détail par mois", "Monthly detail")}
             </Text>
 
-            {stats.months.length === 0 ? (
-              <Text style={styles.value}>
-                {t("Aucune donnée mensuelle.", "No monthly data.")}
-              </Text>
-            ) : (
-              <>
-                <Pressable
-                  onPress={() => {
-                    if (selectedMonth) {
-                      setPickerYear(selectedMonth.year);
-                    }
-                    setShowMonthPicker((prev) => !prev);
-                  }}
+            <Pressable
+              style={[
+                styles.monthSelector,
+                { borderColor: cardBorder },
+              ]}
+              onPress={openMonthPicker}
+            >
+              <View>
+                <Text
                   style={[
-                    styles.monthSelector,
-                    { borderColor: "#1f2933", backgroundColor: "#020617" },
+                    styles.value,
+                    { fontWeight: "600", color: textMain },
                   ]}
                 >
-                  <View>
-                    <Text style={[styles.value, { fontWeight: "600" }]}>
-                      {selectedMonth
-                        ? formatMonthLabel(
-                            selectedMonth.year,
-                            selectedMonth.month
-                          )
-                        : "-"}
+                  {selectedMonth
+                    ? formatMonthLabel(
+                        selectedMonth.year,
+                        selectedMonth.month,
+                        language
+                      )
+                    : "-"}
+                </Text>
+                <Text style={[styles.label, { color: textSub }]}>
+                  {selectedMonth
+                    ? `${selectedMonth.count} ${t(
+                        "trades",
+                        "trades"
+                      )}`
+                    : ""}
+                </Text>
+              </View>
+              <Text style={{ color: "#9ca3af", fontSize: 18 }}>⌵</Text>
+            </Pressable>
+
+            {showMonthPicker && (
+              <View
+                style={[
+                  styles.monthPicker,
+                  {
+                    backgroundColor: cardBackground,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <View style={[styles.rowBetween, { marginBottom: 8 }]}>
+                  <Pressable
+                    style={styles.yearButton}
+                    onPress={() => changeYear(-1)}
+                  >
+                    <Text style={{ color: "#9ca3af", fontSize: 18 }}>
+                      ‹
                     </Text>
-                    <Text style={styles.label}>
-                      {selectedMonth
-                        ? `${selectedMonth.count} ${t("trades", "trades")}`
-                        : ""}
+                  </Pressable>
+
+                  <Text
+                    style={{
+                      color: textMain,
+                      fontSize: 14,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {pickerYear ?? currentYear}
+                  </Text>
+
+                  <Pressable
+                    style={styles.yearButton}
+                    onPress={() => changeYear(1)}
+                  >
+                    <Text style={{ color: "#9ca3af", fontSize: 18 }}>
+                      ›
                     </Text>
-                  </View>
-                  <Text style={{ color: "#9ca3af", fontSize: 18 }}>⌵</Text>
-                </Pressable>
+                  </Pressable>
+                </View>
 
-                {showMonthPicker && (
-                  <View style={styles.monthPicker}>
-                    <View style={[styles.rowBetween, { marginBottom: 8 }]}>
+                <View className="month-grid" style={styles.monthGrid}>
+                  {(language === "en" ? monthsShortEn : monthsShortFr).map(
+                    (label, index) => (
                       <Pressable
-                        style={styles.yearButton}
-                        onPress={() => changeYear(-1)}
+                        key={label}
+                        style={[
+                          styles.monthItem,
+                          {
+                            borderColor:
+                              selectedMonthKey ===
+                              `${pickerYear ?? currentYear}-${String(
+                                index + 1
+                              ).padStart(2, "0")}`
+                                ? "#38bdf8"
+                                : isDark
+                                ? "#1f2937"
+                                : "#cbd5e1",
+                            backgroundColor:
+                              selectedMonthKey ===
+                              `${pickerYear ?? currentYear}-${String(
+                                index + 1
+                              ).padStart(2, "0")}`
+                                ? "rgba(56,189,248,0.16)"
+                                : "transparent",
+                          },
+                        ]}
+                        onPress={() => handleSelectMonth(index)}
                       >
-                        <Text style={{ color: "#9ca3af", fontSize: 18 }}>
-                          ‹
-                        </Text>
-                      </Pressable>
-
-                      <Text
-                        style={{
-                          color: "#e5e7eb",
-                          fontSize: 14,
-                          fontWeight: "600",
-                        }}
-                      >
-                        {pickerYear ?? currentYear}
-                      </Text>
-
-                      <Pressable
-                        style={styles.yearButton}
-                        onPress={() => changeYear(1)}
-                      >
-                        <Text style={{ color: "#9ca3af", fontSize: 18 }}>
-                          ›
-                        </Text>
-                      </Pressable>
-                    </View>
-
-                    <View className="month-grid" style={styles.monthGrid}>
-                      {(language === "en"
-                        ? monthsShortEn
-                        : monthsShortFr
-                      ).map((label, index) => (
-                        <Pressable
-                          key={label}
-                          style={styles.monthItem}
-                          onPress={() => handleSelectMonth(index)}
+                        <Text
+                          style={[
+                            styles.monthItemText,
+                            { color: textMain },
+                          ]}
                         >
-                          <Text style={styles.monthItemText}>{label}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {selectedMonth && (
-                  <View style={[styles.rowBetween, { marginTop: 8 }]}>
-                    <Text style={styles.label}>
-                      {t("PnL du mois", "PnL this month")}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.value,
-                        selectedMonth.pnl > 0 && { color: "#22c55e" },
-                        selectedMonth.pnl < 0 && { color: "#ef4444" },
-                      ]}
-                    >
-                      {formatSigned(selectedMonth.pnl, 2)}
-                    </Text>
-                  </View>
-                )}
-              </>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    )
+                  )}
+                </View>
+              </View>
             )}
-          </View>
 
-          {/* Top 3 mois */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
-              {t("Top 3 mois", "Top 3 months")}
+            {selectedMonth && (
+              <View style={[styles.rowBetween, { marginTop: 8 }]}>
+                <Text style={[styles.label, { color: textSub }]}>
+                  {t("PnL du mois", "PnL this month")}
+                </Text>
+                <Text
+                  style={[
+                    styles.value,
+                    selectedMonth.pnl > 0 && { color: "#22c55e" },
+                    selectedMonth.pnl < 0 && { color: "#ef4444" },
+                    selectedMonth.pnl === 0 && { color: textMain },
+                  ]}
+                >
+                  {formatSigned(selectedMonth.pnl, 2)}
+                </Text>
+              </View>
+            )}
+
+            <View style={[styles.cardSeparator, { marginTop: 12 }]} />
+
+            <Text style={[styles.cardTitle, { marginTop: 8, color: textMain }]}>
+              {t("Meilleurs mois", "Best months")}
             </Text>
             {stats.topMonths.length === 0 ? (
-              <Text style={styles.value}>
+              <Text style={[styles.label, { marginTop: 4, color: textSub }]}>
                 {t(
                   "Aucun mois positif pour le moment.",
                   "No positive month yet."
@@ -845,10 +966,11 @@ const StatsScreen: React.FC = () => {
               stats.topMonths.map((m, index) => (
                 <View key={m.key} style={styles.rowBetween}>
                   <View>
-                    <Text style={styles.value}>
-                      #{index + 1} {formatMonthLabel(m.year, m.month)}
+                    <Text style={[styles.value, { color: textMain }]}>
+                      #{index + 1}{" "}
+                      {formatMonthLabel(m.year, m.month, language)}
                     </Text>
-                    <Text style={styles.label}>
+                    <Text style={[styles.label, { color: textSub }]}>
                       {m.count} {t("trades", "trades")}
                     </Text>
                   </View>
@@ -876,12 +998,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    color: "#e5e7eb",
     fontSize: 18,
     fontWeight: "700",
   },
   titleProfile: {
-    color: "#9ca3af",
     fontSize: 13,
     marginLeft: 8,
   },
@@ -894,17 +1014,14 @@ const styles = StyleSheet.create({
     borderColor: "#111827",
   },
   cardTitle: {
-    color: "#e5e7eb",
     fontSize: 15,
     fontWeight: "600",
     marginBottom: 8,
   },
   label: {
-    color: "#9ca3af",
     fontSize: 12,
   },
   value: {
-    color: "#e5e7eb",
     fontSize: 14,
   },
   rowBetween: {
@@ -928,8 +1045,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#111827",
-    backgroundColor: "#020617",
   },
   monthGrid: {
     flexDirection: "row",
@@ -943,11 +1058,9 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#1f2937",
     alignItems: "center",
   },
   monthItemText: {
-    color: "#e5e7eb",
     fontSize: 12,
   },
   yearButton: {
@@ -956,6 +1069,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+  },
+  cardSeparator: {
+    height: 1,
+    backgroundColor: "#1f2933",
+    marginVertical: 4,
   },
 });
 

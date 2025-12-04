@@ -36,6 +36,21 @@ const TradeFormScreen: React.FC = () => {
   const { currency, theme } = useSettings();
   const router = useRouter();
 
+  const isDark = theme === "dark";
+
+  // Couleurs dépendant du thème
+  const screenBg = isDark ? "#020617" : "#f1f5f9";
+  const labelColor = isDark ? "#e5e7eb" : "#0f172a";
+  const valueColor = isDark ? "#e5e7eb" : "#0f172a";
+  const inputBg = isDark ? "#020617" : "#ffffff";
+  const inputBorder = isDark ? "#111827" : "#d1d5db";
+  const inputTextColor = isDark ? "#e5e7eb" : "#0f172a";
+  const chipBorder = isDark ? "#4b5563" : "#cbd5e1";
+  const chipBg = isDark ? "#020617" : "#ffffff";
+  const chipTextColor = labelColor;
+  const directionBorder = chipBorder;
+  const directionBg = chipBg;
+
   const existingTrade: Trade | undefined = tradeIdStr
     ? trades.find((t) => t.id === tradeIdStr)
     : undefined;
@@ -209,54 +224,107 @@ const TradeFormScreen: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
       <ScrollView
-        style={[
-          styles.container,
-          { backgroundColor: theme === "dark" ? "#020617" : "#f1f5f9" },
-        ]}
+        style={[styles.container, { backgroundColor: screenBg }]}
         contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.label}>Date</Text>
-        <Text style={styles.value}>{dateStr}</Text>
+        <Text style={[styles.label, { color: labelColor }]}>Date</Text>
+        <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
 
-        <Text style={styles.label}>
+        <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
           {isEdit ? "Modifier le trade" : "Nouveau trade"}
         </Text>
 
-        <Text style={styles.label}>Actif / Paire</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Actif / Paire
+        </Text>
         <TextInput
-          style={styles.input}
-          placeholder="EUR/USD, XAU/USD..."
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
+          placeholder="EUR/USD, XAU/USD."
           placeholderTextColor="#6b7280"
           value={instrument}
           onChangeText={setInstrument}
         />
 
-        <Text style={styles.label}>Direction</Text>
+        <Text style={[styles.label, { color: labelColor }]}>Direction</Text>
         <View style={styles.row}>
           <TouchableOpacity
             style={[
               styles.directionButton,
-              direction === "BUY" && styles.directionButtonActiveBuy,
+              {
+                borderColor: directionBorder,
+                backgroundColor: directionBg,
+              },
+              direction === "BUY" && {
+                backgroundColor: "#16a34a",
+                borderColor: "#22c55e",
+              },
             ]}
             onPress={() => setDirection("BUY")}
           >
-            <Text style={styles.directionText}>BUY</Text>
+            <Text
+              style={[
+                styles.directionText,
+                {
+                  color:
+                    direction === "BUY"
+                      ? "#f9fafb"
+                      : inputTextColor,
+                },
+              ]}
+            >
+              BUY
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.directionButton,
-              direction === "SELL" && styles.directionButtonActiveSell,
+              {
+                borderColor: directionBorder,
+                backgroundColor: directionBg,
+              },
+              direction === "SELL" && {
+                backgroundColor: "#dc2626",
+                borderColor: "#ef4444",
+              },
             ]}
             onPress={() => setDirection("SELL")}
           >
-            <Text style={styles.directionText}>SELL</Text>
+            <Text
+              style={[
+                styles.directionText,
+                {
+                  color:
+                    direction === "SELL"
+                      ? "#f9fafb"
+                      : inputTextColor,
+                },
+              ]}
+            >
+              SELL
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Résultat ({currency})</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Résultat ({currency})
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           keyboardType="numeric"
           placeholder="Ex : 25.50"
           placeholderTextColor="#6b7280"
@@ -264,19 +332,37 @@ const TradeFormScreen: React.FC = () => {
           onChangeText={setPnl}
         />
 
-        <Text style={styles.label}>Lot (optionnel)</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Lot (optionnel)
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           keyboardType="numeric"
-          placeholder="Ex : 0.50"
+          placeholder="Ex : 0.25"
           placeholderTextColor="#6b7280"
           value={lotSize}
           onChangeText={setLotSize}
         />
 
-        <Text style={styles.label}>Prix (optionnels)</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Prix (optionnel)
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           keyboardType="numeric"
           placeholder="Prix d'entrée"
           placeholderTextColor="#6b7280"
@@ -284,7 +370,14 @@ const TradeFormScreen: React.FC = () => {
           onChangeText={setEntryPrice}
         />
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           keyboardType="numeric"
           placeholder="TP"
           placeholderTextColor="#6b7280"
@@ -292,7 +385,14 @@ const TradeFormScreen: React.FC = () => {
           onChangeText={setTpPrice}
         />
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           keyboardType="numeric"
           placeholder="SL"
           placeholderTextColor="#6b7280"
@@ -300,9 +400,18 @@ const TradeFormScreen: React.FC = () => {
           onChangeText={setSlPrice}
         />
 
-        <Text style={styles.label}>RR (optionnel)</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          RR (optionnel)
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           keyboardType="numeric"
           placeholder="Ex : 2.35"
           placeholderTextColor="#6b7280"
@@ -310,7 +419,7 @@ const TradeFormScreen: React.FC = () => {
           onChangeText={setRr}
         />
 
-        <Text style={styles.label}>Émotion</Text>
+        <Text style={[styles.label, { color: labelColor }]}>Émotion</Text>
         <View style={styles.rowWrap}>
           {[
             { key: "calm", label: "😌 calme" },
@@ -319,64 +428,153 @@ const TradeFormScreen: React.FC = () => {
             { key: "revenge", label: "😡 revenge" },
             { key: "tired", label: "😴 fatigué" },
             { key: "disciplined", label: "✅ discipliné" },
-          ].map((e) => (
-            <TouchableOpacity
-              key={e.key}
-              style={[
-                styles.chip,
-                emotion === e.key && styles.chipActive,
-              ]}
-              onPress={() =>
-                setEmotion((prev) =>
-                  prev === e.key ? undefined : (e.key as any)
-                )
-              }
-            >
-              <Text style={styles.chipText}>{e.label}</Text>
-            </TouchableOpacity>
-          ))}
+          ].map((e) => {
+            const active = emotion === e.key;
+            return (
+              <TouchableOpacity
+                key={e.key}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: chipBorder,
+                    backgroundColor: chipBg,
+                  },
+                  active && {
+                    backgroundColor: "#1d4ed8",
+                    borderColor: "#60a5fa",
+                  },
+                ]}
+                onPress={() =>
+                  setEmotion((prev) =>
+                    prev === e.key ? undefined : (e.key as any)
+                  )
+                }
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: active ? "#f9fafb" : chipTextColor,
+                    },
+                  ]}
+                >
+                  {e.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        <Text style={styles.label}>Qualité du trade</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Qualité du trade
+        </Text>
         <View style={styles.row}>
-          {(["A", "B", "C"] as Quality[]).map((q) => (
-            <TouchableOpacity
-              key={q}
-              style={[styles.chip, quality === q && styles.chipActive]}
-              onPress={() =>
-                setQuality((prev) => (prev === q ? undefined : q))
-              }
-            >
-              <Text style={styles.chipText}>{q}</Text>
-            </TouchableOpacity>
-          ))}
+          {(["A", "B", "C"] as Quality[]).map((q) => {
+            const active = quality === q;
+            return (
+              <TouchableOpacity
+                key={q}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: chipBorder,
+                    backgroundColor: chipBg,
+                  },
+                  active && {
+                    backgroundColor: "#1d4ed8",
+                    borderColor: "#60a5fa",
+                  },
+                ]}
+                onPress={() =>
+                  setQuality((prev) => (prev === q ? undefined : q))
+                }
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: active ? "#f9fafb" : chipTextColor,
+                    },
+                  ]}
+                >
+                  {q}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        <Text style={styles.label}>Respect du plan</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Respect du plan
+        </Text>
         <View style={styles.row}>
           <TouchableOpacity
             style={[
               styles.chip,
-              respectPlan === true && styles.chipActive,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              respectPlan === true && {
+                backgroundColor: "#16a34a",
+                borderColor: "#22c55e",
+              },
             ]}
             onPress={() => setRespectPlan(true)}
           >
-            <Text style={styles.chipText}>Oui</Text>
+            <Text
+              style={[
+                styles.chipText,
+                {
+                  color:
+                    respectPlan === true ? "#f9fafb" : chipTextColor,
+                },
+              ]}
+            >
+              Oui
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.chip,
-              respectPlan === false && styles.chipActive,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              respectPlan === false && {
+                backgroundColor: "#dc2626",
+                borderColor: "#ef4444",
+              },
             ]}
             onPress={() => setRespectPlan(false)}
           >
-            <Text style={styles.chipText}>Non</Text>
+            <Text
+              style={[
+                styles.chipText,
+                {
+                  color:
+                    respectPlan === false ? "#f9fafb" : chipTextColor,
+                },
+              ]}
+            >
+              Non
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Commentaire</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          Commentaire
+        </Text>
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={[
+            styles.input,
+            styles.textArea,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: inputTextColor,
+            },
+          ]}
           multiline
           numberOfLines={4}
           placeholder="Notes sur le trade, contexte, erreurs, etc."
@@ -385,19 +583,45 @@ const TradeFormScreen: React.FC = () => {
           onChangeText={setComment}
         />
 
-        <Text style={styles.label}>Screenshot</Text>
+        <Text style={[styles.label, { color: labelColor }]}>Screenshot</Text>
         <View style={styles.row}>
           <TouchableOpacity
-            style={styles.imageButton}
+            style={[
+              styles.imageButton,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+            ]}
             onPress={handlePickImageFromGallery}
           >
-            <Text style={styles.imageButtonText}>Galerie</Text>
+            <Text
+              style={[
+                styles.imageButtonText,
+                { color: chipTextColor },
+              ]}
+            >
+              Galerie
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.imageButton}
+            style={[
+              styles.imageButton,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+            ]}
             onPress={handleTakePhoto}
           >
-            <Text style={styles.imageButtonText}>Caméra</Text>
+            <Text
+              style={[
+                styles.imageButtonText,
+                { color: chipTextColor },
+              ]}
+            >
+              Caméra
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -406,7 +630,10 @@ const TradeFormScreen: React.FC = () => {
             <TouchableOpacity onPress={openImageFullScreen}>
               <Image
                 source={{ uri: screenshotUri }}
-                style={styles.screenshotPreview}
+                style={[
+                  styles.screenshotPreview,
+                  { borderColor: inputBorder },
+                ]}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setScreenshotUri(undefined)}>
@@ -448,21 +675,16 @@ const TradeFormScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   label: {
-    color: "#e5e7eb",
     marginTop: 12,
     marginBottom: 4,
     fontSize: 13,
   },
   value: {
-    color: "#e5e7eb",
     fontSize: 14,
   },
   input: {
-    backgroundColor: "#020617",
-    color: "#e5e7eb",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#111827",
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 14,
@@ -488,36 +710,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#4b5563",
     alignItems: "center",
   },
-  directionButtonActiveBuy: {
-    backgroundColor: "#166534",
-    borderColor: "#22c55e",
-  },
-  directionButtonActiveSell: {
-    backgroundColor: "#7f1d1d",
-    borderColor: "#ef4444",
-  },
   directionText: {
-    color: "#e5e7eb",
     fontWeight: "600",
+    fontSize: 13,
   },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#4b5563",
     marginRight: 8,
     marginTop: 4,
   },
-  chipActive: {
-    backgroundColor: "#1d4ed8",
-    borderColor: "#60a5fa",
-  },
   chipText: {
-    color: "#e5e7eb",
     fontSize: 12,
   },
   imageButton: {
@@ -525,11 +732,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#4b5563",
     alignItems: "center",
   },
   imageButtonText: {
-    color: "#e5e7eb",
     fontSize: 13,
   },
   screenshotPreviewContainer: {
@@ -541,7 +746,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#111827",
     marginBottom: 4,
   },
   removeScreenshotText: {

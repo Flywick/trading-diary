@@ -54,8 +54,42 @@ function getDaysMatrix(year: number, month: number) {
 const AgendaScreen: React.FC = () => {
   const { trades } = useTrades();
   const { theme, currency } = useSettings();
-  const { journals, activeJournal, createJournal, renameJournal, setActiveJournal } =
-    useJournal();
+  const isDark = theme === "dark";
+
+  // Couleurs dépendantes du thème
+  const bgColor = isDark ? "#020617" : "#f1f5f9";
+  const monthSummaryBg = isDark ? "#020617" : "#e5e7eb";
+  const headerTitleColor = isDark ? "#e5e7eb" : "#0f172a";
+  const arrowColor = isDark ? "#e5e7eb" : "#0f172a";
+  const journalLabelColor = isDark ? "#9ca3af" : "#6b7280";
+  const journalChipBg = isDark ? "#020617" : "#ffffff";
+  const journalChipBorder = isDark ? "#4b5563" : "#cbd5e1";
+  const journalChipTextColor = isDark ? "#e5e7eb" : "#0f172a";
+  const summaryLabelColor = isDark ? "#9ca3af" : "#6b7280";
+  const summarySubColor = isDark ? "#9ca3af" : "#6b7280";
+  const weekdayColor = isDark ? "#9ca3af" : "#64748b";
+
+  const modalCardBg = isDark ? "#020617" : "#ffffff";
+  const modalCardBorder = isDark ? "#111827" : "#e5e7eb";
+  const modalTitleColor = isDark ? "#e5e7eb" : "#0f172a";
+  const modalLabelColor = isDark ? "#9ca3af" : "#6b7280";
+  const modalInputBg = isDark ? "#020617" : "#f9fafb";
+  const modalInputBorder = isDark ? "#111827" : "#d1d5db";
+  const modalInputTextColor = isDark ? "#e5e7eb" : "#0f172a";
+
+  const journalItemBorder = isDark ? "#1f2933" : "#cbd5e1";
+  const journalItemBg = isDark ? "#020617" : "#ffffff";
+  const journalItemBgActive = isDark ? "#0b1120" : "#e0f2fe";
+  const journalItemTextColor = isDark ? "#e5e7eb" : "#0f172a";
+  const journalItemTextActiveColor = isDark ? "#e5e7eb" : "#0f172a";
+
+  const {
+    journals,
+    activeJournal,
+    createJournal,
+    renameJournal,
+    setActiveJournal,
+  } = useJournal();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -121,17 +155,12 @@ const AgendaScreen: React.FC = () => {
           rrTrades.length
         : 0;
 
-    return { hasTrades: true, pnl: totalPnl, rr: avgRr, dateStr };
-  };
-
-  const handleDayPress = (dayNumber: number) => {
-    const { dateStr, hasTrades } = getSummaryForDay(dayNumber);
-
-    if (hasTrades) {
-      router.push({ pathname: "/day", params: { date: dateStr } });
-    } else {
-      router.push({ pathname: "/trade", params: { date: dateStr } });
-    }
+    return {
+      hasTrades: true,
+      pnl: totalPnl,
+      rr: avgRr,
+      dateStr,
+    };
   };
 
   const monthName = currentDate.toLocaleString("fr-FR", {
@@ -173,6 +202,21 @@ const AgendaScreen: React.FC = () => {
     setJournalModalVisible(false);
   };
 
+  const handleDayPress = (dayNumber: number) => {
+    const monthStr = String(month + 1).padStart(2, "0");
+    const dayStr = String(dayNumber).padStart(2, "0");
+    const dateStr = `${year}-${monthStr}-${dayStr}`;
+
+    const dayTrades = trades.filter((t) => t.date === dateStr);
+    const hasTrades = dayTrades.length > 0;
+
+    if (hasTrades) {
+      router.push({ pathname: "/day", params: { date: dateStr } });
+    } else {
+      router.push({ pathname: "/trade", params: { date: dateStr } });
+    }
+  };
+
   const handleCreateJournal = () => {
     const name = newJournalName.trim() || "Nouveau journal";
     const ok = createJournal(name);
@@ -199,49 +243,82 @@ const AgendaScreen: React.FC = () => {
     <View
       style={[
         styles.container,
-        { backgroundColor: theme === "dark" ? "#020617" : "#f1f5f9" },
+        { backgroundColor: bgColor },
       ]}
     >
       {/* Titre + navigation mois */}
       <View style={styles.headerRow}>
-        <Text style={styles.arrow} onPress={() => changeMonth("prev")}>
+        <Text
+          style={[styles.arrow, { color: arrowColor }]}
+          onPress={() => changeMonth("prev")}
+        >
           {"<"}
         </Text>
 
-        <Text style={styles.headerTitle}>{monthName}</Text>
+        <Text
+          style={[styles.headerTitle, { color: headerTitleColor }]}
+        >
+          {monthName}
+        </Text>
 
-        <Text style={styles.arrow} onPress={() => changeMonth("next")}>
+        <Text
+          style={[styles.arrow, { color: arrowColor }]}
+          onPress={() => changeMonth("next")}
+        >
           {">"}
         </Text>
       </View>
 
       {/* Sélecteur de profil / journal */}
       <View style={styles.journalRow}>
-        <Text style={styles.journalLabel}>Profil</Text>
+        <Text
+          style={[styles.journalLabel, { color: journalLabelColor }]}
+        >
+          Profil
+        </Text>
         <TouchableOpacity
-          style={styles.journalChip}
+          style={[
+            styles.journalChip,
+            {
+              backgroundColor: journalChipBg,
+              borderColor: journalChipBorder,
+            },
+          ]}
           onPress={openJournalModal}
         >
-          <Text style={styles.journalChipText}>
+          <Text
+            style={[
+              styles.journalChipText,
+              { color: journalChipTextColor },
+            ]}
+          >
             {activeJournal?.name ?? "Journal"}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Bloc animé (stat mois + calendrier) */}
-      <Animated.View style={[styles.monthContentWrapper, animatedContentStyle]}>
+      <Animated.View
+        style={[styles.monthContentWrapper, animatedContentStyle]}
+      >
         <View
           style={[
             styles.monthSummary,
             {
-              backgroundColor:
-                theme === "dark" ? "#020617" : "#e5e7eb",
+              backgroundColor: monthSummaryBg,
             },
           ]}
         >
           <View style={styles.summaryRowTop}>
             <View style={styles.summaryBlockLeft}>
-              <Text style={styles.summaryLabel}>Résultat du mois (PnL)</Text>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  { color: summaryLabelColor },
+                ]}
+              >
+                Résultat du mois (PnL)
+              </Text>
               <Text
                 style={[
                   styles.summaryValue,
@@ -251,7 +328,9 @@ const AgendaScreen: React.FC = () => {
                         ? "#22c55e"
                         : monthStats.totalPnl < 0
                         ? "#ef4444"
-                        : "#e5e7eb",
+                        : isDark
+                        ? "#e5e7eb"
+                        : "#0f172a",
                   },
                 ]}
               >
@@ -261,8 +340,20 @@ const AgendaScreen: React.FC = () => {
             </View>
 
             <View style={styles.summaryBlockMiddle}>
-              <Text style={styles.summaryLabel}>Trades</Text>
-              <Text style={styles.summaryValue}>
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  { color: summaryLabelColor },
+                ]}
+              >
+                Trades
+              </Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  { color: isDark ? "#e5e7eb" : "#0f172a" },
+                ]}
+              >
                 {monthStats.tradeCount}
               </Text>
             </View>
@@ -283,7 +374,12 @@ const AgendaScreen: React.FC = () => {
           <View style={styles.summaryRowBottom}>
             <View style={styles.summaryBottomLeft} />
             <View style={styles.summaryBlockMiddle}>
-              <Text style={styles.summarySub}>
+              <Text
+                style={[
+                  styles.summarySub,
+                  { color: summarySubColor },
+                ]}
+              >
                 Winrate {monthStats.winrate.toFixed(0)}%
               </Text>
             </View>
@@ -293,7 +389,10 @@ const AgendaScreen: React.FC = () => {
 
         <View className="weekdaysRow" style={styles.weekdaysRow}>
           {WEEKDAYS.map((d) => (
-            <Text key={d} style={styles.weekday}>
+            <Text
+              key={d}
+              style={[styles.weekday, { color: weekdayColor }]}
+            >
               {d}
             </Text>
           ))}
@@ -312,15 +411,26 @@ const AgendaScreen: React.FC = () => {
                   isCurrentMonth && dayNumber === today.getDate();
 
                 return (
-                  <View key={colIndex} style={styles.dayWrapper}>
+                  <View
+                    key={colIndex}
+                    style={styles.dayWrapper}
+                  >
                     {dayNumber === null ? (
                       <View style={[styles.cell, styles.emptyCell]} />
                     ) : (
                       <DayCell
                         dayNumber={dayNumber}
                         hasTrades={summary?.hasTrades ?? false}
-                        pnl={summary?.hasTrades ? summary?.pnl : undefined}
-                        rr={summary?.hasTrades ? summary?.rr : undefined}
+                        pnl={
+                          summary?.hasTrades
+                            ? summary?.pnl
+                            : undefined
+                        }
+                        rr={
+                          summary?.hasTrades
+                            ? summary?.rr
+                            : undefined
+                        }
                         onPress={() => handleDayPress(dayNumber)}
                         isToday={isTodayCell}
                       />
@@ -340,18 +450,48 @@ const AgendaScreen: React.FC = () => {
         animationType="fade"
         onRequestClose={closeJournalModal}
       >
-        <Pressable style={styles.modalOverlay} onPress={closeJournalModal}>
-          <Pressable style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Profils (journaux)</Text>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={closeJournalModal}
+        >
+          <Pressable
+            style={[
+              styles.modalCard,
+              {
+                backgroundColor: modalCardBg,
+                borderColor: modalCardBorder,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.modalTitle,
+                { color: modalTitleColor },
+              ]}
+            >
+              Profils (journaux)
+            </Text>
 
             {journals.map((j) => {
-              const isActive = activeJournal && j.id === activeJournal.id;
+              const isActive =
+                activeJournal && j.id === activeJournal.id;
+              const baseItemStyle = {
+                borderColor: journalItemBorder,
+                backgroundColor: journalItemBg,
+              };
+              const activeItemStyle = isActive
+                ? {
+                    backgroundColor: journalItemBgActive,
+                    borderColor: "#38bdf8",
+                  }
+                : {};
               return (
                 <TouchableOpacity
                   key={j.id}
                   style={[
                     styles.journalItem,
-                    isActive && styles.journalItemActive,
+                    baseItemStyle,
+                    activeItemStyle,
                   ]}
                   onPress={() => {
                     setActiveJournal(j.id);
@@ -361,13 +501,19 @@ const AgendaScreen: React.FC = () => {
                   <Text
                     style={[
                       styles.journalItemText,
-                      isActive && styles.journalItemTextActive,
+                      {
+                        color: isActive
+                          ? journalItemTextActiveColor
+                          : journalItemTextColor,
+                      },
                     ]}
                   >
                     {j.name}
                   </Text>
                   {isActive && (
-                    <Text style={styles.journalItemBadge}>Actif</Text>
+                    <Text style={styles.journalItemBadge}>
+                      Actif
+                    </Text>
                   )}
                 </TouchableOpacity>
               );
@@ -375,18 +521,33 @@ const AgendaScreen: React.FC = () => {
 
             {activeJournal && (
               <>
-                <Text style={[styles.modalLabel, { marginTop: 12 }]}>
+                <Text
+                  style={[
+                    styles.modalLabel,
+                    { marginTop: 12, color: modalLabelColor },
+                  ]}
+                >
                   Renommer le profil actif
                 </Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: modalInputBg,
+                      borderColor: modalInputBorder,
+                      color: modalInputTextColor,
+                    },
+                  ]}
                   placeholder={activeJournal.name}
                   placeholderTextColor="#6b7280"
                   value={renameValue}
                   onChangeText={setRenameValue}
                 />
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonPrimary]}
+                  style={[
+                    styles.modalButton,
+                    styles.modalButtonPrimary,
+                  ]}
                   onPress={handleRenameActiveJournal}
                 >
                   <Text style={styles.modalButtonText}>
@@ -396,28 +557,50 @@ const AgendaScreen: React.FC = () => {
               </>
             )}
 
-            <Text style={[styles.modalLabel, { marginTop: 16 }]}>
+            <Text
+              style={[
+                styles.modalLabel,
+                { marginTop: 16, color: modalLabelColor },
+              ]}
+            >
               Nouveau profil
             </Text>
             <TextInput
-              style={styles.modalInput}
+              style={[
+                styles.modalInput,
+                {
+                  backgroundColor: modalInputBg,
+                  borderColor: modalInputBorder,
+                  color: modalInputTextColor,
+                },
+              ]}
               placeholder="Ex : Prop firm, Crypto, Scalping..."
               placeholderTextColor="#6b7280"
               value={newJournalName}
               onChangeText={setNewJournalName}
             />
             <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonSecondary]}
+              style={[
+                styles.modalButton,
+                styles.modalButtonSecondary,
+              ]}
               onPress={handleCreateJournal}
             >
-              <Text style={styles.modalButtonText}>Créer et activer</Text>
+              <Text style={styles.modalButtonText}>
+                Créer et activer
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonGhost]}
+              style={[
+                styles.modalButton,
+                styles.modalButtonGhost,
+              ]}
               onPress={closeJournalModal}
             >
-              <Text style={styles.modalButtonGhostText}>Fermer</Text>
+              <Text style={styles.modalButtonGhostText}>
+                Fermer
+              </Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -651,9 +834,6 @@ const styles = StyleSheet.create({
   journalItemText: {
     color: "#e5e7eb",
     fontSize: 13,
-  },
-  journalItemTextActive: {
-    fontWeight: "600",
   },
   journalItemBadge: {
     color: "#38bdf8",
