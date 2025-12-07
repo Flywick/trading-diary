@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
@@ -11,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useAccount } from "../context/AccountContext";
+import { useJournal } from "../context/JournalContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
@@ -73,7 +76,8 @@ const SettingsScreen: React.FC = () => {
     setTheme,
     setTimeFormat24h,
   } = useSettings();
-  const { resetTrades, trades } = useTrades();
+  const { trades, resetTrades } = useTrades();
+  const { journals, activeJournal } = useJournal();
   const {
     activeAccount,
     updateActiveAccount,
@@ -91,7 +95,6 @@ const SettingsScreen: React.FC = () => {
   const [emailInput, setEmailInput] = useState(activeAccount?.email ?? "");
   const [isEditingAccount, setIsEditingAccount] = useState(false);
 
-  // Mot de passe
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [currentPasswordInput, setCurrentPasswordInput] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
@@ -115,7 +118,6 @@ const SettingsScreen: React.FC = () => {
 
   const t = (fr: string, en: string) => (language === "en" ? en : fr);
 
-  // 🎨 Couleurs thème
   const isDark = theme === "dark";
   const screenBg = isDark ? "#020617" : "#e5e7eb";
   const cardBg = isDark ? "#020617" : "#ffffff";
@@ -125,10 +127,8 @@ const SettingsScreen: React.FC = () => {
 
   const chipBorder = isDark ? "#4b5563" : "#cbd5e1";
   const chipBg = isDark ? "#020617" : "#f9fafb";
-
-  // Style original vert menthe premium
-  const chipActiveBg = "rgba(52,211,153,0.18)"; // vert menthe léger
-  const chipActiveBorder = "#34d399";           // vert saturé
+  const chipActiveBg = "rgba(52,211,153,0.18)";
+  const chipActiveBorder = "#34d399";
   const chipActiveText = isDark ? "#ffffff" : "#064e3b";
 
   const inputBg = isDark ? "#020617" : "#f9fafb";
@@ -386,6 +386,188 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
+  const handleExportJson = async () => {
+    if (!activeAccount) {
+      Alert.alert(
+        "Aucun compte",
+        "Crée d'abord un compte depuis l'écran d'accueil."
+      );
+      return;
+    }
+
+    try {
+      const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        account: {
+          id: activeAccount.id,
+          username: activeAccount.username,
+          birthdate: activeAccount.birthdate,
+          email: activeAccount.email,
+          createdAt: activeAccount.createdAt,
+        },
+        settings: {
+          theme,
+          currency,
+          timeFormat24h,
+          language,
+        },
+        journals: {
+          journals,
+          activeJournalId: activeJournal ? activeJournal.id : undefined,
+        },
+        trades,
+      };
+
+      const jsonContent = JSON.stringify(payload, null, 2);
+
+      const safeUsername = (activeAccount.username || "compte")
+        .replace(/[^a-zA-Z0-9_-]/g, "_")
+        .slice(0, 20);
+      const dateTag = new Date().toISOString().slice(0, 10);
+      const fileName = `backup_${safeUsername}_${dateTag}.json`;
+
+      const baseDir =
+        FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
+      const fileUri = baseDir + fileName;
+
+      await FileSystem.writeAsStringAsync(fileUri, jsonContent);
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "application/json",
+          dialogTitle: "Exporter les données en JSON",
+        });
+      } else {
+        Alert.alert(
+          "Export terminé",
+          "Le fichier JSON a été créé dans le stockage de l'application."
+        );
+      }
+    } catch (error) {
+      console.error("Erreur export JSON", error);
+      Alert.alert(
+        "Erreur",
+        "Une erreur est survenue pendant l'export des données."
+      );
+    }
+  };
+
+  const handleImportJson = async () => {
+    if (!activeAccount) {
+      Alert.alert(
+        "Aucun compte",
+        "Crée d'abord un compte depuis l'écran d'accueil."
+      );
+      return;
+    }
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/json",
+        copyToCacheDirectory: true,
+      });
+
+      // Nouveau format (Expo SDK 50+)
+      // @ts-ignore
+      if (result.canceled) {
+        return;
+      }
+
+      // @ts-ignore
+      const asset = result.assets && result.assets[0];
+      if (!asset || !asset.uri) {
+        Alert.alert("Erreur", "Impossible de lire le fichier sélectionné.");
+        return;
+      }
+
+      const content = await FileSystem.readAsStringAsync(asset.uri);
+      let data: any;
+      try {
+        data = JSON.parse(content);
+      } catch (e) {
+        Alert.alert("Fichier invalide", "Le fichier sélectionné n'est pas un JSON valide.");
+        return;
+      }
+
+      if (!data || typeof data !== "object") {
+        Alert.alert("Fichier invalide", "Le contenu du fichier est invalide.");
+        return;
+      }
+
+      // Mettre à jour le compte (sans toucher à l'id)
+      if (data.account) {
+        const patch: any = {};
+        if (typeof data.account.username === "string") {
+          patch.username = data.account.username;
+        }
+        if (typeof data.account.birthdate === "string") {
+          patch.birthdate = data.account.birthdate;
+        }
+        if (typeof data.account.email === "string") {
+          patch.email = data.account.email;
+        }
+        if (typeof data.account.password === "string") {
+          patch.password = data.account.password;
+        }
+
+        if (Object.keys(patch).length > 0) {
+          updateActiveAccount(patch);
+        }
+      }
+
+      // Mettre à jour les settings
+      if (data.settings) {
+        if (data.settings.theme === "dark" || data.settings.theme === "light") {
+          setTheme(data.settings.theme);
+        }
+        if (data.settings.currency) {
+          setCurrency(data.settings.currency);
+        }
+        if (typeof data.settings.timeFormat24h === "boolean") {
+          setTimeFormat24h(data.settings.timeFormat24h);
+        }
+        if (data.settings.language === "fr" || data.settings.language === "en") {
+          setLanguage(data.settings.language);
+        }
+      }
+
+      // Sauvegarder journaux & trades dans AsyncStorage pour ce compte
+      const accountId = activeAccount.id;
+
+      if (data.journals && data.journals.journals) {
+        const journalsKey = "@trading-diary-journals-v1-" + accountId;
+        const stateToStore = {
+          journals: Array.isArray(data.journals.journals)
+            ? data.journals.journals
+            : [],
+          activeJournalId:
+            typeof data.journals.activeJournalId === "string"
+              ? data.journals.activeJournalId
+              : undefined,
+        };
+        await AsyncStorage.setItem(journalsKey, JSON.stringify(stateToStore));
+      }
+
+      if (Array.isArray(data.trades)) {
+        const tradesKey = "@trading-diary-trades-v1-" + accountId;
+        await AsyncStorage.setItem(tradesKey, JSON.stringify(data.trades));
+      }
+
+      Alert.alert(
+        "Import terminé",
+        "Les données ont été importées. Redémarre l'application pour recharger complètement les journaux et les trades."
+      );
+    } catch (error) {
+      console.error("Erreur import JSON", error);
+      Alert.alert(
+        "Erreur",
+        "Une erreur est survenue pendant l'import des données."
+      );
+    }
+  };
+
   const handleResetApp = () => {
     Alert.alert(
       "Réinitialiser l'application",
@@ -469,7 +651,6 @@ const SettingsScreen: React.FC = () => {
         {t("Compte", "Account")}
       </Text>
 
-      {/* Vue édition compte / mot de passe / vue normale */}
       {isEditingAccount ? (
         <View
           style={[
@@ -642,7 +823,6 @@ const SettingsScreen: React.FC = () => {
             { backgroundColor: cardBg, borderColor: cardBorder },
           ]}
         >
-          {/* Header avatar + pseudo + email */}
           <View style={styles.accountHeaderRow}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
@@ -697,223 +877,207 @@ const SettingsScreen: React.FC = () => {
       )}
 
       {/* SECTION PRÉFÉRENCES */}
-<Text style={[styles.sectionTitle, { color: mainText }]}>
-  Préférences
-</Text>
+      <Text style={[styles.sectionTitle, { color: mainText }]}>
+        Préférences
+      </Text>
 
-<View
-  style={[
-    styles.card,
-    { backgroundColor: cardBg, borderColor: cardBorder },
-  ]}
->
-  {/* Langue */}
-  <Text style={[styles.subTitle, { color: mainText }]}>Langue</Text>
-  <View style={styles.row}>
-    <TouchableOpacity
-      style={[
-        styles.chip,
-        {
-          borderColor: chipBorder,
-          backgroundColor: chipBg,
-        },
-        language === "fr" && {
-          backgroundColor: chipActiveBg,
-          borderColor: chipActiveBorder,
-        },
-      ]}
-      onPress={() => setLanguage("fr")}
-    >
-      <Text
+      <View
         style={[
-          styles.chipText,
-          {
-            color: language === "fr" ? chipActiveText : mainText,
-          },
+          styles.card,
+          { backgroundColor: cardBg, borderColor: cardBorder },
         ]}
       >
-        Français
-      </Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={[
-        styles.chip,
-        {
-          borderColor: chipBorder,
-          backgroundColor: chipBg,
-        },
-        language === "en" && {
-          backgroundColor: chipActiveBg,
-          borderColor: chipActiveBorder,
-        },
-      ]}
-      onPress={() => setLanguage("en")}
-    >
-      <Text
-        style={[
-          styles.chipText,
-          {
-            color: language === "en" ? chipActiveText : mainText,
-          },
-        ]}
-      >
-        English
-      </Text>
-    </TouchableOpacity>
-  </View>
-
-  {/* Devise */}
-  <Text style={[styles.subTitle, { color: mainText }]}>Devise</Text>
-  <View style={styles.row}>
-    {["EUR", "USD", "GBP", "JPY"].map((c) => {
-      const active = currency === c;
-      return (
-        <TouchableOpacity
-          key={c}
-          style={[
-            styles.chip,
-            {
-              borderColor: chipBorder,
-              backgroundColor: chipBg,
-            },
-            active && {
-              backgroundColor: chipActiveBg,
-              borderColor: chipActiveBorder,
-            },
-          ]}
-          onPress={() => setCurrency(c as any)}
-        >
-          <Text
+        <Text style={[styles.subTitle, { color: mainText }]}>Langue</Text>
+        <View style={styles.row}>
+          <TouchableOpacity
             style={[
-              styles.chipText,
+              styles.chip,
               {
-                color: active ? chipActiveText : mainText,
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              language === "fr" && {
+                backgroundColor: chipActiveBg,
+                borderColor: chipActiveBorder,
               },
             ]}
+            onPress={() => setLanguage("fr")}
           >
-            {c}
-          </Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
+            <Text
+              style={[
+                styles.chipText,
+                {
+                  color:
+                    language === "fr" ? chipActiveText : mainText,
+                },
+              ]}
+            >
+              Français
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.chip,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              language === "en" && {
+                backgroundColor: chipActiveBg,
+                borderColor: chipActiveBorder,
+              },
+            ]}
+            onPress={() => setLanguage("en")}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                {
+                  color:
+                    language === "en" ? chipActiveText : mainText,
+                },
+              ]}
+            >
+              English
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-  {/* Thème */}
-  <Text style={[styles.subTitle, { color: mainText }]}>Thème</Text>
-  <View style={styles.row}>
-    <TouchableOpacity
-      style={[
-        styles.chip,
-        {
-          borderColor: chipBorder,
-          backgroundColor: chipBg,
-        },
-        theme === "dark" && {
-          backgroundColor: chipActiveBg,
-          borderColor: chipActiveBorder,
-        },
-      ]}
-      onPress={() => setTheme("dark")}
-    >
-      <Text
-        style={[
-          styles.chipText,
-          {
-            color: theme === "dark" ? chipActiveText : mainText,
-          },
-        ]}
-      >
-        Sombre
-      </Text>
-    </TouchableOpacity>
+        <Text style={[styles.subTitle, { color: mainText }]}>Devise</Text>
+        <View style={styles.row}>
+          {["EUR", "USD", "GBP", "JPY"].map((c) => {
+            const active = currency === c;
+            return (
+              <TouchableOpacity
+                key={c}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: chipBorder,
+                    backgroundColor: chipBg,
+                  },
+                  active && {
+                    backgroundColor: chipActiveBg,
+                    borderColor: chipActiveBorder,
+                  },
+                ]}
+                onPress={() => setCurrency(c as any)}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    { color: active ? chipActiveText : mainText },
+                  ]}
+                >
+                  {c}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-    <TouchableOpacity
-      style={[
-        styles.chip,
-        {
-          borderColor: chipBorder,
-          backgroundColor: chipBg,
-        },
-        theme === "light" && {
-          backgroundColor: chipActiveBg,
-          borderColor: chipActiveBorder,
-        },
-      ]}
-      onPress={() => setTheme("light")}
-    >
-      <Text
-        style={[
-          styles.chipText,
-          {
-            color: theme === "light" ? chipActiveText : mainText,
-          },
-        ]}
-      >
-        Clair
-      </Text>
-    </TouchableOpacity>
-  </View>
+        <Text style={[styles.subTitle, { color: mainText }]}>Thème</Text>
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={[
+              styles.chip,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              theme === "dark" && {
+                backgroundColor: chipActiveBg,
+                borderColor: chipActiveBorder,
+              },
+            ]}
+            onPress={() => setTheme("dark")}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: theme === "dark" ? chipActiveText : mainText },
+              ]}
+            >
+              Sombre
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.chip,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              theme === "light" && {
+                backgroundColor: chipActiveBg,
+                borderColor: chipActiveBorder,
+              },
+            ]}
+            onPress={() => setTheme("light")}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: theme === "light" ? chipActiveText : mainText },
+              ]}
+            >
+              Clair
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-  {/* Format de l'heure */}
-  <Text style={[styles.subTitle, { color: mainText }]}>
-    Format de l'heure
-  </Text>
-  <View style={styles.row}>
-    <TouchableOpacity
-      style={[
-        styles.chip,
-        {
-          borderColor: chipBorder,
-          backgroundColor: chipBg,
-        },
-        timeFormat24h && {
-          backgroundColor: chipActiveBg,
-          borderColor: chipActiveBorder,
-        },
-      ]}
-      onPress={() => setTimeFormat24h(true)}
-    >
-      <Text
-        style={[
-          styles.chipText,
-          {
-            color: timeFormat24h ? chipActiveText : mainText,
-          },
-        ]}
-      >
-        24h
-      </Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={[
-        styles.chip,
-        {
-          borderColor: chipBorder,
-          backgroundColor: chipBg,
-        },
-        !timeFormat24h && {
-          backgroundColor: chipActiveBg,
-          borderColor: chipActiveBorder,
-        },
-      ]}
-      onPress={() => setTimeFormat24h(false)}
-    >
-      <Text
-        style={[
-          styles.chipText,
-          {
-            color: !timeFormat24h ? chipActiveText : mainText,
-          },
-        ]}
-      >
-        12h (AM/PM)
-      </Text>
-    </TouchableOpacity>
-  </View>
-</View>
-
+        <Text style={[styles.subTitle, { color: mainText }]}>
+          Format de l'heure
+        </Text>
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={[
+              styles.chip,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              timeFormat24h && {
+                backgroundColor: chipActiveBg,
+                borderColor: chipActiveBorder,
+              },
+            ]}
+            onPress={() => setTimeFormat24h(true)}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: timeFormat24h ? chipActiveText : mainText },
+              ]}
+            >
+              24h
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.chip,
+              {
+                borderColor: chipBorder,
+                backgroundColor: chipBg,
+              },
+              !timeFormat24h && {
+                backgroundColor: chipActiveBg,
+                borderColor: chipActiveBorder,
+              },
+            ]}
+            onPress={() => setTimeFormat24h(false)}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                { color: !timeFormat24h ? chipActiveText : mainText },
+              ]}
+            >
+              12h (AM/PM)
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* SECTION VERSION */}
       <Text style={[styles.sectionTitle, { color: mainText }]}>Version</Text>
@@ -998,6 +1162,55 @@ const SettingsScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* SECTION EXPORT / IMPORT JSON */}
+      <Text style={[styles.sectionTitle, { color: mainText }]}>
+        Sauvegarde JSON (complet)
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: cardBg, borderColor: cardBorder },
+        ]}
+      >
+        <Text style={[styles.label, { color: subText }]}>
+          Exporte ou importe un fichier JSON contenant ton compte, tes
+          préférences, tes journaux et tes trades.
+        </Text>
+        <Text
+          style={[
+            styles.helperText,
+            { marginBottom: 0, color: subText },
+          ]}
+        >
+          Parfait pour faire une sauvegarde manuelle ou transférer tes données
+          sur un autre appareil.
+        </Text>
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+            styles.buttonSecondaryLight,
+            { marginTop: 12 },
+          ]}
+          activeOpacity={0.7}
+          onPress={handleExportJson}
+        >
+          <Text style={styles.buttonText}>Exporter en JSON</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+            styles.buttonSecondaryLight,
+            { marginTop: 8 },
+          ]}
+          activeOpacity={0.7}
+          onPress={handleImportJson}
+        >
+          <Text style={styles.buttonText}>Importer depuis un JSON</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* SECTION RÉINITIALISATION */}
       <Text style={[styles.sectionTitle, { color: mainText }]}>
         Données et réinitialisation
@@ -1074,7 +1287,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 13,
   },
   button: {
     marginTop: 10,
