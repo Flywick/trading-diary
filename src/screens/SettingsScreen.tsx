@@ -571,7 +571,7 @@ const SettingsScreen: React.FC = () => {
   const handleResetApp = () => {
     Alert.alert(
       "Réinitialiser l'application",
-      "Tu es sur le point de supprimer toutes les données de l'application (trades, stats, etc.), mais ton compte sera conservé. Continuer ?",
+      "Tu vas supprimer tous les trades de tous tes profils (journaux) pour ce compte.\n\nTes profils et ton compte seront conservés.\n\nContinuer ?",
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -590,29 +590,41 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    if (!activeAccount) {
-      Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
-      return;
-    }
-    Alert.alert(
-      "Supprimer le compte",
-      "Tu es sur le point de supprimer ce compte ET tous les trades associés sur cet appareil. Cette action est irréversible. Continuer ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Oui, supprimer",
-          style: "destructive",
-          onPress: () => {
-            deleteActiveAccount();
-            Alert.alert(
-              "Compte supprimé",
-              "Le compte et toutes ses données ont été supprimés."
-            );
-          },
+  if (!activeAccount) {
+    Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
+    return;
+  }
+
+  Alert.alert(
+    "Supprimer le compte",
+    "Tu es sur le point de supprimer ce compte ET tous les trades associés sur cet appareil. Cette action est irréversible. Continuer ?",
+    [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Oui, supprimer",
+        style: "destructive",
+        onPress: () => {
+          // On affiche d'abord le message de confirmation,
+          // puis on supprime réellement le compte quand l'utilisateur appuie sur OK.
+          Alert.alert(
+            "Compte supprimé",
+            "Le compte et toutes ses données ont été supprimés.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  deleteActiveAccount();
+                },
+              },
+            ]
+          );
         },
-      ]
-    );
-  };
+      },
+    ]
+  );
+};
+
+
 
   const handleLogout = () => {
     if (!activeAccount) {
