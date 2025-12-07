@@ -89,6 +89,7 @@ const AgendaScreen: React.FC = () => {
     createJournal,
     renameJournal,
     setActiveJournal,
+    deleteJournal, // ✅ AJOUT
   } = useJournal();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -237,6 +238,34 @@ const AgendaScreen: React.FC = () => {
     if (activeJournal && renameValue.trim().length > 0) {
       renameJournal(activeJournal.id, renameValue.trim());
     }
+  };
+
+  const handleDeleteActiveJournal = () => {
+    if (!activeJournal) return;
+
+    if (journals.length <= 1) {
+      Alert.alert(
+        "Impossible de supprimer",
+        "Tu dois garder au moins un profil (journal) actif."
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Supprimer le profil",
+      `Tu es sur le point de supprimer le profil "${activeJournal.name}". Les trades associés ne seront plus visibles dans ce journal. Continuer ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => {
+            deleteJournal(activeJournal.id);
+            setRenameValue("");
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -554,6 +583,19 @@ const AgendaScreen: React.FC = () => {
                     Enregistrer le nom
                   </Text>
                 </TouchableOpacity>
+
+                {/* ✅ Bouton rouge : supprimer le profil actif */}
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.modalButtonDanger,
+                  ]}
+                  onPress={handleDeleteActiveJournal}
+                >
+                  <Text style={styles.modalButtonText}>
+                    Supprimer le profil actif
+                  </Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -802,6 +844,9 @@ const styles = StyleSheet.create({
   },
   modalButtonSecondary: {
     backgroundColor: "#1d4ed8",
+  },
+  modalButtonDanger: {
+    backgroundColor: "#ef4444",
   },
   modalButtonGhost: {
     backgroundColor: "transparent",

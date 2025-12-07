@@ -1,10 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
-    createContext,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 import { useAccount } from "./AccountContext";
 
@@ -33,6 +33,7 @@ interface JournalContextValue {
   createJournal: (name: string) => boolean; // ✅ true = créé, false = refus (limite)
   renameJournal: (id: string, newName: string) => void;
   setActiveJournal: (id: string) => void;
+  deleteJournal: (id: string) => void; // ✅ AJOUT
 }
 
 const JournalContext = createContext<JournalContextValue | undefined>(
@@ -222,6 +223,32 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
     persist(next);
   };
 
+  const deleteJournal: JournalContextValue["deleteJournal"] = (id) => {
+    // Protection : ne jamais descendre sous 1 journal
+    if (state.journals.length <= 1) {
+      return;
+    }
+
+    const remaining = state.journals.filter((j) => j.id !== id);
+    if (remaining.length === state.journals.length) {
+      return;
+    }
+
+    const nextActiveId =
+      state.activeJournalId === id
+        ? remaining.length > 0
+          ? remaining[0].id
+          : undefined
+        : state.activeJournalId;
+
+    const next: JournalsState = {
+      journals: remaining,
+      activeJournalId: nextActiveId,
+    };
+
+    persist(next);
+  };
+
   const value: JournalContextValue = {
     journals: state.journals,
     activeJournal,
@@ -229,6 +256,7 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
     createJournal,
     renameJournal,
     setActiveJournal,
+    deleteJournal,
   };
 
   return (
