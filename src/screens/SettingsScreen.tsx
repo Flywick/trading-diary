@@ -100,6 +100,11 @@ const SettingsScreen: React.FC = () => {
   const [newPasswordInput, setNewPasswordInput] = useState("");
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
 
+  // 🔐 Modal de confirmation par mot de passe pour la suppression de compte
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deletePasswordInput, setDeletePasswordInput] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+
   useEffect(() => {
     setUsernameInput(activeAccount?.username ?? "");
     setBirthdateInput(activeAccount?.birthdate ?? "");
@@ -109,6 +114,11 @@ const SettingsScreen: React.FC = () => {
     setCurrentPasswordInput("");
     setNewPasswordInput("");
     setConfirmPasswordInput("");
+
+    // Réinitialiser le modal de suppression si changement de compte
+    setShowDeleteConfirmModal(false);
+    setDeletePasswordInput("");
+    setDeleteError("");
   }, [activeAccount]);
 
   const liveAge = getAgeFromBirthdate(birthdateInput);
@@ -590,41 +600,65 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-  if (!activeAccount) {
-    Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
-    return;
-  }
+    if (!activeAccount) {
+      Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
+      return;
+    }
 
-  Alert.alert(
-    "Supprimer le compte",
-    "Tu es sur le point de supprimer ce compte ET tous les trades associés sur cet appareil. Cette action est irréversible. Continuer ?",
-    [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Oui, supprimer",
-        style: "destructive",
-        onPress: () => {
-          // On affiche d'abord le message de confirmation,
-          // puis on supprime réellement le compte quand l'utilisateur appuie sur OK.
-          Alert.alert(
-            "Compte supprimé",
-            "Le compte et toutes ses données ont été supprimés.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  deleteActiveAccount();
-                },
-              },
-            ]
-          );
+    Alert.alert(
+      "Supprimer le compte",
+      "Tu es sur le point de supprimer ce compte ET tous les trades associés sur cet appareil. Cette action est irréversible.\n\nContinuer ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Continuer",
+          style: "destructive",
+          onPress: () => {
+            // On ouvre le modal de confirmation par mot de passe
+            setDeletePasswordInput("");
+            setDeleteError("");
+            setShowDeleteConfirmModal(true);
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
+  const confirmDeleteWithPassword = () => {
+    if (!activeAccount) {
+      setShowDeleteConfirmModal(false);
+      return;
+    }
 
+    const entered = deletePasswordInput.trim();
+
+    if (!entered) {
+      setDeleteError("Merci d'entrer ton mot de passe.");
+      return;
+    }
+
+    if (entered !== activeAccount.password) {
+      setDeleteError("Mot de passe incorrect.");
+      return;
+    }
+
+    // Mot de passe correct : on affiche le message final puis on supprime
+    Alert.alert(
+      "Compte supprimé",
+      "Le compte et toutes ses données ont été supprimés.",
+      [
+        {
+          text: "OK",
+          onPress: () => {
+            setShowDeleteConfirmModal(false);
+            setDeletePasswordInput("");
+            setDeleteError("");
+            deleteActiveAccount();
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     if (!activeAccount) {
@@ -654,6 +688,7 @@ const SettingsScreen: React.FC = () => {
   };
 
   return (
+    <>
     <ScrollView
       style={[styles.container, { backgroundColor: screenBg }]}
       contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
@@ -836,7 +871,7 @@ const SettingsScreen: React.FC = () => {
           ]}
         >
           <View style={styles.accountHeaderRow}>
-            <View style={styles.avatar}>
+            <View className="avatar" style={styles.avatar}>
               <Text style={styles.avatarText}>
                 {getInitial(activeAccount?.username)}
               </Text>
@@ -1253,6 +1288,70 @@ const SettingsScreen: React.FC = () => {
         appareil seront supprimées.
       </Text>
     </ScrollView>
+
+    {/* 🔐 MODAL CONFIRMATION MOT DE PASSE SUPPRESSION COMPTE */}
+      {showDeleteConfirmModal && (
+        <View style={styles.deleteModalOverlay}>
+          <View
+            style={[
+              styles.deleteModalCard,
+              { backgroundColor: cardBg, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.deleteModalTitle, { color: mainText }]}>
+              Confirmer la suppression
+            </Text>
+            <Text style={[styles.deleteModalMessage, { color: subText }]}>
+              Pour confirmer la suppression définitive de ce compte, entre ton
+              mot de passe.
+            </Text>
+
+            <TextInput
+              style={[
+                styles.deleteModalInput,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder="Mot de passe"
+              placeholderTextColor="#6b7280"
+              value={deletePasswordInput}
+              onChangeText={(text) => {
+                setDeletePasswordInput(text);
+                if (deleteError) setDeleteError("");
+              }}
+              secureTextEntry
+            />
+
+            {deleteError ? (
+              <Text style={styles.deleteModalError}>{deleteError}</Text>
+            ) : null}
+
+            <View style={styles.deleteModalButtonsRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonGhost, { flex: 1 }]}
+                onPress={() => {
+                  setShowDeleteConfirmModal(false);
+                  setDeletePasswordInput("");
+                  setDeleteError("");
+                }}
+              >
+                <Text style={styles.buttonGhostText}>Annuler</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, styles.buttonDanger, { flex: 1 }]}
+                onPress={confirmDeleteWithPassword}
+              >
+                <Text style={styles.buttonText}>Supprimer le compte</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+    </>
   );
 };
 
@@ -1306,6 +1405,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 12,
   },
   buttonPrimary: {
@@ -1319,15 +1419,18 @@ const styles = StyleSheet.create({
   },
   buttonDanger: {
     backgroundColor: "#ef4444",
+    justifyContent: "center",
   },
   buttonGhost: {
     backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: "#4b5563",
+    justifyContent: "center",
   },
   buttonText: {
     color: "#f9fafb",
     fontWeight: "600",
+    textAlign: "center",
   },
   buttonGhostText: {
     color: "#9ca3af",
@@ -1385,6 +1488,58 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "center",
   },
+
+  // 🔐 Styles du modal de confirmation mot de passe
+deleteModalOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(15,23,42,0.85)",
+  justifyContent: "center",
+  alignItems: "center",
+  paddingHorizontal: 24,
+  zIndex: 9999,
+  elevation: 10,
+},
+
+  deleteModalCard: {
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+  },
+  deleteModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  deleteModalMessage: {
+    fontSize: 13,
+    marginBottom: 12,
+  },
+  deleteModalInput: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
+  },
+  deleteModalError: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#fca5a5",
+    textAlign: "center",
+  },
+  deleteModalButtonsRow: {
+  flexDirection: "row",
+  marginTop: 14,
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+},
 });
 
 export default SettingsScreen;
