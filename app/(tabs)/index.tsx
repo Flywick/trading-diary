@@ -184,19 +184,19 @@ const Home: React.FC = () => {
   };
 
   const handleLoginSubmit = () => {
-    const ident = loginIdentifier.trim();
+    const email = loginIdentifier.trim();
     const pwd = loginPassword;
 
-    if (!ident || !pwd) {
+    if (!email || !pwd) {
       Alert.alert(
         "Champs manquants",
-        "Merci d'entrer ton pseudo/email et ton mot de passe."
+        "Merci d'entrer ton email et ton mot de passe."
       );
       return;
     }
 
     try {
-      login(ident, pwd);
+      login(email, pwd);
       setLoginIdentifier("");
       setLoginPassword("");
       setShowAccountModal(false);
@@ -344,16 +344,16 @@ const Home: React.FC = () => {
       </Text>
       <Text style={styles.subtitle}>
         {language === "en"
-          ? "Enter your username or email, then your password."
-          : "Entre ton pseudo ou ton email, puis ton mot de passe."}
+          ? "Enter your email, then your password."
+          : "Entre ton email, puis ton mot de passe."}
       </Text>
 
       <Text style={styles.label}>
-        {language === "en" ? "Username or email" : "Pseudo ou email"}
+        {language === "en" ? "email" : "email"}
       </Text>
       <TextInput
         style={styles.input}
-        placeholder={language === "en" ? "Username or email" : "Pseudo ou email"}
+        placeholder={language === "en" ? "email" : "email"}
         placeholderTextColor="#6b7280"
         value={loginIdentifier}
         onChangeText={setLoginIdentifier}

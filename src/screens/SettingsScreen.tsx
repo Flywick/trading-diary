@@ -661,26 +661,41 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-    if (!activeAccount) {
-      Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
-      return;
-    }
-    Alert.alert(
-      "Déconnexion",
-      "Tu vas être déconnecté de ce compte. Tes trades et tes stats resteront liés à ce compte sur cet appareil. Continuer ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Se déconnecter",
-          style: "destructive",
-          onPress: () => {
-            logout();
-            Alert.alert("Déconnecté", "Tu es maintenant déconnecté.");
-          },
+  if (!activeAccount) {
+    Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
+    return;
+  }
+
+  Alert.alert(
+    "Déconnexion",
+    "Tu vas être déconnecté de ce compte. Tes trades et tes stats resteront liés à ce compte sur cet appareil. Continuer ?",
+    [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Se déconnecter",
+        style: "destructive",
+        onPress: () => {
+          // 1️⃣ On affiche d’abord le message de confirmation
+          Alert.alert(
+            "Déconnecté",
+            "Tu es maintenant déconnecté.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  // 2️⃣ Et seulement quand l’utilisateur appuie sur OK,
+                  // on fait vraiment le logout.
+                  logout();
+                },
+              },
+            ]
+          );
         },
-      ]
-    );
-  };
+      },
+    ]
+  );
+};
+
 
   const getInitial = (name: string | undefined) => {
     if (!name || name.length === 0) return "?";
