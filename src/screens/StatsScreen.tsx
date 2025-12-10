@@ -8,9 +8,9 @@ import Svg, {
   Text as SvgText,
 } from "react-native-svg";
 import { useJournal } from "../context/JournalContext";
-import { useLanguage } from "../context/LanguageContext";
 import { useSettings } from "../context/SettingsContext";
 import { Trade, useTrades } from "../context/TradesContext";
+import { useI18n } from "../i18n/useI18n";
 
 type MonthAgg = {
   key: string; // "2025-01"
@@ -89,8 +89,8 @@ const formatMonthLabel = (year: number, month: number, language: string) => {
 const StatsScreen: React.FC = () => {
   const { trades } = useTrades();
   const { currency, theme } = useSettings();
-  const { language } = useLanguage();
   const { activeJournal } = useJournal();
+  const { t, language } = useI18n();
 
   const isDark = theme === "dark";
 
@@ -99,8 +99,6 @@ const StatsScreen: React.FC = () => {
   const cardBorder = isDark ? "#111827" : "#e5e7eb";
   const textMain = isDark ? "#e5e7eb" : "#0f172a";
   const textSub = isDark ? "#9ca3af" : "#6b7280";
-
-  const t = (fr: string, en: string) => (language === "en" ? en : fr);
 
   const formatNumber = (n: number, decimals = 2) =>
     n.toFixed(decimals).replace(".", ",");
@@ -386,7 +384,6 @@ const StatsScreen: React.FC = () => {
       ? stats.byInstrument
       : stats.byInstrument.slice(0, 3);
 
-
   const selectedMonth: MonthAgg | undefined = useMemo(() => {
     if (!selectedMonthKey) return undefined;
     return stats.months.find((m) => m.key === selectedMonthKey);
@@ -419,7 +416,7 @@ const StatsScreen: React.FC = () => {
       {/* Titre + profil */}
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: textMain }]}>
-          {t("Statistiques", "Statistics")}
+          {t("stats.title")}
         </Text>
         {activeJournal && (
           <Text style={[styles.titleProfile, { color: textSub }]}>
@@ -436,10 +433,7 @@ const StatsScreen: React.FC = () => {
           ]}
         >
           <Text style={[styles.value, { color: textMain }]}>
-            {t(
-              "Pas encore de trades. Ajoute quelques trades pour voir tes stats.",
-              "No trades yet. Add some trades to see your stats."
-            )}
+            {t("stats.noTrades")}
           </Text>
         </View>
       ) : (
@@ -452,7 +446,7 @@ const StatsScreen: React.FC = () => {
             ]}
           >
             <Text style={[styles.cardTitle, { color: textMain }]}>
-              {t("Évolution des trades", "Trades performance")} ({currency})
+              {t("stats.equityTitle")} ({currency})
             </Text>
 
             {hasCurve ? (
@@ -551,19 +545,16 @@ const StatsScreen: React.FC = () => {
 
                 <View style={styles.rowBetween}>
                   <Text style={[styles.label, { color: textSub }]}>
-                    {t("Min", "Min")}: {formatNumber(minVal, 2)}
+                    {t("stats.minLabel")}: {formatNumber(minVal, 2)}
                   </Text>
                   <Text style={[styles.label, { color: textSub }]}>
-                    {t("Max", "Max")}: {formatNumber(maxVal, 2)}
+                    {t("stats.maxLabel")}: {formatNumber(maxVal, 2)}
                   </Text>
                 </View>
               </>
             ) : (
               <Text style={[styles.label, { marginTop: 8, color: textSub }]}>
-                {t(
-                  "Pas assez de données pour afficher la courbe.",
-                  "Not enough data to display the curve."
-                )}
+                {t("stats.notEnoughData")}
               </Text>
             )}
           </View>
@@ -576,11 +567,11 @@ const StatsScreen: React.FC = () => {
             ]}
           >
             <Text style={[styles.cardTitle, { color: textMain }]}>
-              {t("Vue d'ensemble", "Overview")}
+              {t("stats.overviewTitle")}
             </Text>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("Nombre de trades", "Total trades")}
+                {t("stats.totalTrades")}
               </Text>
               <Text style={[styles.value, { color: textMain }]}>
                 {stats.total}
@@ -588,7 +579,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("Gagnants", "Winners")}
+                {t("stats.winners")}
               </Text>
               <Text style={[styles.value, { color: "#22c55e" }]}>
                 {stats.wins}
@@ -596,7 +587,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("Perdants", "Losers")}
+                {t("stats.losers")}
               </Text>
               <Text style={[styles.value, { color: "#ef4444" }]}>
                 {stats.losses}
@@ -604,7 +595,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("Neutres", "Breakeven")}
+                {t("stats.breakeven")}
               </Text>
               <Text style={[styles.value, { color: textMain }]}>
                 {stats.breakeven}
@@ -612,7 +603,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("Winrate", "Winrate")}
+                {t("stats.winrate")}
               </Text>
               <Text style={[styles.value, { color: textMain }]}>
                 {formatNumber(stats.winrate, 1)} %
@@ -628,11 +619,11 @@ const StatsScreen: React.FC = () => {
             ]}
           >
             <Text style={[styles.cardTitle, { color: textMain }]}>
-              Résultat (PnL)
+              {t("stats.pnlTitle")}
             </Text>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("PnL total", "Total PnL")} ({currency})
+                {t("stats.pnlTotal")} ({currency})
               </Text>
               <Text
                 style={[
@@ -647,7 +638,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("PnL moyen / trade", "Avg PnL / trade")} ({currency})
+                {t("stats.pnlAvgPerTrade")} ({currency})
               </Text>
               <Text style={[styles.value, { color: textMain }]}>
                 {formatNumber(stats.avgPnl, 2)}
@@ -655,7 +646,7 @@ const StatsScreen: React.FC = () => {
             </View>
             <View style={styles.rowBetween}>
               <Text style={[styles.label, { color: textSub }]}>
-                {t("RR moyen (si renseigné)", "Avg RR (if filled)")}
+                {t("stats.rrAvg")}
               </Text>
               <Text style={[styles.value, { color: textMain }]}>
                 {formatNumber(stats.avgRr, 2)}
@@ -671,13 +662,13 @@ const StatsScreen: React.FC = () => {
             ]}
           >
             <Text style={[styles.cardTitle, { color: textMain }]}>
-              {t("Meilleur & pire trade", "Best & worst trade")}
+              {t("stats.bestWorstTitle")}
             </Text>
             {stats.bestTrade ? (
               <View style={styles.rowBetween}>
                 <View>
                   <Text style={[styles.label, { color: textSub }]}>
-                    {t("Meilleur", "Best")}
+                    {t("stats.best")}
                   </Text>
                   <Text style={[styles.value, { color: textMain }]}>
                     {stats.bestTrade.instrument} ({stats.bestTrade.direction})
@@ -689,7 +680,7 @@ const StatsScreen: React.FC = () => {
               </View>
             ) : (
               <Text style={[styles.label, { marginTop: 4, color: textSub }]}>
-                {t("Pas de trade gagnant.", "No winning trade yet.")}
+                {t("stats.noWinningTrade")}
               </Text>
             )}
 
@@ -697,7 +688,7 @@ const StatsScreen: React.FC = () => {
               <View style={styles.rowBetween}>
                 <View>
                   <Text style={[styles.label, { color: textSub }]}>
-                    {t("Pire", "Worst")}
+                    {t("stats.worst")}
                   </Text>
                   <Text style={[styles.value, { color: textMain }]}>
                     {stats.worstTrade.instrument} (
@@ -710,15 +701,12 @@ const StatsScreen: React.FC = () => {
               </View>
             ) : (
               <Text style={[styles.label, { marginTop: 4, color: textSub }]}>
-                {t(
-                  "Pas encore de trade perdant (ou aucun trade).",
-                  "No losing trade yet (or no trades)."
-                )}
+                {t("stats.noLosingTrade")}
               </Text>
             )}
           </View>
 
-                    {/* Par instrument */}
+          {/* Par instrument */}
           <View
             style={[
               styles.card,
@@ -727,7 +715,7 @@ const StatsScreen: React.FC = () => {
           >
             <View style={styles.rowBetween}>
               <Text style={[styles.cardTitle, { color: textMain }]}>
-                {t("Par instrument", "By instrument")}
+                {t("stats.byInstrumentTitle")}
               </Text>
 
               {stats.byInstrument.length > 3 && (
@@ -743,8 +731,8 @@ const StatsScreen: React.FC = () => {
                     ]}
                   >
                     {showAllInstruments
-                      ? t("Réduire", "Show less")
-                      : t("Voir tout", "Show all")}
+                      ? t("stats.seeLess")
+                      : t("stats.seeAll")}
                   </Text>
                 </Pressable>
               )}
@@ -757,7 +745,7 @@ const StatsScreen: React.FC = () => {
                   { marginTop: 4, color: textSub },
                 ]}
               >
-                {t("Aucun instrument", "No instruments")}
+                {t("stats.noInstruments")}
               </Text>
             ) : (
               displayedInstruments.map((item) => {
@@ -783,7 +771,7 @@ const StatsScreen: React.FC = () => {
                           { color: textSub },
                         ]}
                       >
-                        {item.count} {t("trades", "trades")}
+                        {item.count} {t("stats.tradesLabel")}
                       </Text>
                     </View>
                     <Text
@@ -803,7 +791,6 @@ const StatsScreen: React.FC = () => {
             )}
           </View>
 
-
           {/* Détail par mois + top mois */}
           <View
             style={[
@@ -812,7 +799,7 @@ const StatsScreen: React.FC = () => {
             ]}
           >
             <Text style={[styles.cardTitle, { color: textMain }]}>
-              {t("Détail par mois", "Monthly detail")}
+              {t("stats.monthlyDetailTitle")}
             </Text>
 
             <Pressable
@@ -840,8 +827,7 @@ const StatsScreen: React.FC = () => {
                 <Text style={[styles.label, { color: textSub }]}>
                   {selectedMonth
                     ? `${selectedMonth.count} ${t(
-                        "trades",
-                        "trades"
+                        "stats.tradesLabel"
                       )}`
                     : ""}
                 </Text>
@@ -935,7 +921,7 @@ const StatsScreen: React.FC = () => {
             {selectedMonth && (
               <View style={[styles.rowBetween, { marginTop: 8 }]}>
                 <Text style={[styles.label, { color: textSub }]}>
-                  {t("PnL du mois", "PnL this month")}
+                  {t("stats.pnlThisMonth")}
                 </Text>
                 <Text
                   style={[
@@ -953,14 +939,11 @@ const StatsScreen: React.FC = () => {
             <View style={[styles.cardSeparator, { marginTop: 12 }]} />
 
             <Text style={[styles.cardTitle, { marginTop: 8, color: textMain }]}>
-              {t("Meilleurs mois", "Best months")}
+              {t("stats.bestMonthsTitle")}
             </Text>
             {stats.topMonths.length === 0 ? (
               <Text style={[styles.label, { marginTop: 4, color: textSub }]}>
-                {t(
-                  "Aucun mois positif pour le moment.",
-                  "No positive month yet."
-                )}
+                {t("stats.noPositiveMonth")}
               </Text>
             ) : (
               stats.topMonths.map((m, index) => (
@@ -971,7 +954,7 @@ const StatsScreen: React.FC = () => {
                       {formatMonthLabel(m.year, m.month, language)}
                     </Text>
                     <Text style={[styles.label, { color: textSub }]}>
-                      {m.count} {t("trades", "trades")}
+                      {m.count} {t("stats.tradesLabel")}
                     </Text>
                   </View>
                   <Text style={[styles.value, { color: "#22c55e" }]}>

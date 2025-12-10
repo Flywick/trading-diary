@@ -18,6 +18,7 @@ import DayCell from "../components/DayCell";
 import { useJournal } from "../context/JournalContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
+import { useI18n } from "../i18n/useI18n";
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -55,6 +56,7 @@ const AgendaScreen: React.FC = () => {
   const { trades } = useTrades();
   const { theme, currency } = useSettings();
   const isDark = theme === "dark";
+  const { language, t, weekdaysShort } = useI18n();
 
   // Couleurs dépendantes du thème
   const bgColor = isDark ? "#020617" : "#f1f5f9";
@@ -89,7 +91,7 @@ const AgendaScreen: React.FC = () => {
     createJournal,
     renameJournal,
     setActiveJournal,
-    deleteJournal, // ✅ AJOUT
+    deleteJournal,
   } = useJournal();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -164,10 +166,14 @@ const AgendaScreen: React.FC = () => {
     };
   };
 
-  const monthName = currentDate.toLocaleString("fr-FR", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthName = useMemo(
+    () =>
+      currentDate.toLocaleString(
+        language === "en" ? "en-US" : "fr-FR",
+        { month: "long", year: "numeric" }
+      ),
+    [currentDate, language]
+  );
 
   const changeMonth = (direction: "prev" | "next") => {
     const newMonth = direction === "prev" ? month - 1 : month + 1;
@@ -219,13 +225,15 @@ const AgendaScreen: React.FC = () => {
   };
 
   const handleCreateJournal = () => {
-    const name = newJournalName.trim() || "Nouveau journal";
+    const name =
+      newJournalName.trim() ||
+      t("agenda.newJournalDefaultName");
     const ok = createJournal(name);
 
     if (!ok) {
       Alert.alert(
-        "Fonction Pro",
-        "Les profils multiples (plusieurs journaux : Trading, Prop firm, Crypto, etc.) seront disponibles dans Trading Diary Pro (bientôt)."
+        t("agenda.proFeatureTitle"),
+        t("agenda.proFeatureMessage")
       );
       return;
     }
@@ -245,19 +253,22 @@ const AgendaScreen: React.FC = () => {
 
     if (journals.length <= 1) {
       Alert.alert(
-        "Impossible de supprimer",
-        "Tu dois garder au moins un profil (journal) actif."
+        t("agenda.cannotDeleteLastProfileTitle"),
+        t("agenda.cannotDeleteLastProfileMessage")
       );
       return;
     }
 
     Alert.alert(
-      "Supprimer le profil",
-      `Tu es sur le point de supprimer le profil "${activeJournal.name}". Les trades associés ne seront plus visibles dans ce journal. Continuer ?`,
+      t("agenda.deleteProfileTitle"),
+      t("agenda.deleteProfileMessage").replace(
+        "{{name}}",
+        activeJournal.name
+      ),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Supprimer",
+          text: t("settings.deleteAccountConfirm"),
           style: "destructive",
           onPress: () => {
             deleteJournal(activeJournal.id);
@@ -303,7 +314,7 @@ const AgendaScreen: React.FC = () => {
         <Text
           style={[styles.journalLabel, { color: journalLabelColor }]}
         >
-          Profil
+          {t("agenda.profileLabel")}
         </Text>
         <TouchableOpacity
           style={[
@@ -321,7 +332,7 @@ const AgendaScreen: React.FC = () => {
               { color: journalChipTextColor },
             ]}
           >
-            {activeJournal?.name ?? "Journal"}
+            {activeJournal?.name ?? t("agenda.profilePlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -346,7 +357,7 @@ const AgendaScreen: React.FC = () => {
                   { color: summaryLabelColor },
                 ]}
               >
-                Résultat du mois (PnL)
+                {t("agenda.monthResultLabel")}
               </Text>
               <Text
                 style={[
@@ -375,7 +386,7 @@ const AgendaScreen: React.FC = () => {
                   { color: summaryLabelColor },
                 ]}
               >
-                Trades
+                {t("stats.tradesLabel")}
               </Text>
               <Text
                 style={[
@@ -392,7 +403,7 @@ const AgendaScreen: React.FC = () => {
                 <TouchableOpacity onPress={goToToday}>
                   <View style={styles.todayButton}>
                     <Text style={styles.todayButtonText}>
-                      ↩ Retour{"\n"}Mois actuel
+                      {t("agenda.returnToCurrentMonth")}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -409,7 +420,8 @@ const AgendaScreen: React.FC = () => {
                   { color: summarySubColor },
                 ]}
               >
-                Winrate {monthStats.winrate.toFixed(0)}%
+                {t("agenda.winrateLabel")}{" "}
+                {monthStats.winrate.toFixed(0)}%
               </Text>
             </View>
             <View style={styles.summaryBottomRight} />
@@ -417,7 +429,7 @@ const AgendaScreen: React.FC = () => {
         </View>
 
         <View className="weekdaysRow" style={styles.weekdaysRow}>
-          {WEEKDAYS.map((d) => (
+          {(weekdaysShort ?? WEEKDAYS).map((d) => (
             <Text
               key={d}
               style={[styles.weekday, { color: weekdayColor }]}
@@ -498,7 +510,7 @@ const AgendaScreen: React.FC = () => {
                 { color: modalTitleColor },
               ]}
             >
-              Profils (journaux)
+              {t("agenda.profilesTitle")}
             </Text>
 
             {journals.map((j) => {
@@ -541,7 +553,7 @@ const AgendaScreen: React.FC = () => {
                   </Text>
                   {isActive && (
                     <Text style={styles.journalItemBadge}>
-                      Actif
+                      {t("agenda.profileActiveBadge")}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -556,7 +568,7 @@ const AgendaScreen: React.FC = () => {
                     { marginTop: 12, color: modalLabelColor },
                   ]}
                 >
-                  Renommer le profil actif
+                  {t("agenda.renameActiveProfileLabel")}
                 </Text>
                 <TextInput
                   style={[
@@ -580,11 +592,10 @@ const AgendaScreen: React.FC = () => {
                   onPress={handleRenameActiveJournal}
                 >
                   <Text style={styles.modalButtonText}>
-                    Enregistrer le nom
+                    {t("agenda.saveProfileNameButton")}
                   </Text>
                 </TouchableOpacity>
 
-                {/* ✅ Bouton rouge : supprimer le profil actif */}
                 <TouchableOpacity
                   style={[
                     styles.modalButton,
@@ -593,7 +604,7 @@ const AgendaScreen: React.FC = () => {
                   onPress={handleDeleteActiveJournal}
                 >
                   <Text style={styles.modalButtonText}>
-                    Supprimer le profil actif
+                    {t("agenda.deleteActiveProfileButton")}
                   </Text>
                 </TouchableOpacity>
               </>
@@ -605,7 +616,7 @@ const AgendaScreen: React.FC = () => {
                 { marginTop: 16, color: modalLabelColor },
               ]}
             >
-              Nouveau profil
+              {t("agenda.newProfileLabel")}
             </Text>
             <TextInput
               style={[
@@ -616,7 +627,7 @@ const AgendaScreen: React.FC = () => {
                   color: modalInputTextColor,
                 },
               ]}
-              placeholder="Ex : Prop firm, Crypto, Scalping..."
+              placeholder={t("agenda.newProfilePlaceholder")}
               placeholderTextColor="#6b7280"
               value={newJournalName}
               onChangeText={setNewJournalName}
@@ -629,7 +640,7 @@ const AgendaScreen: React.FC = () => {
               onPress={handleCreateJournal}
             >
               <Text style={styles.modalButtonText}>
-                Créer et activer
+                {t("agenda.createAndActivateButton")}
               </Text>
             </TouchableOpacity>
 
@@ -641,7 +652,7 @@ const AgendaScreen: React.FC = () => {
               onPress={closeJournalModal}
             >
               <Text style={styles.modalButtonGhostText}>
-                Fermer
+                {t("common.close")}
               </Text>
             </TouchableOpacity>
           </Pressable>

@@ -1,3 +1,4 @@
+// src/screens/TradeFormScreen.tsx
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -23,6 +24,7 @@ import {
   Trade,
   useTrades,
 } from "../context/TradesContext";
+import { useI18n } from "../i18n/useI18n";
 
 const TradeFormScreen: React.FC = () => {
   const { date, tradeId } = useLocalSearchParams<{
@@ -35,6 +37,7 @@ const TradeFormScreen: React.FC = () => {
   const { trades, addTrade, updateTrade } = useTrades();
   const { currency, theme } = useSettings();
   const router = useRouter();
+  const { t } = useI18n();
 
   const isDark = theme === "dark";
 
@@ -72,6 +75,16 @@ const TradeFormScreen: React.FC = () => {
     undefined
   );
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+
+  // 🧠 Émotions i18n
+  const emotions: { key: Emotion; label: string }[] = [
+    { key: "calm", label: t("tradeForm.emotionCalm") },
+    { key: "stress", label: t("tradeForm.emotionStress") },
+    { key: "fomo", label: t("tradeForm.emotionFomo") },
+    { key: "revenge", label: t("tradeForm.emotionRevenge") },
+    { key: "tired", label: t("tradeForm.emotionTired") },
+    { key: "disciplined", label: t("tradeForm.emotionDisciplined") },
+  ];
 
   // Pré-remplissage en mode édition
   useEffect(() => {
@@ -119,8 +132,8 @@ const TradeFormScreen: React.FC = () => {
     const numericPnl = parseFloat(pnl.replace(",", "."));
     if (!instrument || isNaN(numericPnl) || !dateStr) {
       Alert.alert(
-        "Champs manquants",
-        "Actif / paire, date et résultat sont obligatoires."
+        t("tradeForm.missingRequiredFieldsTitle"),
+        t("tradeForm.missingRequiredFieldsMessage")
       );
       return;
     }
@@ -160,8 +173,8 @@ const TradeFormScreen: React.FC = () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
-        "Permission nécessaire",
-        "Autorise l'accès à la galerie pour ajouter un screenshot."
+        t("tradeForm.permissionNeededTitle"),
+        t("tradeForm.galleryPermissionMessage")
       );
       return false;
     }
@@ -172,8 +185,8 @@ const TradeFormScreen: React.FC = () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
-        "Permission nécessaire",
-        "Autorise l'accès à la caméra pour prendre une photo."
+        t("tradeForm.permissionNeededTitle"),
+        t("tradeForm.cameraPermissionMessage")
       );
       return false;
     }
@@ -228,15 +241,19 @@ const TradeFormScreen: React.FC = () => {
         contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[styles.label, { color: labelColor }]}>Date</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          {t("tradeForm.dateLabel")}
+        </Text>
         <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
 
         <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
-          {isEdit ? "Modifier le trade" : "Nouveau trade"}
+          {isEdit
+            ? t("tradeForm.editTradeTitle")
+            : t("tradeForm.newTradeTitle")}
         </Text>
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Actif / Paire
+          {t("tradeForm.instrumentLabel")}
         </Text>
         <TextInput
           style={[
@@ -247,13 +264,15 @@ const TradeFormScreen: React.FC = () => {
               color: inputTextColor,
             },
           ]}
-          placeholder="EUR/USD, XAU/USD."
+          placeholder={t("tradeForm.instrumentPlaceholder")}
           placeholderTextColor="#6b7280"
           value={instrument}
           onChangeText={setInstrument}
         />
 
-        <Text style={[styles.label, { color: labelColor }]}>Direction</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          {t("tradeForm.directionLabel")}
+        </Text>
         <View style={styles.row}>
           <TouchableOpacity
             style={[
@@ -274,9 +293,7 @@ const TradeFormScreen: React.FC = () => {
                 styles.directionText,
                 {
                   color:
-                    direction === "BUY"
-                      ? "#f9fafb"
-                      : inputTextColor,
+                    direction === "BUY" ? "#f9fafb" : inputTextColor,
                 },
               ]}
             >
@@ -302,9 +319,7 @@ const TradeFormScreen: React.FC = () => {
                 styles.directionText,
                 {
                   color:
-                    direction === "SELL"
-                      ? "#f9fafb"
-                      : inputTextColor,
+                    direction === "SELL" ? "#f9fafb" : inputTextColor,
                 },
               ]}
             >
@@ -314,7 +329,7 @@ const TradeFormScreen: React.FC = () => {
         </View>
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Résultat ({currency})
+          {t("tradeForm.resultLabelPrefix")} ({currency})
         </Text>
         <TextInput
           style={[
@@ -326,14 +341,14 @@ const TradeFormScreen: React.FC = () => {
             },
           ]}
           keyboardType="numeric"
-          placeholder="Ex : 25.50"
+          placeholder={t("tradeForm.pnlExamplePlaceholder")}
           placeholderTextColor="#6b7280"
           value={pnl}
           onChangeText={setPnl}
         />
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Lot (optionnel)
+          {t("tradeForm.lotLabel")}
         </Text>
         <TextInput
           style={[
@@ -345,14 +360,14 @@ const TradeFormScreen: React.FC = () => {
             },
           ]}
           keyboardType="numeric"
-          placeholder="Ex : 0.25"
+          placeholder={t("tradeForm.lotExamplePlaceholder")}
           placeholderTextColor="#6b7280"
           value={lotSize}
           onChangeText={setLotSize}
         />
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Prix (optionnel)
+          {t("tradeForm.priceLabel")}
         </Text>
         <TextInput
           style={[
@@ -364,7 +379,7 @@ const TradeFormScreen: React.FC = () => {
             },
           ]}
           keyboardType="numeric"
-          placeholder="Prix d'entrée"
+          placeholder={t("tradeForm.entryPlaceholder")}
           placeholderTextColor="#6b7280"
           value={entryPrice}
           onChangeText={setEntryPrice}
@@ -379,7 +394,7 @@ const TradeFormScreen: React.FC = () => {
             },
           ]}
           keyboardType="numeric"
-          placeholder="TP"
+          placeholder={t("tradeForm.tpPlaceholder")}
           placeholderTextColor="#6b7280"
           value={tpPrice}
           onChangeText={setTpPrice}
@@ -394,14 +409,14 @@ const TradeFormScreen: React.FC = () => {
             },
           ]}
           keyboardType="numeric"
-          placeholder="SL"
+          placeholder={t("tradeForm.slPlaceholder")}
           placeholderTextColor="#6b7280"
           value={slPrice}
           onChangeText={setSlPrice}
         />
 
         <Text style={[styles.label, { color: labelColor }]}>
-          RR (optionnel)
+          {t("tradeForm.rrLabel")}
         </Text>
         <TextInput
           style={[
@@ -413,22 +428,17 @@ const TradeFormScreen: React.FC = () => {
             },
           ]}
           keyboardType="numeric"
-          placeholder="Ex : 2.35"
+          placeholder={t("tradeForm.rrExamplePlaceholder")}
           placeholderTextColor="#6b7280"
           value={rr}
           onChangeText={setRr}
         />
 
-        <Text style={[styles.label, { color: labelColor }]}>Émotion</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          {t("tradeForm.emotionLabel")}
+        </Text>
         <View style={styles.rowWrap}>
-          {[
-            { key: "calm", label: "😌 calme" },
-            { key: "stress", label: "😰 stress" },
-            { key: "fomo", label: "🤯 FOMO" },
-            { key: "revenge", label: "😡 revenge" },
-            { key: "tired", label: "😴 fatigué" },
-            { key: "disciplined", label: "✅ discipliné" },
-          ].map((e) => {
+          {emotions.map((e) => {
             const active = emotion === e.key;
             return (
               <TouchableOpacity
@@ -445,9 +455,7 @@ const TradeFormScreen: React.FC = () => {
                   },
                 ]}
                 onPress={() =>
-                  setEmotion((prev) =>
-                    prev === e.key ? undefined : (e.key as any)
-                  )
+                  setEmotion((prev) => (prev === e.key ? undefined : e.key))
                 }
               >
                 <Text
@@ -466,7 +474,7 @@ const TradeFormScreen: React.FC = () => {
         </View>
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Qualité du trade
+          {t("tradeForm.qualityLabel")}
         </Text>
         <View style={styles.row}>
           {(["A", "B", "C"] as Quality[]).map((q) => {
@@ -505,7 +513,7 @@ const TradeFormScreen: React.FC = () => {
         </View>
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Respect du plan
+          {t("tradeForm.respectPlanLabel")}
         </Text>
         <View style={styles.row}>
           <TouchableOpacity
@@ -531,7 +539,7 @@ const TradeFormScreen: React.FC = () => {
                 },
               ]}
             >
-              Oui
+              {t("tradeForm.respectPlanYes")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -557,13 +565,13 @@ const TradeFormScreen: React.FC = () => {
                 },
               ]}
             >
-              Non
+              {t("tradeForm.respectPlanNo")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text style={[styles.label, { color: labelColor }]}>
-          Commentaire
+          {t("tradeForm.commentLabel")}
         </Text>
         <TextInput
           style={[
@@ -577,13 +585,15 @@ const TradeFormScreen: React.FC = () => {
           ]}
           multiline
           numberOfLines={4}
-          placeholder="Notes sur le trade, contexte, erreurs, etc."
+          placeholder={t("tradeForm.commentPlaceholder")}
           placeholderTextColor="#6b7280"
           value={comment}
           onChangeText={setComment}
         />
 
-        <Text style={[styles.label, { color: labelColor }]}>Screenshot</Text>
+        <Text style={[styles.label, { color: labelColor }]}>
+          {t("tradeForm.screenshotLabel")}
+        </Text>
         <View style={styles.row}>
           <TouchableOpacity
             style={[
@@ -601,7 +611,7 @@ const TradeFormScreen: React.FC = () => {
                 { color: chipTextColor },
               ]}
             >
-              Galerie
+              {t("tradeForm.screenshotGallery")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -620,7 +630,7 @@ const TradeFormScreen: React.FC = () => {
                 { color: chipTextColor },
               ]}
             >
-              Caméra
+              {t("tradeForm.screenshotCamera")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -638,7 +648,7 @@ const TradeFormScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setScreenshotUri(undefined)}>
               <Text style={styles.removeScreenshotText}>
-                Retirer le screenshot
+                {t("tradeForm.screenshotRemove")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -646,7 +656,9 @@ const TradeFormScreen: React.FC = () => {
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>
-            {isEdit ? "Mettre à jour le trade" : "Enregistrer le trade"}
+            {isEdit
+              ? t("tradeForm.updateButton")
+              : t("tradeForm.saveButton")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

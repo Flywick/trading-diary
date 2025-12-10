@@ -1,3 +1,4 @@
+// src/screens/DaySummaryScreen.tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
@@ -12,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSettings } from "../context/SettingsContext";
 import { Trade, useTrades } from "../context/TradesContext";
+import { useI18n } from "../i18n/useI18n";
 
 const DaySummaryScreen: React.FC = () => {
   const { date } = useLocalSearchParams<{ date?: string }>();
@@ -20,6 +22,7 @@ const DaySummaryScreen: React.FC = () => {
   const router = useRouter();
 
   const isDark = theme === "dark";
+  const { t, language } = useI18n();
 
   const dateStr = typeof date === "string" ? date : "";
 
@@ -36,12 +39,15 @@ const DaySummaryScreen: React.FC = () => {
       : 0;
 
   const jsDate = dateStr ? new Date(dateStr) : new Date();
-  const dateLabel = jsDate.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const dateLabel = jsDate.toLocaleDateString(
+    language === "en" ? "en-US" : "fr-FR",
+    {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }
+  );
 
   const textMainColor = isDark ? "#e5e7eb" : "#0f172a";
   const textSubColor = isDark ? "#9ca3af" : "#6b7280";
@@ -57,11 +63,11 @@ const DaySummaryScreen: React.FC = () => {
 
   const handlePressTrade = (trade: Trade) => {
     Alert.alert(
-      "Trade",
-      "Que veux-tu faire ?",
+      t("daySummary.tradeDetailsTitle"),
+      t("daySummary.actionQuestion"),
       [
         {
-          text: "Modifier",
+          text: t("daySummary.editTrade"),
           onPress: () => {
             router.push({
               pathname: "/trade",
@@ -70,14 +76,14 @@ const DaySummaryScreen: React.FC = () => {
           },
         },
         {
-          text: "Supprimer",
+          text: t("daySummary.deleteTrade"),
           style: "destructive",
           onPress: () => {
             deleteTrade(trade.id);
           },
         },
         {
-          text: "Annuler",
+          text: t("common.cancel"),
           style: "cancel",
         },
       ],
@@ -148,7 +154,7 @@ const DaySummaryScreen: React.FC = () => {
                   { color: textSubColor },
                 ]}
               >
-                Émotion : {item.emotion}
+                {t("tradeForm.emotionLabel")}: {item.emotion}
               </Text>
             )}
             {item.quality && (
@@ -158,7 +164,7 @@ const DaySummaryScreen: React.FC = () => {
                   { color: textSubColor },
                 ]}
               >
-                Qualité : {item.quality}
+                {t("tradeForm.qualityLabel")}: {item.quality}
               </Text>
             )}
             {typeof item.respectPlan === "boolean" && (
@@ -168,7 +174,8 @@ const DaySummaryScreen: React.FC = () => {
                   { color: textSubColor },
                 ]}
               >
-                Plan {item.respectPlan ? "✅" : "❌"}
+                {t("tradeForm.respectPlanLabel")}{" "}
+                {item.respectPlan ? "✅" : "❌"}
               </Text>
             )}
           </View>
@@ -202,7 +209,7 @@ const DaySummaryScreen: React.FC = () => {
                   { color: textSubColor },
                 ]}
               >
-                Screenshot enregistré
+                {t("tradeForm.screenshotLabel")}
               </Text>
             </View>
           )}
@@ -235,7 +242,7 @@ const DaySummaryScreen: React.FC = () => {
               { color: textSubColor },
             ]}
           >
-            Résultat total :{" "}
+            {t("daySummary.totalPnl")}:{" "}
             <Text
               style={{
                 color: totalPnlColor,
@@ -251,7 +258,8 @@ const DaySummaryScreen: React.FC = () => {
               { color: textSubColor },
             ]}
           >
-            RR moyen : {avgRr.toFixed(2)} | Trades : {dayTrades.length}
+            {t("daySummary.avgRr")}: {avgRr.toFixed(2)} |{" "}
+            {t("daySummary.tradesCount")}: {dayTrades.length}
           </Text>
         </View>
 
@@ -281,7 +289,7 @@ const DaySummaryScreen: React.FC = () => {
               { color: textSubColor },
             ]}
           >
-            Aucun trade ce jour. Appuie sur "+" pour ajouter un trade.
+            {t("daySummary.noTrades")}
           </Text>
         </View>
       ) : (
@@ -304,7 +312,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 8, // petite marge sous la barre de notif
+    paddingTop: 8,
     marginBottom: 12,
   },
   headerTextBlock: {

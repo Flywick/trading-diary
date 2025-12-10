@@ -17,6 +17,7 @@ import { useJournal } from "../context/JournalContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
+import { useI18n } from "../i18n/useI18n";
 
 const formatBirthdate = (text: string) => {
   const cleaned = text.replace(/\D/g, "").slice(0, 8);
@@ -84,7 +85,8 @@ const SettingsScreen: React.FC = () => {
     deleteActiveAccount,
     logout,
   } = useAccount();
-  const { language, setLanguage } = useLanguage();
+  const { setLanguage } = useLanguage();
+  const { t, language } = useI18n();
 
   const [usernameInput, setUsernameInput] = useState(
     activeAccount?.username ?? ""
@@ -126,8 +128,6 @@ const SettingsScreen: React.FC = () => {
     ? getAgeFromBirthdate(activeAccount.birthdate)
     : null;
 
-  const t = (fr: string, en: string) => (language === "en" ? en : fr);
-
   const isDark = theme === "dark";
   const screenBg = isDark ? "#020617" : "#e5e7eb";
   const cardBg = isDark ? "#020617" : "#ffffff";
@@ -148,8 +148,8 @@ const SettingsScreen: React.FC = () => {
   const handleSaveAccount = () => {
     if (!activeAccount) {
       Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
+        t("settings.deleteAccountNoAccount"),
+        t("errors.noAccount")
       );
       return;
     }
@@ -160,8 +160,8 @@ const SettingsScreen: React.FC = () => {
 
     if (!username || !birthdate || !email) {
       Alert.alert(
-        "Informations manquantes",
-        "Le pseudo, la date de naissance et l'email sont obligatoires."
+        t("settings.accountInfosMissingTitle"),
+        t("settings.accountInfosMissingMessage")
       );
       return;
     }
@@ -169,21 +169,24 @@ const SettingsScreen: React.FC = () => {
     const birthdateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!birthdateRegex.test(birthdate)) {
       Alert.alert(
-        "Format de date invalide",
-        "Merci d'entrer la date de naissance au format AAAA-MM-JJ (ex : 1995-04-23)."
+        t("settings.accountInvalidBirthdateTitle"),
+        t("settings.accountInvalidBirthdateMessage")
       );
       return;
     }
 
     const age = getAgeFromBirthdate(birthdate);
     if (age === null) {
-      Alert.alert("Date invalide", "La date de naissance ne semble pas valide.");
+      Alert.alert(
+        t("errors.invalidBirthdate"),
+        t("errors.invalidBirthdate")
+      );
       return;
     }
     if (age < 18) {
       Alert.alert(
-        "Âge insuffisant",
-        "Tu dois avoir au moins 18 ans pour utiliser cette application."
+        t("errors.ageTooLow"),
+        t("errors.ageTooLow")
       );
       return;
     }
@@ -191,8 +194,8 @@ const SettingsScreen: React.FC = () => {
     const emailRegex = /.+@.+\..+/;
     if (!emailRegex.test(email)) {
       Alert.alert(
-        "Email invalide",
-        "Merci d'entrer une adresse email valide."
+        t("errors.invalidEmail"),
+        t("errors.invalidEmail")
       );
       return;
     }
@@ -205,25 +208,29 @@ const SettingsScreen: React.FC = () => {
 
     setIsEditingAccount(false);
 
-    Alert.alert("Compte mis à jour", "Tes informations ont été enregistrées.");
+    Alert.alert(
+      t("settings.accountUpdatedTitle"),
+      t("settings.accountUpdatedMessage")
+    );
   };
 
   const handleChangePassword = () => {
     if (!activeAccount) {
       Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
+        t("settings.deleteAccountNoAccount"),
+        t("errors.noAccount")
       );
       return;
     }
 
     if (!activeAccount.password) {
-      Alert.alert(
-        "Mot de passe non défini",
-        "Ce compte n'a pas encore de mot de passe local. Déconnecte-toi et reconnecte-toi en mode sécurisé pour le définir."
-      );
-      return;
-    }
+  Alert.alert(
+    t("settings.passwordNotDefinedTitle"),
+    t("settings.passwordNotDefinedMessage")
+  );
+  return;
+}
+
 
     const currentPassword = currentPasswordInput.trim();
     const newPassword = newPasswordInput.trim();
@@ -231,29 +238,32 @@ const SettingsScreen: React.FC = () => {
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert(
-        "Champs manquants",
-        "Tous les champs du mot de passe sont obligatoires."
+        t("errors.missingLoginFields"),
+        t("errors.missingLoginFields")
       );
       return;
     }
 
     if (currentPassword !== activeAccount.password) {
-      Alert.alert("Mot de passe incorrect", "L'ancien mot de passe est incorrect.");
+      Alert.alert(
+        t("settings.passwordIncorrect"),
+        t("settings.passwordIncorrect")
+      );
       return;
     }
 
     if (newPassword.length < 6) {
       Alert.alert(
-        "Mot de passe trop court",
-        "Choisis un mot de passe d'au moins 6 caractères."
+        t("errors.passwordTooShort"),
+        t("errors.passwordTooShort")
       );
       return;
     }
 
     if (newPassword !== confirmPassword) {
       Alert.alert(
-        "Confirmation incorrecte",
-        "La confirmation du mot de passe ne correspond pas."
+        t("errors.passwordConfirmMismatch"),
+        t("errors.passwordConfirmMismatch")
       );
       return;
     }
@@ -265,22 +275,25 @@ const SettingsScreen: React.FC = () => {
     setNewPasswordInput("");
     setConfirmPasswordInput("");
 
-    Alert.alert("Mot de passe mis à jour", "Ton mot de passe a été modifié.");
+    Alert.alert(
+      t("settings.passwordUpdatedTitle"),
+      t("settings.passwordUpdatedMessage")
+    );
   };
 
   const handleExportCsv = async () => {
     if (!activeAccount) {
       Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
+        t("settings.deleteAccountNoAccount"),
+        t("errors.noAccount")
       );
       return;
     }
 
     if (!trades || trades.length === 0) {
       Alert.alert(
-        "Aucun trade",
-        "Tu n'as pas encore de trade dans le journal actif."
+        t("stats.noTrades"),
+        t("stats.noTrades")
       );
       return;
     }
@@ -313,49 +326,53 @@ const SettingsScreen: React.FC = () => {
       const lines: string[] = [];
       lines.push(header.join(";"));
 
-      for (const t of trades) {
+      for (const tTrade of trades) {
         const row = [
-          escapeCsv(t.id),
-          escapeCsv(t.date),
-          escapeCsv(t.time),
-          escapeCsv(t.instrument),
-          escapeCsv(t.direction),
+          escapeCsv(tTrade.id),
+          escapeCsv(tTrade.date),
+          escapeCsv(tTrade.time),
+          escapeCsv(tTrade.instrument),
+          escapeCsv(tTrade.direction),
           escapeCsv(
-            typeof t.pnl === "number" ? t.pnl.toString().replace(".", ",") : ""
-          ),
-          escapeCsv(
-            typeof t.rr === "number" ? t.rr.toString().replace(".", ",") : ""
-          ),
-          escapeCsv(
-            typeof t.lotSize === "number"
-              ? t.lotSize.toString().replace(".", ",")
+            typeof tTrade.pnl === "number"
+              ? tTrade.pnl.toString().replace(".", ",")
               : ""
           ),
           escapeCsv(
-            typeof t.entryPrice === "number"
-              ? t.entryPrice.toString().replace(".", ",")
+            typeof tTrade.rr === "number"
+              ? tTrade.rr.toString().replace(".", ",")
               : ""
           ),
           escapeCsv(
-            typeof t.tpPrice === "number"
-              ? t.tpPrice.toString().replace(".", ",")
+            typeof tTrade.lotSize === "number"
+              ? tTrade.lotSize.toString().replace(".", ",")
               : ""
           ),
           escapeCsv(
-            typeof t.slPrice === "number"
-              ? t.slPrice.toString().replace(".", ",")
+            typeof tTrade.entryPrice === "number"
+              ? tTrade.entryPrice.toString().replace(".", ",")
               : ""
           ),
-          escapeCsv(t.emotion ?? ""),
-          escapeCsv(t.quality ?? ""),
           escapeCsv(
-            typeof t.respectPlan === "boolean"
-              ? t.respectPlan
+            typeof tTrade.tpPrice === "number"
+              ? tTrade.tpPrice.toString().replace(".", ",")
+              : ""
+          ),
+          escapeCsv(
+            typeof tTrade.slPrice === "number"
+              ? tTrade.slPrice.toString().replace(".", ",")
+              : ""
+          ),
+          escapeCsv(tTrade.emotion ?? ""),
+          escapeCsv(tTrade.quality ?? ""),
+          escapeCsv(
+            typeof tTrade.respectPlan === "boolean"
+              ? tTrade.respectPlan
                 ? "oui"
                 : "non"
               : ""
           ),
-          escapeCsv(t.comment ?? ""),
+          escapeCsv(tTrade.comment ?? ""),
         ];
         lines.push(row.join(";"));
       }
@@ -379,19 +396,19 @@ const SettingsScreen: React.FC = () => {
       if (canShare) {
         await Sharing.shareAsync(fileUri, {
           mimeType: "text/csv",
-          dialogTitle: "Exporter les trades en CSV",
+          dialogTitle: t("settings.exportCsvButton"),
         });
       } else {
         Alert.alert(
-          "Export terminé",
-          "Le fichier CSV a été créé dans le stockage de l'application."
+          t("settings.exportCsvDoneTitle"),
+          t("settings.exportCsvDoneMessage")
         );
       }
     } catch (error) {
       console.error("Erreur export CSV", error);
       Alert.alert(
-        "Erreur",
-        "Une erreur est survenue pendant l'export des trades."
+        t("settings.exportCsvErrorTitle"),
+        t("settings.exportCsvErrorMessage")
       );
     }
   };
@@ -399,8 +416,8 @@ const SettingsScreen: React.FC = () => {
   const handleExportJson = async () => {
     if (!activeAccount) {
       Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
+        t("settings.deleteAccountNoAccount"),
+        t("errors.noAccount")
       );
       return;
     }
@@ -447,19 +464,19 @@ const SettingsScreen: React.FC = () => {
       if (canShare) {
         await Sharing.shareAsync(fileUri, {
           mimeType: "application/json",
-          dialogTitle: "Exporter les données en JSON",
+          dialogTitle: t("settings.exportJsonButton"),
         });
       } else {
         Alert.alert(
-          "Export terminé",
-          "Le fichier JSON a été créé dans le stockage de l'application."
+          t("settings.importJsonDoneTitle"),
+          t("settings.importJsonDoneMessage")
         );
       }
     } catch (error) {
       console.error("Erreur export JSON", error);
       Alert.alert(
-        "Erreur",
-        "Une erreur est survenue pendant l'export des données."
+        t("settings.importJsonErrorTitle"),
+        t("settings.importJsonErrorMessage")
       );
     }
   };
@@ -467,8 +484,8 @@ const SettingsScreen: React.FC = () => {
   const handleImportJson = async () => {
     if (!activeAccount) {
       Alert.alert(
-        "Aucun compte",
-        "Crée d'abord un compte depuis l'écran d'accueil."
+        t("settings.deleteAccountNoAccount"),
+        t("errors.noAccount")
       );
       return;
     }
@@ -488,7 +505,10 @@ const SettingsScreen: React.FC = () => {
       // @ts-ignore
       const asset = result.assets && result.assets[0];
       if (!asset || !asset.uri) {
-        Alert.alert("Erreur", "Impossible de lire le fichier sélectionné.");
+        Alert.alert(
+          t("settings.exportJsonErrorTitle"),
+          t("settings.exportJsonErrorMessage")
+        );
         return;
       }
 
@@ -497,12 +517,18 @@ const SettingsScreen: React.FC = () => {
       try {
         data = JSON.parse(content);
       } catch (e) {
-        Alert.alert("Fichier invalide", "Le fichier sélectionné n'est pas un JSON valide.");
+        Alert.alert(
+          t("settings.importJsonInvalidFileTitle"),
+          t("settings.importJsonInvalidFileMessage")
+        );
         return;
       }
 
       if (!data || typeof data !== "object") {
-        Alert.alert("Fichier invalide", "Le contenu du fichier est invalide.");
+        Alert.alert(
+          t("settings.importJsonInvalidFileTitle"),
+          t("settings.importJsonInvalidContentMessage")
+        );
         return;
       }
 
@@ -566,32 +592,32 @@ const SettingsScreen: React.FC = () => {
       }
 
       Alert.alert(
-        "Import terminé",
-        "Les données ont été importées. Redémarre l'application pour recharger complètement les journaux et les trades."
+        t("settings.importJsonDoneTitle"),
+        t("settings.importJsonDoneMessage")
       );
     } catch (error) {
       console.error("Erreur import JSON", error);
       Alert.alert(
-        "Erreur",
-        "Une erreur est survenue pendant l'import des données."
+        t("settings.importJsonErrorTitle"),
+        t("settings.importJsonErrorMessage")
       );
     }
   };
 
   const handleResetApp = () => {
     Alert.alert(
-      "Réinitialiser l'application",
-      "Tu vas supprimer tous les trades de tous tes profils (journaux) pour ce compte.\n\nTes profils et ton compte seront conservés.\n\nContinuer ?",
+      t("settings.resetAppTitle"),
+      t("settings.resetAppMessage"),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Oui, réinitialiser",
+          text: t("settings.resetAppConfirm"),
           style: "destructive",
           onPress: () => {
             resetTrades();
             Alert.alert(
-              "Réinitialisation terminée",
-              "Tous les trades ont été supprimés pour ce compte."
+              t("settings.resetAppDoneTitle"),
+              t("settings.resetAppDoneMessage")
             );
           },
         },
@@ -601,17 +627,20 @@ const SettingsScreen: React.FC = () => {
 
   const handleDeleteAccount = () => {
     if (!activeAccount) {
-      Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
+      Alert.alert(
+        t("settings.deleteAccountNoAccount"),
+        t("settings.deleteAccountNoAccount")
+      );
       return;
     }
 
     Alert.alert(
-      "Supprimer le compte",
-      "Tu es sur le point de supprimer ce compte ET tous les trades associés sur cet appareil. Cette action est irréversible.\n\nContinuer ?",
+      t("settings.deleteAccountTitle"),
+      t("settings.deleteAccountMessage"),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Continuer",
+          text: t("settings.deleteAccountConfirm"),
           style: "destructive",
           onPress: () => {
             // On ouvre le modal de confirmation par mot de passe
@@ -633,22 +662,22 @@ const SettingsScreen: React.FC = () => {
     const entered = deletePasswordInput.trim();
 
     if (!entered) {
-      setDeleteError("Merci d'entrer ton mot de passe.");
+      setDeleteError(t("settings.deleteAccountPasswordErrorEmpty"));
       return;
     }
 
     if (entered !== activeAccount.password) {
-      setDeleteError("Mot de passe incorrect.");
+      setDeleteError(t("settings.deleteAccountPasswordErrorWrong"));
       return;
     }
 
     // Mot de passe correct : on affiche le message final puis on supprime
     Alert.alert(
-      "Compte supprimé",
-      "Le compte et toutes ses données ont été supprimés.",
+      t("settings.deleteAccountFinalTitle"),
+      t("settings.deleteAccountFinalMessage"),
       [
         {
-          text: "OK",
+          text: t("common.ok"),
           onPress: () => {
             setShowDeleteConfirmModal(false);
             setDeletePasswordInput("");
@@ -661,41 +690,40 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-  if (!activeAccount) {
-    Alert.alert("Aucun compte", "Tu n'es connecté à aucun compte.");
-    return;
-  }
+    if (!activeAccount) {
+      Alert.alert(
+        t("settings.deleteAccountNoAccount"),
+        t("settings.deleteAccountNoAccount")
+      );
+      return;
+    }
 
-  Alert.alert(
-    "Déconnexion",
-    "Tu vas être déconnecté de ce compte. Tes trades et tes stats resteront liés à ce compte sur cet appareil. Continuer ?",
-    [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Se déconnecter",
-        style: "destructive",
-        onPress: () => {
-          // 1️⃣ On affiche d’abord le message de confirmation
-          Alert.alert(
-            "Déconnecté",
-            "Tu es maintenant déconnecté.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  // 2️⃣ Et seulement quand l’utilisateur appuie sur OK,
-                  // on fait vraiment le logout.
-                  logout();
+    Alert.alert(
+      t("settings.logoutTitle"),
+      t("settings.logoutMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("settings.logoutButton"),
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              t("settings.logoutDoneTitle"),
+              t("settings.logoutDoneMessage"),
+              [
+                {
+                  text: t("common.ok"),
+                  onPress: () => {
+                    logout();
+                  },
                 },
-              },
-            ]
-          );
+              ]
+            );
+          },
         },
-      },
-    ]
-  );
-};
-
+      ]
+    );
+  };
 
   const getInitial = (name: string | undefined) => {
     if (!name || name.length === 0) return "?";
@@ -704,607 +732,634 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <>
-    <ScrollView
-      style={[styles.container, { backgroundColor: screenBg }]}
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-    >
-      {/* SECTION COMPTE */}
-      <Text style={[styles.sectionTitle, { color: mainText }]}>
-        {t("Compte", "Account")}
-      </Text>
-
-      {isEditingAccount ? (
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardBg, borderColor: cardBorder },
-          ]}
-        >
-          <Text style={[styles.subTitle, { color: mainText }]}>
-            Modifier le compte
-          </Text>
-
-          <Text style={[styles.label, { color: subText }]}>Pseudo *</Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: inputBg,
-                borderColor: inputBorder,
-                color: inputText,
-              },
-            ]}
-            placeholder="Ton pseudo"
-            placeholderTextColor="#6b7280"
-            value={usernameInput}
-            onChangeText={setUsernameInput}
-          />
-
-          <Text style={[styles.label, { color: subText }]}>
-            Date de naissance * (AAAA-MM-JJ)
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: inputBg,
-                borderColor: inputBorder,
-                color: inputText,
-              },
-            ]}
-            placeholder="1995-04-23"
-            placeholderTextColor="#6b7280"
-            value={birthdateInput}
-            onChangeText={(text) => setBirthdateInput(formatBirthdate(text))}
-            keyboardType="numeric"
-          />
-          {liveAge !== null && (
-            <Text style={[styles.helperText, { color: subText }]}>
-              Âge calculé : {liveAge} ans
-            </Text>
-          )}
-
-          <Text style={[styles.label, { color: subText }]}>Email *</Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: inputBg,
-                borderColor: inputBorder,
-                color: inputText,
-              },
-            ]}
-            placeholder="ton.email@example.com"
-            placeholderTextColor="#6b7280"
-            value={emailInput}
-            onChangeText={setEmailInput}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary]}
-            onPress={handleSaveAccount}
-          >
-            <Text style={styles.buttonText}>Enregistrer le compte</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonGhost]}
-            onPress={() => setIsEditingAccount(false)}
-          >
-            <Text style={styles.buttonGhostText}>Annuler</Text>
-          </TouchableOpacity>
-        </View>
-      ) : isEditingPassword ? (
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardBg, borderColor: cardBorder },
-          ]}
-        >
-          <Text style={[styles.subTitle, { color: mainText }]}>
-            Modifier le mot de passe
-          </Text>
-
-          <Text style={[styles.label, { color: subText }]}>
-            Ancien mot de passe *
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: inputBg,
-                borderColor: inputBorder,
-                color: inputText,
-              },
-            ]}
-            placeholder="Ton mot de passe actuel"
-            placeholderTextColor="#6b7280"
-            value={currentPasswordInput}
-            onChangeText={setCurrentPasswordInput}
-            secureTextEntry
-          />
-
-          <Text style={[styles.label, { color: subText }]}>
-            Nouveau mot de passe *
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: inputBg,
-                borderColor: inputBorder,
-                color: inputText,
-              },
-            ]}
-            placeholder="Nouveau mot de passe"
-            placeholderTextColor="#6b7280"
-            value={newPasswordInput}
-            onChangeText={setNewPasswordInput}
-            secureTextEntry
-          />
-
-          <Text style={[styles.label, { color: subText }]}>
-            Confirmer le mot de passe *
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: inputBg,
-                borderColor: inputBorder,
-                color: inputText,
-              },
-            ]}
-            placeholder="Confirme le mot de passe"
-            placeholderTextColor="#6b7280"
-            value={confirmPasswordInput}
-            onChangeText={setConfirmPasswordInput}
-            secureTextEntry
-          />
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary]}
-            onPress={handleChangePassword}
-          >
-            <Text style={styles.buttonText}>Mettre à jour le mot de passe</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonGhost]}
-            onPress={() => setIsEditingPassword(false)}
-          >
-            <Text style={styles.buttonGhostText}>Annuler</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardBg, borderColor: cardBorder },
-          ]}
-        >
-          <View style={styles.accountHeaderRow}>
-            <View className="avatar" style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {getInitial(activeAccount?.username)}
-              </Text>
-            </View>
-            <View style={styles.infoTextBlock}>
-              <Text style={[styles.accountUsername, { color: mainText }]}>
-                {activeAccount?.username ?? "Compte local"}
-              </Text>
-              <Text style={[styles.accountEmail, { color: subText }]}>
-                {activeAccount?.email ?? "Aucune adresse email renseignée"}
-              </Text>
-              {accountAge !== null && (
-                <Text style={[styles.helperText, { color: subText }]}>
-                  {accountAge} ans – {activeAccount?.birthdate}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.accountInfoRow}>
-            <Text style={[styles.label, { color: subText }]}>
-              {t(
-                "Compte local sur cet appareil",
-                "Local account on this device"
-              )}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonSecondaryLight]}
-            onPress={() => setIsEditingAccount(true)}
-          >
-            <Text style={styles.buttonText}>Modifier les informations</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonSecondaryLight]}
-            onPress={() => setIsEditingPassword(true)}
-          >
-            <Text style={styles.buttonText}>Modifier le mot de passe</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonGhost]}
-            onPress={handleLogout}
-          >
-            <Text style={styles.buttonGhostText}>Se déconnecter</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* SECTION PRÉFÉRENCES */}
-      <Text style={[styles.sectionTitle, { color: mainText }]}>
-        Préférences
-      </Text>
-
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: cardBg, borderColor: cardBorder },
-        ]}
+      <ScrollView
+        style={[styles.container, { backgroundColor: screenBg }]}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
       >
-        <Text style={[styles.subTitle, { color: mainText }]}>Langue</Text>
-        <View style={styles.row}>
-          <TouchableOpacity
-            style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              language === "fr" && {
-                backgroundColor: chipActiveBg,
-                borderColor: chipActiveBorder,
-              },
-            ]}
-            onPress={() => setLanguage("fr")}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                {
-                  color:
-                    language === "fr" ? chipActiveText : mainText,
-                },
-              ]}
-            >
-              Français
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              language === "en" && {
-                backgroundColor: chipActiveBg,
-                borderColor: chipActiveBorder,
-              },
-            ]}
-            onPress={() => setLanguage("en")}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                {
-                  color:
-                    language === "en" ? chipActiveText : mainText,
-                },
-              ]}
-            >
-              English
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* SECTION COMPTE */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.accountSectionTitle")}
+        </Text>
 
-        <Text style={[styles.subTitle, { color: mainText }]}>Devise</Text>
-        <View style={styles.row}>
-          {["EUR", "USD", "GBP", "JPY"].map((c) => {
-            const active = currency === c;
-            return (
-              <TouchableOpacity
-                key={c}
+        {isEditingAccount ? (
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBg, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.subTitle, { color: mainText }]}>
+              {t("settings.editAccountButton")}
+            </Text>
+
+            <Text style={[styles.label, { color: subText }]}>
+              {t("settings.usernameLabel")} *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder={t("settings.usernamePlaceholder")}
+              placeholderTextColor="#6b7280"
+              value={usernameInput}
+              onChangeText={setUsernameInput}
+            />
+
+            <Text style={[styles.label, { color: subText }]}>
+              {t("settings.birthdateLabel")} *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder={t("settings.birthdatePlaceholder")}
+              placeholderTextColor="#6b7280"
+              value={birthdateInput}
+              onChangeText={(text) => setBirthdateInput(formatBirthdate(text))}
+              keyboardType="numeric"
+            />
+            {liveAge !== null && (
+  <Text style={[styles.helperText, { color: subText }]}>
+    {language === "en"
+      ? `Calculated age: ${liveAge} years`
+      : `Âge calculé : ${liveAge} ans`}
+  </Text>
+)}
+
+
+            <Text style={[styles.label, { color: subText }]}>
+              {t("settings.emailLabel")} *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder={t("settings.emailPlaceholder")}
+              placeholderTextColor="#6b7280"
+              value={emailInput}
+              onChangeText={setEmailInput}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonPrimary]}
+              onPress={handleSaveAccount}
+            >
+              <Text style={styles.buttonText}>
+                {t("settings.saveAccountButton")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonGhost]}
+              onPress={() => setIsEditingAccount(false)}
+            >
+              <Text style={styles.buttonGhostText}>{t("common.cancel")}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : isEditingPassword ? (
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBg, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.subTitle, { color: mainText }]}>
+              {t("settings.editPasswordButton")}
+            </Text>
+
+            <Text style={[styles.label, { color: subText }]}>
+              {t("settings.currentPasswordLabel")} *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder={t("settings.currentPasswordPlaceholder")}
+              placeholderTextColor="#6b7280"
+              value={currentPasswordInput}
+              onChangeText={setCurrentPasswordInput}
+              secureTextEntry
+            />
+
+            <Text style={[styles.label, { color: subText }]}>
+              {t("settings.newPasswordLabel")} *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder={t("settings.newPasswordPlaceholder")}
+              placeholderTextColor="#6b7280"
+              value={newPasswordInput}
+              onChangeText={setNewPasswordInput}
+              secureTextEntry
+            />
+
+            <Text style={[styles.label, { color: subText }]}>
+              {t("settings.confirmNewPasswordLabel")} *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: inputBorder,
+                  color: inputText,
+                },
+              ]}
+              placeholder={t("settings.confirmPasswordPlaceholder")}
+              placeholderTextColor="#6b7280"
+              value={confirmPasswordInput}
+              onChangeText={setConfirmPasswordInput}
+              secureTextEntry
+            />
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonPrimary]}
+              onPress={handleChangePassword}
+            >
+              <Text style={styles.buttonText}>
+                {t("settings.editPasswordButton")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonGhost]}
+              onPress={() => setIsEditingPassword(false)}
+            >
+              <Text style={styles.buttonGhostText}>{t("common.cancel")}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: cardBg, borderColor: cardBorder },
+            ]}
+          >
+            <View style={styles.accountHeaderRow}>
+              <View className="avatar" style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {getInitial(activeAccount?.username)}
+                </Text>
+              </View>
+              <View style={styles.infoTextBlock}>
+                <Text style={[styles.accountUsername, { color: mainText }]}>
+                  {activeAccount?.username ?? t("settings.accountLocalInfo")}
+                </Text>
+                <Text style={[styles.accountEmail, { color: subText }]}>
+                  {activeAccount?.email ?? t("settings.noEmailFallback")}
+                </Text>
+
+                {accountAge !== null && (
+                  <Text style={[styles.helperText, { color: subText }]}>
+                    {accountAge} ans – {activeAccount?.birthdate}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.accountInfoRow}>
+              <Text style={[styles.label, { color: subText }]}>
+                {t("settings.accountLocalInfo")}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonSecondaryLight]}
+              onPress={() => setIsEditingAccount(true)}
+            >
+              <Text style={styles.buttonText}>
+                {t("settings.editAccountButton")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonSecondaryLight]}
+              onPress={() => setIsEditingPassword(true)}
+            >
+              <Text style={styles.buttonText}>
+                {t("settings.editPasswordButton")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonGhost]}
+              onPress={handleLogout}
+            >
+              <Text style={styles.buttonGhostText}>
+                {t("settings.logoutButton")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* SECTION PRÉFÉRENCES */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.preferencesSectionTitle") ?? "Préférences"}
+        </Text>
+
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+          ]}
+        >
+          <Text style={[styles.subTitle, { color: mainText }]}>
+            {t("settings.languageSectionTitle")}
+          </Text>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                {
+                  borderColor: chipBorder,
+                  backgroundColor: chipBg,
+                },
+                language === "fr" && {
+                  backgroundColor: chipActiveBg,
+                  borderColor: chipActiveBorder,
+                },
+              ]}
+              onPress={() => setLanguage("fr")}
+            >
+              <Text
                 style={[
-                  styles.chip,
+                  styles.chipText,
                   {
-                    borderColor: chipBorder,
-                    backgroundColor: chipBg,
-                  },
-                  active && {
-                    backgroundColor: chipActiveBg,
-                    borderColor: chipActiveBorder,
+                    color: language === "fr" ? chipActiveText : mainText,
                   },
                 ]}
-                onPress={() => setCurrency(c as any)}
               >
-                <Text
+                Français
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                {
+                  borderColor: chipBorder,
+                  backgroundColor: chipBg,
+                },
+                language === "en" && {
+                  backgroundColor: chipActiveBg,
+                  borderColor: chipActiveBorder,
+                },
+              ]}
+              onPress={() => setLanguage("en")}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  {
+                    color: language === "en" ? chipActiveText : mainText,
+                  },
+                ]}
+              >
+                English
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.subTitle, { color: mainText }]}>
+            {t("settings.currencySectionTitle")}
+          </Text>
+          <View style={styles.row}>
+            {["EUR", "USD", "GBP", "JPY"].map((c) => {
+              const active = currency === c;
+              return (
+                <TouchableOpacity
+                  key={c}
                   style={[
-                    styles.chipText,
-                    { color: active ? chipActiveText : mainText },
+                    styles.chip,
+                    {
+                      borderColor: chipBorder,
+                      backgroundColor: chipBg,
+                    },
+                    active && {
+                      backgroundColor: chipActiveBg,
+                      borderColor: chipActiveBorder,
+                    },
                   ]}
+                  onPress={() => setCurrency(c as any)}
                 >
-                  {c}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: active ? chipActiveText : mainText },
+                    ]}
+                  >
+                    {c}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.subTitle, { color: mainText }]}>
+            {t("settings.themeSectionTitle")}
+          </Text>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                {
+                  borderColor: chipBorder,
+                  backgroundColor: chipBg,
+                },
+                theme === "dark" && {
+                  backgroundColor: chipActiveBg,
+                  borderColor: chipActiveBorder,
+                },
+              ]}
+              onPress={() => setTheme("dark")}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: theme === "dark" ? chipActiveText : mainText },
+                ]}
+              >
+                {t("settings.themeDark")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                {
+                  borderColor: chipBorder,
+                  backgroundColor: chipBg,
+                },
+                theme === "light" && {
+                  backgroundColor: chipActiveBg,
+                  borderColor: chipActiveBorder,
+                },
+              ]}
+              onPress={() => setTheme("light")}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: theme === "light" ? chipActiveText : mainText },
+                ]}
+              >
+                {t("settings.themeLight")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.subTitle, { color: mainText }]}>
+            {t("settings.timeFormatSectionTitle")}
+          </Text>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                {
+                  borderColor: chipBorder,
+                  backgroundColor: chipBg,
+                },
+                timeFormat24h && {
+                  backgroundColor: chipActiveBg,
+                  borderColor: chipActiveBorder,
+                },
+              ]}
+              onPress={() => setTimeFormat24h(true)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: timeFormat24h ? chipActiveText : mainText },
+                ]}
+              >
+                {t("settings.format24h")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                {
+                  borderColor: chipBorder,
+                  backgroundColor: chipBg,
+                },
+                !timeFormat24h && {
+                  backgroundColor: chipActiveBg,
+                  borderColor: chipActiveBorder,
+                },
+              ]}
+              onPress={() => setTimeFormat24h(false)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: !timeFormat24h ? chipActiveText : mainText },
+                ]}
+              >
+                {t("settings.format12h")}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <Text style={[styles.subTitle, { color: mainText }]}>Thème</Text>
-        <View style={styles.row}>
+        {/* SECTION VERSION */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.versionSectionTitle")}
+        </Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+          ]}
+        >
+          <Text
+            style={[
+              styles.value,
+              { fontWeight: "600", marginBottom: 4, color: mainText },
+            ]}
+          >
+            {t("settings.versionName")}
+          </Text>
+          <Text style={[styles.label, { color: subText }]}>
+            {t("settings.versionDescription")}
+          </Text>
+          <Text
+            style={[
+              styles.label,
+              { marginTop: 6, color: subText },
+            ]}
+          >
+            {t("settings.versionProNote")}
+          </Text>
+
+          <TouchableOpacity
+  style={[
+    styles.button,
+    styles.buttonSecondaryLight,
+    { marginTop: 12 },
+  ]}
+  activeOpacity={0.7}
+  onPress={() => {
+    Alert.alert(
+      t("settings.versionProAlertTitle"),
+      t("settings.versionProAlertMessage")
+    );
+  }}
+>
+  <Text style={styles.buttonText}>
+    {t("settings.versionProButton")}
+  </Text>
+</TouchableOpacity>
+
+        </View>
+
+        {/* SECTION EXPORT CSV */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.exportCsvSectionTitle")}
+        </Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+          ]}
+        >
+          <Text style={[styles.label, { color: subText }]}>
+            {t("settings.exportCsvDescription")}
+          </Text>
+          <Text
+  style={[
+    styles.helperText,
+    { marginBottom: 0, color: subText },
+  ]}
+>
+  {t("settings.exportCsvHelper")}
+</Text>
+
           <TouchableOpacity
             style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              theme === "dark" && {
-                backgroundColor: chipActiveBg,
-                borderColor: chipActiveBorder,
-              },
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 12 },
             ]}
-            onPress={() => setTheme("dark")}
+            activeOpacity={0.7}
+            onPress={handleExportCsv}
           >
-            <Text
-              style={[
-                styles.chipText,
-                { color: theme === "dark" ? chipActiveText : mainText },
-              ]}
-            >
-              Sombre
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              theme === "light" && {
-                backgroundColor: chipActiveBg,
-                borderColor: chipActiveBorder,
-              },
-            ]}
-            onPress={() => setTheme("light")}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                { color: theme === "light" ? chipActiveText : mainText },
-              ]}
-            >
-              Clair
+            <Text style={styles.buttonText}>
+              {t("settings.exportCsvButton")}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.subTitle, { color: mainText }]}>
-          Format de l'heure
+        {/* SECTION EXPORT / IMPORT JSON */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.exportJsonSectionTitle")}
         </Text>
-        <View style={styles.row}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+          ]}
+        >
+          <Text style={[styles.label, { color: subText }]}>
+            {t("settings.exportJsonDescription")}
+          </Text>
+          <Text
+  style={[
+    styles.helperText,
+    { marginBottom: 0, color: subText },
+  ]}
+>
+  {t("settings.exportJsonHelper")}
+</Text>
+
+
           <TouchableOpacity
             style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              timeFormat24h && {
-                backgroundColor: chipActiveBg,
-                borderColor: chipActiveBorder,
-              },
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 12 },
             ]}
-            onPress={() => setTimeFormat24h(true)}
+            activeOpacity={0.7}
+            onPress={handleExportJson}
           >
-            <Text
-              style={[
-                styles.chipText,
-                { color: timeFormat24h ? chipActiveText : mainText },
-              ]}
-            >
-              24h
+            <Text style={styles.buttonText}>
+              {t("settings.exportJsonButton")}
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              !timeFormat24h && {
-                backgroundColor: chipActiveBg,
-                borderColor: chipActiveBorder,
-              },
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 8 },
             ]}
-            onPress={() => setTimeFormat24h(false)}
+            activeOpacity={0.7}
+            onPress={handleImportJson}
           >
-            <Text
-              style={[
-                styles.chipText,
-                { color: !timeFormat24h ? chipActiveText : mainText },
-              ]}
-            >
-              12h (AM/PM)
+            <Text style={styles.buttonText}>
+              {t("settings.importJsonButton")}
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* SECTION VERSION */}
-      <Text style={[styles.sectionTitle, { color: mainText }]}>Version</Text>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: cardBg, borderColor: cardBorder },
-        ]}
-      >
-        <Text
-          style={[
-            styles.value,
-            { fontWeight: "600", marginBottom: 4, color: mainText },
-          ]}
-        >
-          Trading Diary Free
-        </Text>
-        <Text style={[styles.label, { color: subText }]}>
-          Notes tes trades en illimité sur cet appareil. Sauvegarde locale, sans
-          compte en ligne obligatoire.
-        </Text>
-        <Text
-          style={[
-            styles.label,
-            { marginTop: 6, color: subText },
-          ]}
-        >
-          La version Pro (sauvegarde cloud, multi-appareils, export avancé,
-          etc.) arrivera plus tard.
+        {/* SECTION RÉINITIALISATION */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.resetSectionTitle")}
         </Text>
 
         <TouchableOpacity
-          style={[
-            styles.button,
-            styles.buttonSecondaryLight,
-            { marginTop: 12 },
-          ]}
-          activeOpacity={0.7}
-          onPress={() => {
-            Alert.alert(
-              "Trading Diary Pro",
-              "La version Pro (avec sauvegarde cloud, multi-appareils, statistiques avancées, etc.) sera disponible dans une future mise à jour."
-            );
-          }}
-        >
-          <Text style={styles.buttonText}>Trading Diary Pro (bientôt)</Text>
-        </TouchableOpacity>
-      </View>
+  style={[styles.button, styles.buttonWarning]}
+  onPress={handleResetApp}
+>
+  <Text style={styles.buttonText}>
+    {t("settings.resetTradesButton")}
+  </Text>
+</TouchableOpacity>
+<Text style={[styles.helperText, { color: subText }]}>
+  {t("settings.resetTradesHelper")}
+</Text>
 
-      {/* SECTION EXPORT CSV */}
-      <Text style={[styles.sectionTitle, { color: mainText }]}>
-        Export des trades (CSV)
-      </Text>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: cardBg, borderColor: cardBorder },
-        ]}
-      >
-        <Text style={[styles.label, { color: subText }]}>
-          Exporte tous les trades du journal actif au format CSV sur cet
-          appareil.
-        </Text>
-        <Text
-          style={[
-            styles.helperText,
-            { marginBottom: 0, color: subText },
-          ]}
-        >
-          Tu pourras ensuite ouvrir le fichier dans Excel, Google Sheets, etc.
-        </Text>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.buttonSecondaryLight,
-            { marginTop: 12 },
-          ]}
-          activeOpacity={0.7}
-          onPress={handleExportCsv}
-        >
-          <Text style={styles.buttonText}>Exporter le journal en CSV</Text>
-        </TouchableOpacity>
-      </View>
+<TouchableOpacity
+  style={[styles.button, styles.buttonDanger]}
+  onPress={handleDeleteAccount}
+>
+  <Text style={styles.buttonText}>
+    {t("settings.deleteAccountButton")}
+  </Text>
+</TouchableOpacity>
+<Text style={styles.helperTextDanger}>
+  {t("settings.deleteAccountWarning")}
+</Text>
 
-      {/* SECTION EXPORT / IMPORT JSON */}
-      <Text style={[styles.sectionTitle, { color: mainText }]}>
-        Sauvegarde JSON (complet)
-      </Text>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: cardBg, borderColor: cardBorder },
-        ]}
-      >
-        <Text style={[styles.label, { color: subText }]}>
-          Exporte ou importe un fichier JSON contenant ton compte, tes
-          préférences, tes journaux et tes trades.
-        </Text>
-        <Text
-          style={[
-            styles.helperText,
-            { marginBottom: 0, color: subText },
-          ]}
-        >
-          Parfait pour faire une sauvegarde manuelle ou transférer tes données
-          sur un autre appareil.
-        </Text>
+      </ScrollView>
 
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.buttonSecondaryLight,
-            { marginTop: 12 },
-          ]}
-          activeOpacity={0.7}
-          onPress={handleExportJson}
-        >
-          <Text style={styles.buttonText}>Exporter en JSON</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.buttonSecondaryLight,
-            { marginTop: 8 },
-          ]}
-          activeOpacity={0.7}
-          onPress={handleImportJson}
-        >
-          <Text style={styles.buttonText}>Importer depuis un JSON</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* SECTION RÉINITIALISATION */}
-      <Text style={[styles.sectionTitle, { color: mainText }]}>
-        Données et réinitialisation
-      </Text>
-
-      <TouchableOpacity
-        style={[styles.button, styles.buttonWarning]}
-        onPress={handleResetApp}
-      >
-        <Text style={styles.buttonText}>
-          Réinitialiser l'application (garder le compte)
-        </Text>
-      </TouchableOpacity>
-      <Text style={[styles.helperText, { color: subText }]}>
-        Supprime tous les trades et les statistiques mais conserve ton compte.
-      </Text>
-
-      <TouchableOpacity
-        style={[styles.button, styles.buttonDanger]}
-        onPress={handleDeleteAccount}
-      >
-        <Text style={styles.buttonText}>
-          Supprimer le compte (et toutes les données)
-        </Text>
-      </TouchableOpacity>
-      <Text style={styles.helperTextDanger}>
-        Action définitive : toutes les données liées à ce compte sur cet
-        appareil seront supprimées.
-      </Text>
-    </ScrollView>
-
-    {/* 🔐 MODAL CONFIRMATION MOT DE PASSE SUPPRESSION COMPTE */}
+      {/* 🔐 MODAL CONFIRMATION MOT DE PASSE SUPPRESSION COMPTE */}
       {showDeleteConfirmModal && (
         <View style={styles.deleteModalOverlay}>
           <View
@@ -1314,11 +1369,13 @@ const SettingsScreen: React.FC = () => {
             ]}
           >
             <Text style={[styles.deleteModalTitle, { color: mainText }]}>
-              Confirmer la suppression
+              {t("settings.deleteAccountModalTitle")}
             </Text>
-            <Text style={[styles.deleteModalMessage, { color: subText }]}>
-              Pour confirmer la suppression définitive de ce compte, entre ton
-              mot de passe.
+            <Text
+              style={[styles.deleteModalMessage, { color: subText }]}
+            >
+              {t("settings.deleteAccountModalMessage") ??
+                "Pour confirmer la suppression définitive de ce compte, entre ton mot de passe."}
             </Text>
 
             <TextInput
@@ -1330,7 +1387,7 @@ const SettingsScreen: React.FC = () => {
                   color: inputText,
                 },
               ]}
-              placeholder="Mot de passe"
+              placeholder={t("settings.deleteAccountPasswordPlaceholder")}
               placeholderTextColor="#6b7280"
               value={deletePasswordInput}
               onChangeText={(text) => {
@@ -1353,14 +1410,18 @@ const SettingsScreen: React.FC = () => {
                   setDeleteError("");
                 }}
               >
-                <Text style={styles.buttonGhostText}>Annuler</Text>
+                <Text style={styles.buttonGhostText}>
+                  {t("common.cancel")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.button, styles.buttonDanger, { flex: 1 }]}
                 onPress={confirmDeleteWithPassword}
               >
-                <Text style={styles.buttonText}>Supprimer le compte</Text>
+                <Text style={styles.buttonText}>
+                  {t("settings.deleteAccountButton")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1505,19 +1566,19 @@ const styles = StyleSheet.create({
   },
 
   // 🔐 Styles du modal de confirmation mot de passe
-deleteModalOverlay: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(15,23,42,0.85)",
-  justifyContent: "center",
-  alignItems: "center",
-  paddingHorizontal: 24,
-  zIndex: 9999,
-  elevation: 10,
-},
+  deleteModalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(15,23,42,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    zIndex: 9999,
+    elevation: 10,
+  },
 
   deleteModalCard: {
     width: "100%",
@@ -1549,12 +1610,12 @@ deleteModalOverlay: {
     textAlign: "center",
   },
   deleteModalButtonsRow: {
-  flexDirection: "row",
-  marginTop: 14,
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-},
+    flexDirection: "row",
+    marginTop: 14,
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
 });
 
 export default SettingsScreen;
