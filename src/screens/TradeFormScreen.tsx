@@ -54,6 +54,12 @@ const TradeFormScreen: React.FC = () => {
   const directionBorder = chipBorder;
   const directionBg = chipBg;
 
+  // ✅ Fallback compatible toutes versions (évite crash si MediaType n'existe pas)
+  const IMAGE_MEDIA_TYPES =
+    (ImagePicker as any).MediaType?.Images ??
+    (ImagePicker as any).MediaTypeOptions?.Images ??
+    "images";
+
   const existingTrade: Trade | undefined = tradeIdStr
     ? trades.find((t) => t.id === tradeIdStr)
     : undefined;
@@ -112,9 +118,7 @@ const TradeFormScreen: React.FC = () => {
           ? existingTrade.slPrice.toString()
           : ""
       );
-      setRr(
-        existingTrade.rr !== undefined ? existingTrade.rr.toString() : ""
-      );
+      setRr(existingTrade.rr !== undefined ? existingTrade.rr.toString() : "");
       setEmotion(existingTrade.emotion);
       setQuality(existingTrade.quality);
       setRespectPlan(existingTrade.respectPlan);
@@ -147,9 +151,7 @@ const TradeFormScreen: React.FC = () => {
       direction,
       pnl: numericPnl,
       lotSize: lotSize ? parseFloat(lotSize.replace(",", ".")) : undefined,
-      entryPrice: entryPrice
-        ? parseFloat(entryPrice.replace(",", "."))
-        : undefined,
+      entryPrice: entryPrice ? parseFloat(entryPrice.replace(",", ".")) : undefined,
       tpPrice: tpPrice ? parseFloat(tpPrice.replace(",", ".")) : undefined,
       slPrice: slPrice ? parseFloat(slPrice.replace(",", ".")) : undefined,
       rr: tradeRr,
@@ -198,7 +200,7 @@ const TradeFormScreen: React.FC = () => {
     if (!ok) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: IMAGE_MEDIA_TYPES,
       quality: 0.7,
     });
 
@@ -212,7 +214,7 @@ const TradeFormScreen: React.FC = () => {
     if (!ok) return;
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: IMAGE_MEDIA_TYPES,
       quality: 0.7,
     });
 
@@ -247,9 +249,7 @@ const TradeFormScreen: React.FC = () => {
         <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
 
         <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
-          {isEdit
-            ? t("tradeForm.editTradeTitle")
-            : t("tradeForm.newTradeTitle")}
+          {isEdit ? t("tradeForm.editTradeTitle") : t("tradeForm.newTradeTitle")}
         </Text>
 
         <Text style={[styles.label, { color: labelColor }]}>
@@ -291,10 +291,7 @@ const TradeFormScreen: React.FC = () => {
             <Text
               style={[
                 styles.directionText,
-                {
-                  color:
-                    direction === "BUY" ? "#f9fafb" : inputTextColor,
-                },
+                { color: direction === "BUY" ? "#f9fafb" : inputTextColor },
               ]}
             >
               BUY
@@ -317,10 +314,7 @@ const TradeFormScreen: React.FC = () => {
             <Text
               style={[
                 styles.directionText,
-                {
-                  color:
-                    direction === "SELL" ? "#f9fafb" : inputTextColor,
-                },
+                { color: direction === "SELL" ? "#f9fafb" : inputTextColor },
               ]}
             >
               SELL
@@ -461,9 +455,7 @@ const TradeFormScreen: React.FC = () => {
                 <Text
                   style={[
                     styles.chipText,
-                    {
-                      color: active ? "#f9fafb" : chipTextColor,
-                    },
+                    { color: active ? "#f9fafb" : chipTextColor },
                   ]}
                 >
                   {e.label}
@@ -493,16 +485,12 @@ const TradeFormScreen: React.FC = () => {
                     borderColor: "#60a5fa",
                   },
                 ]}
-                onPress={() =>
-                  setQuality((prev) => (prev === q ? undefined : q))
-                }
+                onPress={() => setQuality((prev) => (prev === q ? undefined : q))}
               >
                 <Text
                   style={[
                     styles.chipText,
-                    {
-                      color: active ? "#f9fafb" : chipTextColor,
-                    },
+                    { color: active ? "#f9fafb" : chipTextColor },
                   ]}
                 >
                   {q}
@@ -533,10 +521,7 @@ const TradeFormScreen: React.FC = () => {
             <Text
               style={[
                 styles.chipText,
-                {
-                  color:
-                    respectPlan === true ? "#f9fafb" : chipTextColor,
-                },
+                { color: respectPlan === true ? "#f9fafb" : chipTextColor },
               ]}
             >
               {t("tradeForm.respectPlanYes")}
@@ -559,10 +544,7 @@ const TradeFormScreen: React.FC = () => {
             <Text
               style={[
                 styles.chipText,
-                {
-                  color:
-                    respectPlan === false ? "#f9fafb" : chipTextColor,
-                },
+                { color: respectPlan === false ? "#f9fafb" : chipTextColor },
               ]}
             >
               {t("tradeForm.respectPlanNo")}
@@ -605,12 +587,7 @@ const TradeFormScreen: React.FC = () => {
             ]}
             onPress={handlePickImageFromGallery}
           >
-            <Text
-              style={[
-                styles.imageButtonText,
-                { color: chipTextColor },
-              ]}
-            >
+            <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
               {t("tradeForm.screenshotGallery")}
             </Text>
           </TouchableOpacity>
@@ -624,12 +601,7 @@ const TradeFormScreen: React.FC = () => {
             ]}
             onPress={handleTakePhoto}
           >
-            <Text
-              style={[
-                styles.imageButtonText,
-                { color: chipTextColor },
-              ]}
-            >
+            <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
               {t("tradeForm.screenshotCamera")}
             </Text>
           </TouchableOpacity>
@@ -640,10 +612,7 @@ const TradeFormScreen: React.FC = () => {
             <TouchableOpacity onPress={openImageFullScreen}>
               <Image
                 source={{ uri: screenshotUri }}
-                style={[
-                  styles.screenshotPreview,
-                  { borderColor: inputBorder },
-                ]}
+                style={[styles.screenshotPreview, { borderColor: inputBorder }]}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setScreenshotUri(undefined)}>
@@ -656,9 +625,7 @@ const TradeFormScreen: React.FC = () => {
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>
-            {isEdit
-              ? t("tradeForm.updateButton")
-              : t("tradeForm.saveButton")}
+            {isEdit ? t("tradeForm.updateButton") : t("tradeForm.saveButton")}
           </Text>
         </TouchableOpacity>
       </ScrollView>
