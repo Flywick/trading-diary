@@ -8,11 +8,9 @@
     "scheme": "tradingdiary",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -24,22 +22,19 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.tradingdiary"
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-
     "splash": {
       "image": "./assets/images/icon-splash-screen.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F1F5F9",
+      "backgroundColor": "#0B1220",
       "dark": {
         "image": "./assets/images/icon-splash-screen-dark.png",
         "backgroundColor": "#020617"
       }
     },
-
     "plugins": [
       "expo-router",
       [
@@ -48,15 +43,14 @@
           "image": "./assets/images/icon-splash-screen.png",
           "imageWidth": 240,
           "resizeMode": "contain",
-          "backgroundColor": "#F1F5F9",
+          "backgroundColor": "#0B1220",
           "dark": {
-            "image": "./assets/images/icon-splash-screen.png",
+            "image": "./assets/images/icon-splash-screen-dark.png",
             "backgroundColor": "#020617"
           }
         }
       ]
     ],
-
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
