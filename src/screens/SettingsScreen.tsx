@@ -1,3 +1,4 @@
+// src/screens/SettingsScreen.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
@@ -12,12 +13,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAccount } from "../context/AccountContext";
 import { useJournal } from "../context/JournalContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
 import { useI18n } from "../i18n/useI18n";
+
 
 const formatBirthdate = (text: string) => {
   const cleaned = text.replace(/\D/g, "").slice(0, 8);
@@ -147,10 +150,7 @@ const SettingsScreen: React.FC = () => {
 
   const handleSaveAccount = () => {
     if (!activeAccount) {
-      Alert.alert(
-        t("settings.deleteAccountNoAccount"),
-        t("errors.noAccount")
-      );
+      Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
       return;
     }
 
@@ -177,26 +177,17 @@ const SettingsScreen: React.FC = () => {
 
     const age = getAgeFromBirthdate(birthdate);
     if (age === null) {
-      Alert.alert(
-        t("errors.invalidBirthdate"),
-        t("errors.invalidBirthdate")
-      );
+      Alert.alert(t("errors.invalidBirthdate"), t("errors.invalidBirthdate"));
       return;
     }
     if (age < 18) {
-      Alert.alert(
-        t("errors.ageTooLow"),
-        t("errors.ageTooLow")
-      );
+      Alert.alert(t("errors.ageTooLow"), t("errors.ageTooLow"));
       return;
     }
 
     const emailRegex = /.+@.+\..+/;
     if (!emailRegex.test(email)) {
-      Alert.alert(
-        t("errors.invalidEmail"),
-        t("errors.invalidEmail")
-      );
+      Alert.alert(t("errors.invalidEmail"), t("errors.invalidEmail"));
       return;
     }
 
@@ -216,47 +207,34 @@ const SettingsScreen: React.FC = () => {
 
   const handleChangePassword = () => {
     if (!activeAccount) {
-      Alert.alert(
-        t("settings.deleteAccountNoAccount"),
-        t("errors.noAccount")
-      );
+      Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
       return;
     }
 
     if (!activeAccount.password) {
-  Alert.alert(
-    t("settings.passwordNotDefinedTitle"),
-    t("settings.passwordNotDefinedMessage")
-  );
-  return;
-}
-
+      Alert.alert(
+        t("settings.passwordNotDefinedTitle"),
+        t("settings.passwordNotDefinedMessage")
+      );
+      return;
+    }
 
     const currentPassword = currentPasswordInput.trim();
     const newPassword = newPasswordInput.trim();
     const confirmPassword = confirmPasswordInput.trim();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert(
-        t("errors.missingLoginFields"),
-        t("errors.missingLoginFields")
-      );
+      Alert.alert(t("errors.missingLoginFields"), t("errors.missingLoginFields"));
       return;
     }
 
     if (currentPassword !== activeAccount.password) {
-      Alert.alert(
-        t("settings.passwordIncorrect"),
-        t("settings.passwordIncorrect")
-      );
+      Alert.alert(t("settings.passwordIncorrect"), t("settings.passwordIncorrect"));
       return;
     }
 
     if (newPassword.length < 6) {
-      Alert.alert(
-        t("errors.passwordTooShort"),
-        t("errors.passwordTooShort")
-      );
+      Alert.alert(t("errors.passwordTooShort"), t("errors.passwordTooShort"));
       return;
     }
 
@@ -283,18 +261,12 @@ const SettingsScreen: React.FC = () => {
 
   const handleExportCsv = async () => {
     if (!activeAccount) {
-      Alert.alert(
-        t("settings.deleteAccountNoAccount"),
-        t("errors.noAccount")
-      );
+      Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
       return;
     }
 
     if (!trades || trades.length === 0) {
-      Alert.alert(
-        t("stats.noTrades"),
-        t("stats.noTrades")
-      );
+      Alert.alert(t("stats.noTrades"), t("stats.noTrades"));
       return;
     }
 
@@ -415,10 +387,7 @@ const SettingsScreen: React.FC = () => {
 
   const handleExportJson = async () => {
     if (!activeAccount) {
-      Alert.alert(
-        t("settings.deleteAccountNoAccount"),
-        t("errors.noAccount")
-      );
+      Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
       return;
     }
 
@@ -483,10 +452,7 @@ const SettingsScreen: React.FC = () => {
 
   const handleImportJson = async () => {
     if (!activeAccount) {
-      Alert.alert(
-        t("settings.deleteAccountNoAccount"),
-        t("errors.noAccount")
-      );
+      Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
       return;
     }
 
@@ -605,24 +571,20 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleResetApp = () => {
-    Alert.alert(
-      t("settings.resetAppTitle"),
-      t("settings.resetAppMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("settings.resetAppConfirm"),
-          style: "destructive",
-          onPress: () => {
-            resetTrades();
-            Alert.alert(
-              t("settings.resetAppDoneTitle"),
-              t("settings.resetAppDoneMessage")
-            );
-          },
+    Alert.alert(t("settings.resetAppTitle"), t("settings.resetAppMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("settings.resetAppConfirm"),
+        style: "destructive",
+        onPress: () => {
+          resetTrades();
+          Alert.alert(
+            t("settings.resetAppDoneTitle"),
+            t("settings.resetAppDoneMessage")
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDeleteAccount = () => {
@@ -634,23 +596,19 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert(
-      t("settings.deleteAccountTitle"),
-      t("settings.deleteAccountMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("settings.deleteAccountConfirm"),
-          style: "destructive",
-          onPress: () => {
-            // On ouvre le modal de confirmation par mot de passe
-            setDeletePasswordInput("");
-            setDeleteError("");
-            setShowDeleteConfirmModal(true);
-          },
+    Alert.alert(t("settings.deleteAccountTitle"), t("settings.deleteAccountMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("settings.deleteAccountConfirm"),
+        style: "destructive",
+        onPress: () => {
+          // On ouvre le modal de confirmation par mot de passe
+          setDeletePasswordInput("");
+          setDeleteError("");
+          setShowDeleteConfirmModal(true);
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const confirmDeleteWithPassword = () => {
@@ -698,31 +656,23 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert(
-      t("settings.logoutTitle"),
-      t("settings.logoutMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("settings.logoutButton"),
-          style: "destructive",
-          onPress: () => {
-            Alert.alert(
-              t("settings.logoutDoneTitle"),
-              t("settings.logoutDoneMessage"),
-              [
-                {
-                  text: t("common.ok"),
-                  onPress: () => {
-                    logout();
-                  },
-                },
-              ]
-            );
-          },
+    Alert.alert(t("settings.logoutTitle"), t("settings.logoutMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("settings.logoutButton"),
+        style: "destructive",
+        onPress: () => {
+          Alert.alert(t("settings.logoutDoneTitle"), t("settings.logoutDoneMessage"), [
+            {
+              text: t("common.ok"),
+              onPress: () => {
+                logout();
+              },
+            },
+          ]);
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const getInitial = (name: string | undefined) => {
@@ -731,10 +681,10 @@ const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <>
+    <SafeAreaView style={[styles.container, { backgroundColor: screenBg }]} edges={["top"]}>
       <ScrollView
         style={[styles.container, { backgroundColor: screenBg }]}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 32 }}
       >
         {/* SECTION COMPTE */}
         <Text style={[styles.sectionTitle, { color: mainText }]}>
@@ -789,13 +739,12 @@ const SettingsScreen: React.FC = () => {
               keyboardType="numeric"
             />
             {liveAge !== null && (
-  <Text style={[styles.helperText, { color: subText }]}>
-    {language === "en"
-      ? `Calculated age: ${liveAge} years`
-      : `Âge calculé : ${liveAge} ans`}
-  </Text>
-)}
-
+              <Text style={[styles.helperText, { color: subText }]}>
+                {language === "en"
+                  ? `Calculated age: ${liveAge} years`
+                  : `Âge calculé : ${liveAge} ans`}
+              </Text>
+            )}
 
             <Text style={[styles.label, { color: subText }]}>
               {t("settings.emailLabel")} *
@@ -1209,34 +1158,28 @@ const SettingsScreen: React.FC = () => {
           <Text style={[styles.label, { color: subText }]}>
             {t("settings.versionDescription")}
           </Text>
-          <Text
-            style={[
-              styles.label,
-              { marginTop: 6, color: subText },
-            ]}
-          >
+          <Text style={[styles.label, { marginTop: 6, color: subText }]}>
             {t("settings.versionProNote")}
           </Text>
 
           <TouchableOpacity
-  style={[
-    styles.button,
-    styles.buttonSecondaryLight,
-    { marginTop: 12 },
-  ]}
-  activeOpacity={0.7}
-  onPress={() => {
-    Alert.alert(
-      t("settings.versionProAlertTitle"),
-      t("settings.versionProAlertMessage")
-    );
-  }}
->
-  <Text style={styles.buttonText}>
-    {t("settings.versionProButton")}
-  </Text>
-</TouchableOpacity>
-
+            style={[
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 12 },
+            ]}
+            activeOpacity={0.7}
+            onPress={() => {
+              Alert.alert(
+                t("settings.versionProAlertTitle"),
+                t("settings.versionProAlertMessage")
+              );
+            }}
+          >
+            <Text style={styles.buttonText}>
+              {t("settings.versionProButton")}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* SECTION EXPORT CSV */}
@@ -1252,14 +1195,9 @@ const SettingsScreen: React.FC = () => {
           <Text style={[styles.label, { color: subText }]}>
             {t("settings.exportCsvDescription")}
           </Text>
-          <Text
-  style={[
-    styles.helperText,
-    { marginBottom: 0, color: subText },
-  ]}
->
-  {t("settings.exportCsvHelper")}
-</Text>
+          <Text style={[styles.helperText, { marginBottom: 0, color: subText }]}>
+            {t("settings.exportCsvHelper")}
+          </Text>
 
           <TouchableOpacity
             style={[
@@ -1289,15 +1227,9 @@ const SettingsScreen: React.FC = () => {
           <Text style={[styles.label, { color: subText }]}>
             {t("settings.exportJsonDescription")}
           </Text>
-          <Text
-  style={[
-    styles.helperText,
-    { marginBottom: 0, color: subText },
-  ]}
->
-  {t("settings.exportJsonHelper")}
-</Text>
-
+          <Text style={[styles.helperText, { marginBottom: 0, color: subText }]}>
+            {t("settings.exportJsonHelper")}
+          </Text>
 
           <TouchableOpacity
             style={[
@@ -1334,29 +1266,28 @@ const SettingsScreen: React.FC = () => {
         </Text>
 
         <TouchableOpacity
-  style={[styles.button, styles.buttonWarning]}
-  onPress={handleResetApp}
->
-  <Text style={styles.buttonText}>
-    {t("settings.resetTradesButton")}
-  </Text>
-</TouchableOpacity>
-<Text style={[styles.helperText, { color: subText }]}>
-  {t("settings.resetTradesHelper")}
-</Text>
+          style={[styles.button, styles.buttonWarning]}
+          onPress={handleResetApp}
+        >
+          <Text style={styles.buttonText}>
+            {t("settings.resetTradesButton")}
+          </Text>
+        </TouchableOpacity>
+        <Text style={[styles.helperText, { color: subText }]}>
+          {t("settings.resetTradesHelper")}
+        </Text>
 
-<TouchableOpacity
-  style={[styles.button, styles.buttonDanger]}
-  onPress={handleDeleteAccount}
->
-  <Text style={styles.buttonText}>
-    {t("settings.deleteAccountButton")}
-  </Text>
-</TouchableOpacity>
-<Text style={styles.helperTextDanger}>
-  {t("settings.deleteAccountWarning")}
-</Text>
-
+        <TouchableOpacity
+          style={[styles.button, styles.buttonDanger]}
+          onPress={handleDeleteAccount}
+        >
+          <Text style={styles.buttonText}>
+            {t("settings.deleteAccountButton")}
+          </Text>
+        </TouchableOpacity>
+        <Text style={styles.helperTextDanger}>
+          {t("settings.deleteAccountWarning")}
+        </Text>
       </ScrollView>
 
       {/* 🔐 MODAL CONFIRMATION MOT DE PASSE SUPPRESSION COMPTE */}
@@ -1371,9 +1302,7 @@ const SettingsScreen: React.FC = () => {
             <Text style={[styles.deleteModalTitle, { color: mainText }]}>
               {t("settings.deleteAccountModalTitle")}
             </Text>
-            <Text
-              style={[styles.deleteModalMessage, { color: subText }]}
-            >
+            <Text style={[styles.deleteModalMessage, { color: subText }]}>
               {t("settings.deleteAccountModalMessage") ??
                 "Pour confirmer la suppression définitive de ce compte, entre ton mot de passe."}
             </Text>
@@ -1410,9 +1339,7 @@ const SettingsScreen: React.FC = () => {
                   setDeleteError("");
                 }}
               >
-                <Text style={styles.buttonGhostText}>
-                  {t("common.cancel")}
-                </Text>
+                <Text style={styles.buttonGhostText}>{t("common.cancel")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1427,7 +1354,7 @@ const SettingsScreen: React.FC = () => {
           </View>
         </View>
       )}
-    </>
+    </SafeAreaView>
   );
 };
 
@@ -1439,7 +1366,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 8,
-    marginTop: 16,
+    marginTop: 8,
   },
   card: {
     borderRadius: 12,

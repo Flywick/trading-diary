@@ -4,7 +4,7 @@
     "slug": "trading-diary",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo-trading-diary.png",
     "scheme": "tradingdiary",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -12,15 +12,11 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.anonymous.tradingdiary",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.tradingdiary"
+        "foregroundImage": "./assets/images/adaptive-icon2.png",
+        "backgroundColor": "#020617"
+      }
     },
     "web": {
       "output": "static",

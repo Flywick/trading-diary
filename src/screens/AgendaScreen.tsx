@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import DayCell from "../components/DayCell";
 import { useJournal } from "../context/JournalContext";
 import { useSettings } from "../context/SettingsContext";
@@ -53,6 +54,8 @@ function getDaysMatrix(year: number, month: number) {
 }
 
 const AgendaScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+
   const { trades } = useTrades();
   const { theme, currency } = useSettings();
   const isDark = theme === "dark";
@@ -130,8 +133,7 @@ const AgendaScreen: React.FC = () => {
     const tradeCount = monthTrades.length;
     const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0);
     const winningTrades = monthTrades.filter((t) => t.pnl > 0).length;
-    const winrate =
-      tradeCount > 0 ? (winningTrades / tradeCount) * 100 : 0;
+    const winrate = tradeCount > 0 ? (winningTrades / tradeCount) * 100 : 0;
 
     return {
       tradeCount,
@@ -154,8 +156,7 @@ const AgendaScreen: React.FC = () => {
     const rrTrades = dayTrades.filter((t) => typeof t.rr === "number");
     const avgRr =
       rrTrades.length > 0
-        ? rrTrades.reduce((sum, t) => sum + (t.rr ?? 0), 0) /
-          rrTrades.length
+        ? rrTrades.reduce((sum, t) => sum + (t.rr ?? 0), 0) / rrTrades.length
         : 0;
 
     return {
@@ -168,10 +169,10 @@ const AgendaScreen: React.FC = () => {
 
   const monthName = useMemo(
     () =>
-      currentDate.toLocaleString(
-        language === "en" ? "en-US" : "fr-FR",
-        { month: "long", year: "numeric" }
-      ),
+      currentDate.toLocaleString(language === "en" ? "en-US" : "fr-FR", {
+        month: "long",
+        year: "numeric",
+      }),
     [currentDate, language]
   );
 
@@ -225,16 +226,11 @@ const AgendaScreen: React.FC = () => {
   };
 
   const handleCreateJournal = () => {
-    const name =
-      newJournalName.trim() ||
-      t("agenda.newJournalDefaultName");
+    const name = newJournalName.trim() || t("agenda.newJournalDefaultName");
     const ok = createJournal(name);
 
     if (!ok) {
-      Alert.alert(
-        t("agenda.proFeatureTitle"),
-        t("agenda.proFeatureMessage")
-      );
+      Alert.alert(t("agenda.proFeatureTitle"), t("agenda.proFeatureMessage"));
       return;
     }
 
@@ -261,10 +257,7 @@ const AgendaScreen: React.FC = () => {
 
     Alert.alert(
       t("agenda.deleteProfileTitle"),
-      t("agenda.deleteProfileMessage").replace(
-        "{{name}}",
-        activeJournal.name
-      ),
+      t("agenda.deleteProfileMessage").replace("{{name}}", activeJournal.name),
       [
         { text: t("common.cancel"), style: "cancel" },
         {
@@ -280,40 +273,33 @@ const AgendaScreen: React.FC = () => {
   };
 
   return (
-    <View
+    <SafeAreaView
+      edges={["top"]}
       style={[
         styles.container,
-        { backgroundColor: bgColor },
+        {
+          backgroundColor: bgColor,
+        },
       ]}
     >
       {/* Titre + navigation mois */}
       <View style={styles.headerRow}>
-        <Text
-          style={[styles.arrow, { color: arrowColor }]}
-          onPress={() => changeMonth("prev")}
-        >
+        <Text style={[styles.arrow, { color: arrowColor }]} onPress={() => changeMonth("prev")}>
           {"<"}
         </Text>
 
-        <Text
-          style={[styles.headerTitle, { color: headerTitleColor }]}
-        >
+        <Text style={[styles.headerTitle, { color: headerTitleColor }]}>
           {monthName}
         </Text>
 
-        <Text
-          style={[styles.arrow, { color: arrowColor }]}
-          onPress={() => changeMonth("next")}
-        >
+        <Text style={[styles.arrow, { color: arrowColor }]} onPress={() => changeMonth("next")}>
           {">"}
         </Text>
       </View>
 
       {/* Sélecteur de profil / journal */}
       <View style={styles.journalRow}>
-        <Text
-          style={[styles.journalLabel, { color: journalLabelColor }]}
-        >
+        <Text style={[styles.journalLabel, { color: journalLabelColor }]}>
           {t("agenda.profileLabel")}
         </Text>
         <TouchableOpacity
@@ -326,21 +312,14 @@ const AgendaScreen: React.FC = () => {
           ]}
           onPress={openJournalModal}
         >
-          <Text
-            style={[
-              styles.journalChipText,
-              { color: journalChipTextColor },
-            ]}
-          >
+          <Text style={[styles.journalChipText, { color: journalChipTextColor }]}>
             {activeJournal?.name ?? t("agenda.profilePlaceholder")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Bloc animé (stat mois + calendrier) */}
-      <Animated.View
-        style={[styles.monthContentWrapper, animatedContentStyle]}
-      >
+      <Animated.View style={[styles.monthContentWrapper, animatedContentStyle]}>
         <View
           style={[
             styles.monthSummary,
@@ -351,12 +330,7 @@ const AgendaScreen: React.FC = () => {
         >
           <View style={styles.summaryRowTop}>
             <View style={styles.summaryBlockLeft}>
-              <Text
-                style={[
-                  styles.summaryLabel,
-                  { color: summaryLabelColor },
-                ]}
-              >
+              <Text style={[styles.summaryLabel, { color: summaryLabelColor }]}>
                 {t("agenda.monthResultLabel")}
               </Text>
               <Text
@@ -380,20 +354,10 @@ const AgendaScreen: React.FC = () => {
             </View>
 
             <View style={styles.summaryBlockMiddle}>
-              <Text
-                style={[
-                  styles.summaryLabel,
-                  { color: summaryLabelColor },
-                ]}
-              >
+              <Text style={[styles.summaryLabel, { color: summaryLabelColor }]}>
                 {t("stats.tradesLabel")}
               </Text>
-              <Text
-                style={[
-                  styles.summaryValue,
-                  { color: isDark ? "#e5e7eb" : "#0f172a" },
-                ]}
-              >
+              <Text style={[styles.summaryValue, { color: isDark ? "#e5e7eb" : "#0f172a" }]}>
                 {monthStats.tradeCount}
               </Text>
             </View>
@@ -414,14 +378,8 @@ const AgendaScreen: React.FC = () => {
           <View style={styles.summaryRowBottom}>
             <View style={styles.summaryBottomLeft} />
             <View style={styles.summaryBlockMiddle}>
-              <Text
-                style={[
-                  styles.summarySub,
-                  { color: summarySubColor },
-                ]}
-              >
-                {t("agenda.winrateLabel")}{" "}
-                {monthStats.winrate.toFixed(0)}%
+              <Text style={[styles.summarySub, { color: summarySubColor }]}>
+                {t("agenda.winrateLabel")} {monthStats.winrate.toFixed(0)}%
               </Text>
             </View>
             <View style={styles.summaryBottomRight} />
@@ -430,10 +388,7 @@ const AgendaScreen: React.FC = () => {
 
         <View className="weekdaysRow" style={styles.weekdaysRow}>
           {(weekdaysShort ?? WEEKDAYS).map((d) => (
-            <Text
-              key={d}
-              style={[styles.weekday, { color: weekdayColor }]}
-            >
+            <Text key={d} style={[styles.weekday, { color: weekdayColor }]}>
               {d}
             </Text>
           ))}
@@ -444,34 +399,20 @@ const AgendaScreen: React.FC = () => {
             <View key={rowIndex} style={styles.weekRow}>
               {week.map((dayNumber, colIndex) => {
                 const summary =
-                  dayNumber !== null
-                    ? getSummaryForDay(dayNumber)
-                    : undefined;
+                  dayNumber !== null ? getSummaryForDay(dayNumber) : undefined;
 
-                const isTodayCell =
-                  isCurrentMonth && dayNumber === today.getDate();
+                const isTodayCell = isCurrentMonth && dayNumber === today.getDate();
 
                 return (
-                  <View
-                    key={colIndex}
-                    style={styles.dayWrapper}
-                  >
+                  <View key={colIndex} style={styles.dayWrapper}>
                     {dayNumber === null ? (
                       <View style={[styles.cell, styles.emptyCell]} />
                     ) : (
                       <DayCell
                         dayNumber={dayNumber}
                         hasTrades={summary?.hasTrades ?? false}
-                        pnl={
-                          summary?.hasTrades
-                            ? summary?.pnl
-                            : undefined
-                        }
-                        rr={
-                          summary?.hasTrades
-                            ? summary?.rr
-                            : undefined
-                        }
+                        pnl={summary?.hasTrades ? summary?.pnl : undefined}
+                        rr={summary?.hasTrades ? summary?.rr : undefined}
                         onPress={() => handleDayPress(dayNumber)}
                         isToday={isTodayCell}
                       />
@@ -491,10 +432,7 @@ const AgendaScreen: React.FC = () => {
         animationType="fade"
         onRequestClose={closeJournalModal}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={closeJournalModal}
-        >
+        <Pressable style={styles.modalOverlay} onPress={closeJournalModal}>
           <Pressable
             style={[
               styles.modalCard,
@@ -504,18 +442,12 @@ const AgendaScreen: React.FC = () => {
               },
             ]}
           >
-            <Text
-              style={[
-                styles.modalTitle,
-                { color: modalTitleColor },
-              ]}
-            >
+            <Text style={[styles.modalTitle, { color: modalTitleColor }]}>
               {t("agenda.profilesTitle")}
             </Text>
 
             {journals.map((j) => {
-              const isActive =
-                activeJournal && j.id === activeJournal.id;
+              const isActive = activeJournal && j.id === activeJournal.id;
               const baseItemStyle = {
                 borderColor: journalItemBorder,
                 backgroundColor: journalItemBg,
@@ -562,12 +494,7 @@ const AgendaScreen: React.FC = () => {
 
             {activeJournal && (
               <>
-                <Text
-                  style={[
-                    styles.modalLabel,
-                    { marginTop: 12, color: modalLabelColor },
-                  ]}
-                >
+                <Text style={[styles.modalLabel, { marginTop: 12, color: modalLabelColor }]}>
                   {t("agenda.renameActiveProfileLabel")}
                 </Text>
                 <TextInput
@@ -585,10 +512,7 @@ const AgendaScreen: React.FC = () => {
                   onChangeText={setRenameValue}
                 />
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.modalButtonPrimary,
-                  ]}
+                  style={[styles.modalButton, styles.modalButtonPrimary]}
                   onPress={handleRenameActiveJournal}
                 >
                   <Text style={styles.modalButtonText}>
@@ -597,10 +521,7 @@ const AgendaScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.modalButtonDanger,
-                  ]}
+                  style={[styles.modalButton, styles.modalButtonDanger]}
                   onPress={handleDeleteActiveJournal}
                 >
                   <Text style={styles.modalButtonText}>
@@ -610,12 +531,7 @@ const AgendaScreen: React.FC = () => {
               </>
             )}
 
-            <Text
-              style={[
-                styles.modalLabel,
-                { marginTop: 16, color: modalLabelColor },
-              ]}
-            >
+            <Text style={[styles.modalLabel, { marginTop: 16, color: modalLabelColor }]}>
               {t("agenda.newProfileLabel")}
             </Text>
             <TextInput
@@ -633,10 +549,7 @@ const AgendaScreen: React.FC = () => {
               onChangeText={setNewJournalName}
             />
             <TouchableOpacity
-              style={[
-                styles.modalButton,
-                styles.modalButtonSecondary,
-              ]}
+              style={[styles.modalButton, styles.modalButtonSecondary]}
               onPress={handleCreateJournal}
             >
               <Text style={styles.modalButtonText}>
@@ -645,27 +558,23 @@ const AgendaScreen: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.modalButton,
-                styles.modalButtonGhost,
-              ]}
+              style={[styles.modalButton, styles.modalButtonGhost]}
               onPress={closeJournalModal}
             >
-              <Text style={styles.modalButtonGhostText}>
-                {t("common.close")}
-              </Text>
+              <Text style={styles.modalButtonGhostText}>{t("common.close")}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 16,
+    // ✅ On retire le paddingTop fixe pour éviter double padding avec SafeArea
+    paddingTop: 0,
   },
   headerRow: {
     flexDirection: "row",

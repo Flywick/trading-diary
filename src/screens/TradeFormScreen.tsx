@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useSettings } from "../context/SettingsContext";
 import {
   Direction,
@@ -25,6 +26,7 @@ import {
   useTrades,
 } from "../context/TradesContext";
 import { useI18n } from "../i18n/useI18n";
+
 
 const TradeFormScreen: React.FC = () => {
   const { date, tradeId } = useLocalSearchParams<{
@@ -233,6 +235,7 @@ const TradeFormScreen: React.FC = () => {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: screenBg }} edges={["top"]}>
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -240,7 +243,7 @@ const TradeFormScreen: React.FC = () => {
     >
       <ScrollView
         style={[styles.container, { backgroundColor: screenBg }]}
-        contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 200 }}
         keyboardShouldPersistTaps="handled"
       >
         <Text style={[styles.label, { color: labelColor }]}>
@@ -648,6 +651,7 @@ const TradeFormScreen: React.FC = () => {
         </Pressable>
       </Modal>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

@@ -1,6 +1,7 @@
 // src/screens/StatsScreen.tsx
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, {
   Circle,
   Line,
@@ -11,6 +12,8 @@ import { useJournal } from "../context/JournalContext";
 import { useSettings } from "../context/SettingsContext";
 import { Trade, useTrades } from "../context/TradesContext";
 import { useI18n } from "../i18n/useI18n";
+
+
 
 type MonthAgg = {
   key: string; // "2025-01"
@@ -409,9 +412,11 @@ const StatsScreen: React.FC = () => {
   };
 
   return (
+    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]} edges={["top"]}>
+
     <ScrollView
       style={[styles.container, { backgroundColor: bgColor }]}
-      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+      contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 100 }}
     >
       {/* Titre + profil */}
       <View style={styles.titleRow}>
@@ -967,6 +972,7 @@ const StatsScreen: React.FC = () => {
         </>
       )}
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -989,6 +995,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   card: {
+    width: "100%",
     backgroundColor: "#020617",
     borderRadius: 12,
     padding: 12,
