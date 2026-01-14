@@ -4,11 +4,10 @@ import React, { useMemo } from "react";
 import {
   Alert,
   FlatList,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSettings } from "../context/SettingsContext";
@@ -111,12 +110,7 @@ const DaySummaryScreen: React.FC = () => {
           ]}
         >
           <View style={styles.tradeRow}>
-            <Text
-              style={[
-                styles.instrument,
-                { color: textMainColor },
-              ]}
-            >
+            <Text style={[styles.instrument, { color: textMainColor }]}>
               {item.instrument}
             </Text>
             <Text
@@ -135,12 +129,7 @@ const DaySummaryScreen: React.FC = () => {
               {item.pnl.toFixed(2)} {currency}
             </Text>
             {typeof item.rr === "number" && (
-              <Text
-                style={[
-                  styles.rr,
-                  { color: textSubColor },
-                ]}
-              >
+              <Text style={[styles.rr, { color: textSubColor }]}>
                 RR {item.rr.toFixed(2)}
               </Text>
             )}
@@ -148,32 +137,17 @@ const DaySummaryScreen: React.FC = () => {
 
           <View style={styles.tradeRow}>
             {item.emotion && (
-              <Text
-                style={[
-                  styles.meta,
-                  { color: textSubColor },
-                ]}
-              >
+              <Text style={[styles.meta, { color: textSubColor }]}>
                 {t("tradeForm.emotionLabel")}: {item.emotion}
               </Text>
             )}
             {item.quality && (
-              <Text
-                style={[
-                  styles.meta,
-                  { color: textSubColor },
-                ]}
-              >
+              <Text style={[styles.meta, { color: textSubColor }]}>
                 {t("tradeForm.qualityLabel")}: {item.quality}
               </Text>
             )}
             {typeof item.respectPlan === "boolean" && (
-              <Text
-                style={[
-                  styles.meta,
-                  { color: textSubColor },
-                ]}
-              >
+              <Text style={[styles.meta, { color: textSubColor }]}>
                 {t("tradeForm.respectPlanLabel")}{" "}
                 {item.respectPlan ? "✅" : "❌"}
               </Text>
@@ -182,37 +156,14 @@ const DaySummaryScreen: React.FC = () => {
 
           {item.comment && (
             <Text
-              style={[
-                styles.comment,
-                { color: textSubColor },
-              ]}
+              style={[styles.comment, { color: textSubColor }]}
               numberOfLines={2}
             >
               {item.comment}
             </Text>
           )}
 
-          {item.screenshotUri && (
-            <View style={styles.screenshotRow}>
-              <Image
-                source={{ uri: item.screenshotUri }}
-                style={[
-                  styles.screenshotThumb,
-                  {
-                    borderColor: isDark ? "#111827" : "#e5e7eb",
-                  },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.screenshotLabel,
-                  { color: textSubColor },
-                ]}
-              >
-                {t("tradeForm.screenshotLabel")}
-              </Text>
-            </View>
-          )}
+          {/* ✅ V1 : on retire l’affichage du screenshot dans le résumé */}
         </View>
       </TouchableOpacity>
     );
@@ -228,67 +179,33 @@ const DaySummaryScreen: React.FC = () => {
     >
       <View style={styles.header}>
         <View style={styles.headerTextBlock}>
-          <Text
-            style={[
-              styles.dateLabel,
-              { color: textMainColor },
-            ]}
-          >
+          <Text style={[styles.dateLabel, { color: textMainColor }]}>
             {dateLabel}
           </Text>
-          <Text
-            style={[
-              styles.summaryText,
-              { color: textSubColor },
-            ]}
-          >
+          <Text style={[styles.summaryText, { color: textSubColor }]}>
             {t("daySummary.totalPnl")}:{" "}
-            <Text
-              style={{
-                color: totalPnlColor,
-              }}
-            >
+            <Text style={{ color: totalPnlColor }}>
               {totalPnl > 0 ? "+" : ""}
               {totalPnl.toFixed(2)} {currency}
             </Text>
           </Text>
-          <Text
-            style={[
-              styles.summaryText,
-              { color: textSubColor },
-            ]}
-          >
+          <Text style={[styles.summaryText, { color: textSubColor }]}>
             {t("daySummary.avgRr")}: {avgRr.toFixed(2)} |{" "}
             {t("daySummary.tradesCount")}: {dayTrades.length}
           </Text>
         </View>
 
         <TouchableOpacity
-          style={[
-            styles.addButton,
-            { borderColor },
-          ]}
+          style={[styles.addButton, { borderColor }]}
           onPress={handleAddTrade}
         >
-          <Text
-            style={[
-              styles.addButtonText,
-              { color: borderColor },
-            ]}
-          >
-            +
-          </Text>
+          <Text style={[styles.addButtonText, { color: borderColor }]}>+</Text>
         </TouchableOpacity>
       </View>
 
       {dayTrades.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text
-            style={[
-              styles.emptyText,
-              { color: textSubColor },
-            ]}
-          >
+          <Text style={[styles.emptyText, { color: textSubColor }]}>
             {t("daySummary.noTrades")}
           </Text>
         </View>
@@ -401,6 +318,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  // (styles screenshot conservés volontairement si tu veux réactiver en V2)
   screenshotRow: {
     flexDirection: "row",
     alignItems: "center",

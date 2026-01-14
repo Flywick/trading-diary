@@ -2,10 +2,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,13 +16,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FEATURES } from "../config/features";
 import { useAccount } from "../context/AccountContext";
 import { useJournal } from "../context/JournalContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
 import { useI18n } from "../i18n/useI18n";
-
 
 const formatBirthdate = (text: string) => {
   const cleaned = text.replace(/\D/g, "").slice(0, 8);
@@ -71,7 +73,11 @@ const getAgeFromBirthdate = (birthdate: string): number | null => {
   return age;
 };
 
+const SUPPORT_EMAIL = "tradingdiary.app@gmail.com";
+
 const SettingsScreen: React.FC = () => {
+  const router = useRouter();
+
   const {
     currency,
     theme,
@@ -120,7 +126,6 @@ const SettingsScreen: React.FC = () => {
     setNewPasswordInput("");
     setConfirmPasswordInput("");
 
-    // Réinitialiser le modal de suppression si changement de compte
     setShowDeleteConfirmModal(false);
     setDeletePasswordInput("");
     setDeleteError("");
@@ -224,12 +229,18 @@ const SettingsScreen: React.FC = () => {
     const confirmPassword = confirmPasswordInput.trim();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert(t("errors.missingLoginFields"), t("errors.missingLoginFields"));
+      Alert.alert(
+        t("errors.missingLoginFields"),
+        t("errors.missingLoginFields")
+      );
       return;
     }
 
     if (currentPassword !== activeAccount.password) {
-      Alert.alert(t("settings.passwordIncorrect"), t("settings.passwordIncorrect"));
+      Alert.alert(
+        t("settings.passwordIncorrect"),
+        t("settings.passwordIncorrect")
+      );
       return;
     }
 
@@ -462,7 +473,6 @@ const SettingsScreen: React.FC = () => {
         copyToCacheDirectory: true,
       });
 
-      // Nouveau format (Expo SDK 50+)
       // @ts-ignore
       if (result.canceled) {
         return;
@@ -498,7 +508,6 @@ const SettingsScreen: React.FC = () => {
         return;
       }
 
-      // Mettre à jour le compte (sans toucher à l'id)
       if (data.account) {
         const patch: any = {};
         if (typeof data.account.username === "string") {
@@ -519,7 +528,6 @@ const SettingsScreen: React.FC = () => {
         }
       }
 
-      // Mettre à jour les settings
       if (data.settings) {
         if (data.settings.theme === "dark" || data.settings.theme === "light") {
           setTheme(data.settings.theme);
@@ -535,7 +543,6 @@ const SettingsScreen: React.FC = () => {
         }
       }
 
-      // Sauvegarder journaux & trades dans AsyncStorage pour ce compte
       const accountId = activeAccount.id;
 
       if (data.journals && data.journals.journals) {
@@ -596,19 +603,22 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert(t("settings.deleteAccountTitle"), t("settings.deleteAccountMessage"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("settings.deleteAccountConfirm"),
-        style: "destructive",
-        onPress: () => {
-          // On ouvre le modal de confirmation par mot de passe
-          setDeletePasswordInput("");
-          setDeleteError("");
-          setShowDeleteConfirmModal(true);
+    Alert.alert(
+      t("settings.deleteAccountTitle"),
+      t("settings.deleteAccountMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("settings.deleteAccountConfirm"),
+          style: "destructive",
+          onPress: () => {
+            setDeletePasswordInput("");
+            setDeleteError("");
+            setShowDeleteConfirmModal(true);
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const confirmDeleteWithPassword = () => {
@@ -629,7 +639,6 @@ const SettingsScreen: React.FC = () => {
       return;
     }
 
-    // Mot de passe correct : on affiche le message final puis on supprime
     Alert.alert(
       t("settings.deleteAccountFinalTitle"),
       t("settings.deleteAccountFinalMessage"),
@@ -662,14 +671,18 @@ const SettingsScreen: React.FC = () => {
         text: t("settings.logoutButton"),
         style: "destructive",
         onPress: () => {
-          Alert.alert(t("settings.logoutDoneTitle"), t("settings.logoutDoneMessage"), [
-            {
-              text: t("common.ok"),
-              onPress: () => {
-                logout();
+          Alert.alert(
+            t("settings.logoutDoneTitle"),
+            t("settings.logoutDoneMessage"),
+            [
+              {
+                text: t("common.ok"),
+                onPress: () => {
+                  logout();
+                },
               },
-            },
-          ]);
+            ]
+          );
         },
       },
     ]);
@@ -680,8 +693,53 @@ const SettingsScreen: React.FC = () => {
     return name.trim().charAt(0).toUpperCase();
   };
 
+  const openSupportEmail = async () => {
+    const subject =
+      language === "en"
+        ? "Support - Trading Diary"
+        : "Support - Trading Diary";
+    const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
+
+    const can = await Linking.canOpenURL(url);
+    if (!can) {
+      Alert.alert(
+        t("settings.supportErrorTitle"),
+        t("settings.supportErrorMessage")
+      );
+      return;
+    }
+    await Linking.openURL(url);
+  };
+
+  const openSuggestionsEmail = async () => {
+    const subject =
+      language === "en"
+        ? "Suggestion - Trading Diary"
+        : "Suggestion - Trading Diary";
+    const body =
+      language === "en"
+        ? "Hi,\n\nI have a suggestion:\n\n"
+        : "Bonjour,\n\nJ’ai une suggestion :\n\n";
+    const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+
+    const can = await Linking.canOpenURL(url);
+    if (!can) {
+      Alert.alert(
+        t("settings.supportErrorTitle"),
+        t("settings.supportErrorMessage")
+      );
+      return;
+    }
+    await Linking.openURL(url);
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: screenBg }]} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: screenBg }]}
+      edges={["top"]}
+    >
       <ScrollView
         style={[styles.container, { backgroundColor: screenBg }]}
         contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 32 }}
@@ -1182,37 +1240,46 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* SECTION EXPORT CSV */}
-        <Text style={[styles.sectionTitle, { color: mainText }]}>
-          {t("settings.exportCsvSectionTitle")}
-        </Text>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardBg, borderColor: cardBorder },
-          ]}
-        >
-          <Text style={[styles.label, { color: subText }]}>
-            {t("settings.exportCsvDescription")}
-          </Text>
-          <Text style={[styles.helperText, { marginBottom: 0, color: subText }]}>
-            {t("settings.exportCsvHelper")}
-          </Text>
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              styles.buttonSecondaryLight,
-              { marginTop: 12 },
-            ]}
-            activeOpacity={0.7}
-            onPress={handleExportCsv}
-          >
-            <Text style={styles.buttonText}>
-              {t("settings.exportCsvButton")}
+        {/* SECTION EXPORT CSV (V1: masquée, V2: réactivable) */}
+        {FEATURES.EXPORT_CSV && (
+          <>
+            <Text style={[styles.sectionTitle, { color: mainText }]}>
+              {t("settings.exportCsvSectionTitle")}
             </Text>
-          </TouchableOpacity>
-        </View>
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: cardBg, borderColor: cardBorder },
+              ]}
+            >
+              <Text style={[styles.label, { color: subText }]}>
+                {t("settings.exportCsvDescription")}
+              </Text>
+              <Text
+                style={[
+                  styles.helperText,
+                  { marginBottom: 0, color: subText },
+                ]}
+              >
+                {t("settings.exportCsvHelper")}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.buttonSecondaryLight,
+                  { marginTop: 12 },
+                ]}
+                activeOpacity={0.7}
+                onPress={handleExportCsv}
+              >
+                <Text style={styles.buttonText}>
+                  {t("settings.exportCsvButton")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
 
         {/* SECTION EXPORT / IMPORT JSON */}
         <Text style={[styles.sectionTitle, { color: mainText }]}>
@@ -1227,7 +1294,9 @@ const SettingsScreen: React.FC = () => {
           <Text style={[styles.label, { color: subText }]}>
             {t("settings.exportJsonDescription")}
           </Text>
-          <Text style={[styles.helperText, { marginBottom: 0, color: subText }]}>
+          <Text
+            style={[styles.helperText, { marginBottom: 0, color: subText }]}
+          >
             {t("settings.exportJsonHelper")}
           </Text>
 
@@ -1260,6 +1329,49 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* ✅ NOUVELLE SECTION : CGU/PRIVACY + SUPPORT + SUGGESTIONS (en bas) */}
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.helpSectionTitle")}
+        </Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.button, styles.buttonSecondaryLight, { marginTop: 0 }]}
+            activeOpacity={0.7}
+            onPress={() => router.push("/legal")}
+          >
+            <Text style={styles.buttonText}>
+              {t("settings.legalPrivacyButton")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.buttonSecondaryLight, { marginTop: 10 }]}
+            activeOpacity={0.7}
+            onPress={openSupportEmail}
+          >
+            <Text style={styles.buttonText}>{t("settings.supportButton")}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.buttonSecondaryLight, { marginTop: 10 }]}
+            activeOpacity={0.7}
+            onPress={openSuggestionsEmail}
+          >
+            <Text style={styles.buttonText}>
+              {t("settings.suggestionsButton")}
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={[styles.helperText, { color: subText }]}>
+            {t("settings.helpEmailNote", { email: SUPPORT_EMAIL } as any)}
+          </Text>
+        </View>
+
         {/* SECTION RÉINITIALISATION */}
         <Text style={[styles.sectionTitle, { color: mainText }]}>
           {t("settings.resetSectionTitle")}
@@ -1269,9 +1381,7 @@ const SettingsScreen: React.FC = () => {
           style={[styles.button, styles.buttonWarning]}
           onPress={handleResetApp}
         >
-          <Text style={styles.buttonText}>
-            {t("settings.resetTradesButton")}
-          </Text>
+          <Text style={styles.buttonText}>{t("settings.resetTradesButton")}</Text>
         </TouchableOpacity>
         <Text style={[styles.helperText, { color: subText }]}>
           {t("settings.resetTradesHelper")}
@@ -1482,7 +1592,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 11,
-    marginTop: 4,
+    marginTop: 10,
     textAlign: "center",
   },
   helperTextDanger: {
@@ -1492,7 +1602,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // 🔐 Styles du modal de confirmation mot de passe
   deleteModalOverlay: {
     position: "absolute",
     top: 0,

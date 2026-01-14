@@ -48,8 +48,7 @@ const fr = {
 
     deleteProfileTitle: "Supprimer le journal",
     deleteProfileMessage:
-      "Voulez-vous vraiment supprimer le journal \"{{name}}\" ? Cette action est définitive.",
-
+      'Voulez-vous vraiment supprimer le journal "{{name}}" ? Cette action est définitive.',
   },
 
   // ---------------- DAY SUMMARY ---------------------
@@ -57,7 +56,7 @@ const fr = {
     tradeDetailsTitle: "Trade",
     editTrade: "Modifier le trade",
     deleteTrade: "Supprimer le trade",
-    noTrades: "Aucun trade ce jour. Appuie sur \"+\" pour ajouter un trade.",
+    noTrades: 'Aucun trade ce jour. Appuie sur "+" pour ajouter un trade.',
     totalPnl: "Résultat total",
     avgRr: "RR moyen",
     tradesCount: "Trades",
@@ -74,6 +73,16 @@ const fr = {
     resetSectionTitle: "Réinitialisation",
     versionSectionTitle: "Version",
 
+    // ✅ NEW (V1)
+    helpSectionTitle: "Aide",
+    legalPrivacyButton: "CGU & Confidentialité",
+    supportButton: "Support",
+    suggestionsButton: "Suggestions",
+    helpEmailNote: "Contact : {{email}}",
+    supportErrorTitle: "Impossible d’ouvrir l’email",
+    supportErrorMessage:
+      "Aucune application mail disponible sur cet appareil.",
+
     // account display
     accountLocalInfo: "Compte local",
     noEmailFallback: "Aucune adresse email renseignée",
@@ -88,15 +97,14 @@ const fr = {
     birthdatePlaceholder: "1995-04-23",
     emailPlaceholder: "ton.email@example.com",
 
-
     accountInfosMissingTitle: "Informations manquantes",
-    accountInfosMissingMessage:
-      "Veuillez remplir tous les champs obligatoires.",
+    accountInfosMissingMessage: "Veuillez remplir tous les champs obligatoires.",
     accountInvalidBirthdateTitle: "Date invalide",
     accountInvalidBirthdateMessage:
       "Veuillez entrer une date au format YYYY-MM-DD.",
     accountUpdatedTitle: "Compte mis à jour",
-    accountUpdatedMessage: "Les informations de votre compte ont été modifiées.",
+    accountUpdatedMessage:
+      "Les informations de votre compte ont été modifiées.",
 
     passwordNotDefinedTitle: "Mot de passe non défini",
     passwordNotDefinedMessage:
@@ -190,12 +198,26 @@ const fr = {
     // version
     versionName: "Trading Diary — version locale",
     versionDescription: "Toutes les données sont stockées sur votre appareil.",
-    versionProNote:
-      "La version Pro offrira sauvegarde cloud, multi-appareils.",
+    versionProNote: "La version Pro offrira sauvegarde cloud, multi-appareils.",
     versionProButton: "Trading Diary Pro (bientôt)",
     versionProAlertTitle: "Trading Diary Pro",
     versionProAlertMessage:
       "La version Pro sera disponible dans une future mise à jour.",
+  },
+
+  // ✅ NEW — LEGAL (CGU / PRIVACY)
+  legal: {
+    title: "CGU & Confidentialité",
+    lastUpdated: "Dernière mise à jour : 14/01/2026",
+    privacyTitle: "Confidentialité",
+    privacyBody:
+      "Cette application stocke vos données uniquement sur votre appareil. Aucune donnée n’est envoyée vers un serveur, aucun suivi (tracking) n’est effectué et aucune donnée n’est vendue.",
+    termsTitle: "Conditions d’utilisation",
+    termsBody:
+      "Trading Diary fournit des outils de journalisation et de statistiques. Les informations affichées ne constituent pas des conseils financiers. Vous êtes seul responsable de vos décisions et de l’utilisation de l’application.",
+    contactTitle: "Contact",
+    contactBody:
+      "Pour toute question, assistance ou suggestion, contactez-nous via le bouton Support dans les paramètres.",
   },
 
   // ------------------ STATS -------------------------
@@ -335,15 +357,14 @@ const en = {
 
     deleteProfileTitle: "Delete journal",
     deleteProfileMessage:
-      "Do you really want to delete the journal \"{{name}}\"? This action cannot be undone.",
-
+      'Do you really want to delete the journal "{{name}}"? This action cannot be undone.',
   },
 
   daySummary: {
     tradeDetailsTitle: "Trade",
     editTrade: "Edit trade",
     deleteTrade: "Delete trade",
-    noTrades: "No trades on this day. Tap \"+\" to add one.",
+    noTrades: 'No trades on this day. Tap "+" to add one.',
     totalPnl: "Total result",
     avgRr: "Avg RR",
     tradesCount: "Trades",
@@ -358,6 +379,15 @@ const en = {
     resetSectionTitle: "Reset",
     versionSectionTitle: "Version",
 
+    // ✅ NEW (V1)
+    helpSectionTitle: "Help",
+    legalPrivacyButton: "Terms & Privacy",
+    supportButton: "Support",
+    suggestionsButton: "Suggestions",
+    helpEmailNote: "Contact: {{email}}",
+    supportErrorTitle: "Unable to open email",
+    supportErrorMessage: "No email app available on this device.",
+
     accountLocalInfo: "Local account",
     noEmailFallback: "No email provided",
 
@@ -370,12 +400,10 @@ const en = {
     birthdatePlaceholder: "1995-04-23",
     emailPlaceholder: "your.email@example.com",
 
-
     accountInfosMissingTitle: "Missing information",
     accountInfosMissingMessage: "Please fill all required fields.",
     accountInvalidBirthdateTitle: "Invalid date",
-    accountInvalidBirthdateMessage:
-      "Please enter a valid date (YYYY-MM-DD).",
+    accountInvalidBirthdateMessage: "Please enter a valid date (YYYY-MM-DD).",
     accountUpdatedTitle: "Account updated",
     accountUpdatedMessage: "Your account information has been updated.",
 
@@ -427,8 +455,7 @@ const en = {
     deleteAccountFinalMessage: "The account will be deleted.",
 
     exportCsvDescription: "Export all your trades to a CSV file.",
-    exportCsvHelper:
-      "You can open it in Excel, Google Sheets, etc.",
+    exportCsvHelper: "You can open it in Excel, Google Sheets, etc.",
     exportCsvButton: "Export CSV",
     exportCsvDoneTitle: "Export done",
     exportCsvDoneMessage: "CSV file generated.",
@@ -436,8 +463,7 @@ const en = {
     exportCsvErrorMessage: "Unable to generate CSV file.",
 
     exportJsonDescription: "Backup your account, journals and trades.",
-    exportJsonHelper:
-      "Useful to transfer your data to another device.",
+    exportJsonHelper: "Useful to transfer your data to another device.",
     exportJsonButton: "Export JSON",
     importJsonButton: "Import JSON file",
     importJsonDoneTitle: "Import done",
@@ -452,8 +478,7 @@ const en = {
       "The file content is not compatible with this app.",
 
     resetAppTitle: "Reset data",
-    resetAppMessage:
-      "All statistics and trades will be removed. Continue?",
+    resetAppMessage: "All statistics and trades will be removed. Continue?",
     resetAppConfirm: "Reset",
     resetAppDoneTitle: "Reset done",
     resetAppDoneMessage: "Data has been deleted.",
@@ -462,13 +487,27 @@ const en = {
       "Remove all trades and statistics but keep your account.",
 
     versionName: "Trading Diary — local version",
-    versionDescription:
-      "All your data is stored on this device.",
+    versionDescription: "All your data is stored on this device.",
     versionProNote: "Pro version will include cloud sync and multi-device.",
     versionProButton: "Trading Diary Pro (soon)",
     versionProAlertTitle: "Trading Diary Pro",
     versionProAlertMessage:
       "The Pro version will be available in a future update.",
+  },
+
+  // ✅ NEW — LEGAL (TERMS / PRIVACY)
+  legal: {
+    title: "Terms & Privacy",
+    lastUpdated: "Last updated: 2026-01-14",
+    privacyTitle: "Privacy",
+    privacyBody:
+      "This app stores your data only on your device. No data is sent to any server, no tracking is performed, and no data is sold.",
+    termsTitle: "Terms of use",
+    termsBody:
+      "Trading Diary provides journaling and statistics tools. The information shown is not financial advice. You are solely responsible for your decisions and for using the app.",
+    contactTitle: "Contact",
+    contactBody:
+      "For questions, support or suggestions, contact us using the Support button in Settings.",
   },
 
   stats: {
@@ -565,11 +604,22 @@ const en = {
 // HOOK useI18n
 // --------------------------------------------------
 
+type TParams = Record<string, string | number | boolean | null | undefined>;
+
+function interpolate(template: string, params?: TParams): string {
+  if (!params) return template;
+  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, key) => {
+    const value = params[key];
+    if (value === null || value === undefined) return match;
+    return String(value);
+  });
+}
+
 export function useI18n() {
   const { language } = useLanguage();
   const dict = language === "en" ? en : fr;
 
-  function t(key: string): string {
+  function t(key: string, params?: TParams): string {
     const parts = key.split(".");
     let current: any = dict;
 
@@ -578,7 +628,11 @@ export function useI18n() {
       current = current[p];
     }
 
-    return typeof current === "string" ? current : key;
+    if (typeof current === "string") {
+      return interpolate(current, params);
+    }
+
+    return key;
   }
 
   const weekdaysShort: string[] = dict.weekdaysShort ?? [

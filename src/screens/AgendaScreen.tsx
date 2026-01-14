@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import DayCell from "../components/DayCell";
+import { FEATURES } from "../config/features";
 import { useJournal } from "../context/JournalContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
@@ -96,6 +97,7 @@ const AgendaScreen: React.FC = () => {
     setActiveJournal,
     deleteJournal,
   } = useJournal();
+
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -201,6 +203,9 @@ const AgendaScreen: React.FC = () => {
   };
 
   const openJournalModal = () => {
+    // V1: multi-profiles désactivé => on n'ouvre jamais la modal
+    if (!FEATURES.MULTI_PROFILES) return;
+
     setNewJournalName("");
     setRenameValue(activeJournal?.name ?? "");
     setJournalModalVisible(true);
@@ -226,6 +231,8 @@ const AgendaScreen: React.FC = () => {
   };
 
   const handleCreateJournal = () => {
+    if (!FEATURES.MULTI_PROFILES) return;
+
     const name = newJournalName.trim() || t("agenda.newJournalDefaultName");
     const ok = createJournal(name);
 
@@ -239,12 +246,16 @@ const AgendaScreen: React.FC = () => {
   };
 
   const handleRenameActiveJournal = () => {
+    if (!FEATURES.MULTI_PROFILES) return;
+
     if (activeJournal && renameValue.trim().length > 0) {
       renameJournal(activeJournal.id, renameValue.trim());
     }
   };
 
   const handleDeleteActiveJournal = () => {
+    if (!FEATURES.MULTI_PROFILES) return;
+
     if (!activeJournal) return;
 
     if (journals.length <= 1) {
@@ -284,7 +295,10 @@ const AgendaScreen: React.FC = () => {
     >
       {/* Titre + navigation mois */}
       <View style={styles.headerRow}>
-        <Text style={[styles.arrow, { color: arrowColor }]} onPress={() => changeMonth("prev")}>
+        <Text
+          style={[styles.arrow, { color: arrowColor }]}
+          onPress={() => changeMonth("prev")}
+        >
           {"<"}
         </Text>
 
@@ -292,31 +306,41 @@ const AgendaScreen: React.FC = () => {
           {monthName}
         </Text>
 
-        <Text style={[styles.arrow, { color: arrowColor }]} onPress={() => changeMonth("next")}>
+        <Text
+          style={[styles.arrow, { color: arrowColor }]}
+          onPress={() => changeMonth("next")}
+        >
           {">"}
         </Text>
       </View>
 
-      {/* Sélecteur de profil / journal */}
-      <View style={styles.journalRow}>
-        <Text style={[styles.journalLabel, { color: journalLabelColor }]}>
-          {t("agenda.profileLabel")}
-        </Text>
-        <TouchableOpacity
-          style={[
-            styles.journalChip,
-            {
-              backgroundColor: journalChipBg,
-              borderColor: journalChipBorder,
-            },
-          ]}
-          onPress={openJournalModal}
-        >
-          <Text style={[styles.journalChipText, { color: journalChipTextColor }]}>
-            {activeJournal?.name ?? t("agenda.profilePlaceholder")}
+      {/* Sélecteur de profil / journal (V1: masqué) */}
+      {FEATURES.MULTI_PROFILES && (
+        <View style={styles.journalRow}>
+          <Text style={[styles.journalLabel, { color: journalLabelColor }]}>
+            {t("agenda.profileLabel")}
           </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[
+              styles.journalChip,
+              {
+                backgroundColor: journalChipBg,
+                borderColor: journalChipBorder,
+              },
+            ]}
+            onPress={openJournalModal}
+          >
+            <Text
+              style={[
+                styles.journalChipText,
+                { color: journalChipTextColor },
+              ]}
+            >
+              {activeJournal?.name ?? t("agenda.profilePlaceholder")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Bloc animé (stat mois + calendrier) */}
       <Animated.View style={[styles.monthContentWrapper, animatedContentStyle]}>
@@ -357,7 +381,12 @@ const AgendaScreen: React.FC = () => {
               <Text style={[styles.summaryLabel, { color: summaryLabelColor }]}>
                 {t("stats.tradesLabel")}
               </Text>
-              <Text style={[styles.summaryValue, { color: isDark ? "#e5e7eb" : "#0f172a" }]}>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  { color: isDark ? "#e5e7eb" : "#0f172a" },
+                ]}
+              >
                 {monthStats.tradeCount}
               </Text>
             </View>
@@ -401,7 +430,8 @@ const AgendaScreen: React.FC = () => {
                 const summary =
                   dayNumber !== null ? getSummaryForDay(dayNumber) : undefined;
 
-                const isTodayCell = isCurrentMonth && dayNumber === today.getDate();
+                const isTodayCell =
+                  isCurrentMonth && dayNumber === today.getDate();
 
                 return (
                   <View key={colIndex} style={styles.dayWrapper}>
@@ -425,147 +455,157 @@ const AgendaScreen: React.FC = () => {
         </ScrollView>
       </Animated.View>
 
-      {/* MODAL JOURNAUX */}
-      <Modal
-        visible={journalModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={closeJournalModal}
-      >
-        <Pressable style={styles.modalOverlay} onPress={closeJournalModal}>
-          <Pressable
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: modalCardBg,
-                borderColor: modalCardBorder,
-              },
-            ]}
-          >
-            <Text style={[styles.modalTitle, { color: modalTitleColor }]}>
-              {t("agenda.profilesTitle")}
-            </Text>
-
-            {journals.map((j) => {
-              const isActive = activeJournal && j.id === activeJournal.id;
-              const baseItemStyle = {
-                borderColor: journalItemBorder,
-                backgroundColor: journalItemBg,
-              };
-              const activeItemStyle = isActive
-                ? {
-                    backgroundColor: journalItemBgActive,
-                    borderColor: "#38bdf8",
-                  }
-                : {};
-              return (
-                <TouchableOpacity
-                  key={j.id}
-                  style={[
-                    styles.journalItem,
-                    baseItemStyle,
-                    activeItemStyle,
-                  ]}
-                  onPress={() => {
-                    setActiveJournal(j.id);
-                    setRenameValue(j.name);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.journalItemText,
-                      {
-                        color: isActive
-                          ? journalItemTextActiveColor
-                          : journalItemTextColor,
-                      },
-                    ]}
-                  >
-                    {j.name}
-                  </Text>
-                  {isActive && (
-                    <Text style={styles.journalItemBadge}>
-                      {t("agenda.profileActiveBadge")}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-
-            {activeJournal && (
-              <>
-                <Text style={[styles.modalLabel, { marginTop: 12, color: modalLabelColor }]}>
-                  {t("agenda.renameActiveProfileLabel")}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.modalInput,
-                    {
-                      backgroundColor: modalInputBg,
-                      borderColor: modalInputBorder,
-                      color: modalInputTextColor,
-                    },
-                  ]}
-                  placeholder={activeJournal.name}
-                  placeholderTextColor="#6b7280"
-                  value={renameValue}
-                  onChangeText={setRenameValue}
-                />
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonPrimary]}
-                  onPress={handleRenameActiveJournal}
-                >
-                  <Text style={styles.modalButtonText}>
-                    {t("agenda.saveProfileNameButton")}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonDanger]}
-                  onPress={handleDeleteActiveJournal}
-                >
-                  <Text style={styles.modalButtonText}>
-                    {t("agenda.deleteActiveProfileButton")}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            <Text style={[styles.modalLabel, { marginTop: 16, color: modalLabelColor }]}>
-              {t("agenda.newProfileLabel")}
-            </Text>
-            <TextInput
+      {/* MODAL JOURNAUX (V1: masquée) */}
+      {FEATURES.MULTI_PROFILES && (
+        <Modal
+          visible={journalModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={closeJournalModal}
+        >
+          <Pressable style={styles.modalOverlay} onPress={closeJournalModal}>
+            <Pressable
               style={[
-                styles.modalInput,
+                styles.modalCard,
                 {
-                  backgroundColor: modalInputBg,
-                  borderColor: modalInputBorder,
-                  color: modalInputTextColor,
+                  backgroundColor: modalCardBg,
+                  borderColor: modalCardBorder,
                 },
               ]}
-              placeholder={t("agenda.newProfilePlaceholder")}
-              placeholderTextColor="#6b7280"
-              value={newJournalName}
-              onChangeText={setNewJournalName}
-            />
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonSecondary]}
-              onPress={handleCreateJournal}
             >
-              <Text style={styles.modalButtonText}>
-                {t("agenda.createAndActivateButton")}
+              <Text style={[styles.modalTitle, { color: modalTitleColor }]}>
+                {t("agenda.profilesTitle")}
               </Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonGhost]}
-              onPress={closeJournalModal}
-            >
-              <Text style={styles.modalButtonGhostText}>{t("common.close")}</Text>
-            </TouchableOpacity>
+              {journals.map((j) => {
+                const isActive = activeJournal && j.id === activeJournal.id;
+                const baseItemStyle = {
+                  borderColor: journalItemBorder,
+                  backgroundColor: journalItemBg,
+                };
+                const activeItemStyle = isActive
+                  ? {
+                      backgroundColor: journalItemBgActive,
+                      borderColor: "#38bdf8",
+                    }
+                  : {};
+                return (
+                  <TouchableOpacity
+                    key={j.id}
+                    style={[styles.journalItem, baseItemStyle, activeItemStyle]}
+                    onPress={() => {
+                      setActiveJournal(j.id);
+                      setRenameValue(j.name);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.journalItemText,
+                        {
+                          color: isActive
+                            ? journalItemTextActiveColor
+                            : journalItemTextColor,
+                        },
+                      ]}
+                    >
+                      {j.name}
+                    </Text>
+                    {isActive && (
+                      <Text style={styles.journalItemBadge}>
+                        {t("agenda.profileActiveBadge")}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+
+              {activeJournal && (
+                <>
+                  <Text
+                    style={[
+                      styles.modalLabel,
+                      { marginTop: 12, color: modalLabelColor },
+                    ]}
+                  >
+                    {t("agenda.renameActiveProfileLabel")}
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.modalInput,
+                      {
+                        backgroundColor: modalInputBg,
+                        borderColor: modalInputBorder,
+                        color: modalInputTextColor,
+                      },
+                    ]}
+                    placeholder={activeJournal.name}
+                    placeholderTextColor="#6b7280"
+                    value={renameValue}
+                    onChangeText={setRenameValue}
+                  />
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonPrimary]}
+                    onPress={handleRenameActiveJournal}
+                  >
+                    <Text style={styles.modalButtonText}>
+                      {t("agenda.saveProfileNameButton")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonDanger]}
+                    onPress={handleDeleteActiveJournal}
+                  >
+                    <Text style={styles.modalButtonText}>
+                      {t("agenda.deleteActiveProfileButton")}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <Text
+                style={[
+                  styles.modalLabel,
+                  { marginTop: 16, color: modalLabelColor },
+                ]}
+              >
+                {t("agenda.newProfileLabel")}
+              </Text>
+              <TextInput
+                style={[
+                  styles.modalInput,
+                  {
+                    backgroundColor: modalInputBg,
+                    borderColor: modalInputBorder,
+                    color: modalInputTextColor,
+                  },
+                ]}
+                placeholder={t("agenda.newProfilePlaceholder")}
+                placeholderTextColor="#6b7280"
+                value={newJournalName}
+                onChangeText={setNewJournalName}
+              />
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary]}
+                onPress={handleCreateJournal}
+              >
+                <Text style={styles.modalButtonText}>
+                  {t("agenda.createAndActivateButton")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonGhost]}
+                onPress={closeJournalModal}
+              >
+                <Text style={styles.modalButtonGhostText}>
+                  {t("common.close")}
+                </Text>
+              </TouchableOpacity>
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };

@@ -1,7 +1,6 @@
 // src/screens/TradeFormScreen.tsx
-import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -17,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FEATURES } from "../config/features";
 import { useSettings } from "../context/SettingsContext";
 import {
   Direction,
@@ -27,6 +27,12 @@ import {
 } from "../context/TradesContext";
 import { useI18n } from "../i18n/useI18n";
 
+// ✅ IMPORTANT V1 : on évite d'importer expo-image-picker (permissions sensibles)
+// V2 : FEATURES.TRADE_SCREENSHOT = true => le module est chargé
+const ImagePicker: any = FEATURES.TRADE_SCREENSHOT
+  ? // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require("expo-image-picker")
+  : null;
 
 const TradeFormScreen: React.FC = () => {
   const { date, tradeId } = useLocalSearchParams<{
@@ -57,10 +63,15 @@ const TradeFormScreen: React.FC = () => {
   const directionBg = chipBg;
 
   // ✅ Fallback compatible toutes versions (évite crash si MediaType n'existe pas)
-  const IMAGE_MEDIA_TYPES =
-    (ImagePicker as any).MediaType?.Images ??
-    (ImagePicker as any).MediaTypeOptions?.Images ??
-    "images";
+  // V1 : ImagePicker = null => on retourne un fallback simple.
+  const IMAGE_MEDIA_TYPES = useMemo(() => {
+    if (!FEATURES.TRADE_SCREENSHOT || !ImagePicker) return "images";
+    return (
+      ImagePicker?.MediaType?.Images ??
+      ImagePicker?.MediaTypeOptions?.Images ??
+      "images"
+    );
+  }, []);
 
   const existingTrade: Trade | undefined = tradeIdStr
     ? trades.find((t) => t.id === tradeIdStr)
@@ -153,7 +164,9 @@ const TradeFormScreen: React.FC = () => {
       direction,
       pnl: numericPnl,
       lotSize: lotSize ? parseFloat(lotSize.replace(",", ".")) : undefined,
-      entryPrice: entryPrice ? parseFloat(entryPrice.replace(",", ".")) : undefined,
+      entryPrice: entryPrice
+        ? parseFloat(entryPrice.replace(",", "."))
+        : undefined,
       tpPrice: tpPrice ? parseFloat(tpPrice.replace(",", ".")) : undefined,
       slPrice: slPrice ? parseFloat(slPrice.replace(",", ".")) : undefined,
       rr: tradeRr,
@@ -173,7 +186,12 @@ const TradeFormScreen: React.FC = () => {
     router.back();
   };
 
+  // -------------------------------
+  // V2 ONLY (screenshot feature)
+  // -------------------------------
   const askMediaLibraryPermission = async () => {
+    if (!FEATURES.TRADE_SCREENSHOT || !ImagePicker) return false;
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
@@ -186,6 +204,8 @@ const TradeFormScreen: React.FC = () => {
   };
 
   const askCameraPermission = async () => {
+    if (!FEATURES.TRADE_SCREENSHOT || !ImagePicker) return false;
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
@@ -198,6 +218,8 @@ const TradeFormScreen: React.FC = () => {
   };
 
   const handlePickImageFromGallery = async () => {
+    if (!FEATURES.TRADE_SCREENSHOT || !ImagePicker) return;
+
     const ok = await askMediaLibraryPermission();
     if (!ok) return;
 
@@ -212,6 +234,8 @@ const TradeFormScreen: React.FC = () => {
   };
 
   const handleTakePhoto = async () => {
+    if (!FEATURES.TRADE_SCREENSHOT || !ImagePicker) return;
+
     const ok = await askCameraPermission();
     if (!ok) return;
 
@@ -236,421 +260,417 @@ const TradeFormScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: screenBg }} edges={["top"]}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-    >
-      <ScrollView
-        style={[styles.container, { backgroundColor: screenBg }]}
-        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 200 }}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.dateLabel")}
-        </Text>
-        <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
+        <ScrollView
+          style={[styles.container, { backgroundColor: screenBg }]}
+          contentContainerStyle={{
+            padding: 16,
+            paddingTop: 0,
+            paddingBottom: 200,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.dateLabel")}
+          </Text>
+          <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
 
-        <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
-          {isEdit ? t("tradeForm.editTradeTitle") : t("tradeForm.newTradeTitle")}
-        </Text>
+          <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
+            {isEdit ? t("tradeForm.editTradeTitle") : t("tradeForm.newTradeTitle")}
+          </Text>
 
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.instrumentLabel")}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          placeholder={t("tradeForm.instrumentPlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={instrument}
-          onChangeText={setInstrument}
-        />
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.directionLabel")}
-        </Text>
-        <View style={styles.row}>
-          <TouchableOpacity
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.instrumentLabel")}
+          </Text>
+          <TextInput
             style={[
-              styles.directionButton,
+              styles.input,
               {
-                borderColor: directionBorder,
-                backgroundColor: directionBg,
-              },
-              direction === "BUY" && {
-                backgroundColor: "#16a34a",
-                borderColor: "#22c55e",
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
               },
             ]}
-            onPress={() => setDirection("BUY")}
-          >
-            <Text
+            placeholder={t("tradeForm.instrumentPlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={instrument}
+            onChangeText={setInstrument}
+          />
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.directionLabel")}
+          </Text>
+          <View style={styles.row}>
+            <TouchableOpacity
               style={[
-                styles.directionText,
-                { color: direction === "BUY" ? "#f9fafb" : inputTextColor },
+                styles.directionButton,
+                {
+                  borderColor: directionBorder,
+                  backgroundColor: directionBg,
+                },
+                direction === "BUY" && {
+                  backgroundColor: "#16a34a",
+                  borderColor: "#22c55e",
+                },
               ]}
+              onPress={() => setDirection("BUY")}
             >
-              BUY
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.directionButton,
-              {
-                borderColor: directionBorder,
-                backgroundColor: directionBg,
-              },
-              direction === "SELL" && {
-                backgroundColor: "#dc2626",
-                borderColor: "#ef4444",
-              },
-            ]}
-            onPress={() => setDirection("SELL")}
-          >
-            <Text
-              style={[
-                styles.directionText,
-                { color: direction === "SELL" ? "#f9fafb" : inputTextColor },
-              ]}
-            >
-              SELL
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.resultLabelPrefix")} ({currency})
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          keyboardType="numeric"
-          placeholder={t("tradeForm.pnlExamplePlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={pnl}
-          onChangeText={setPnl}
-        />
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.lotLabel")}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          keyboardType="numeric"
-          placeholder={t("tradeForm.lotExamplePlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={lotSize}
-          onChangeText={setLotSize}
-        />
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.priceLabel")}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          keyboardType="numeric"
-          placeholder={t("tradeForm.entryPlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={entryPrice}
-          onChangeText={setEntryPrice}
-        />
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          keyboardType="numeric"
-          placeholder={t("tradeForm.tpPlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={tpPrice}
-          onChangeText={setTpPrice}
-        />
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          keyboardType="numeric"
-          placeholder={t("tradeForm.slPlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={slPrice}
-          onChangeText={setSlPrice}
-        />
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.rrLabel")}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          keyboardType="numeric"
-          placeholder={t("tradeForm.rrExamplePlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={rr}
-          onChangeText={setRr}
-        />
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.emotionLabel")}
-        </Text>
-        <View style={styles.rowWrap}>
-          {emotions.map((e) => {
-            const active = emotion === e.key;
-            return (
-              <TouchableOpacity
-                key={e.key}
+              <Text
                 style={[
-                  styles.chip,
-                  {
-                    borderColor: chipBorder,
-                    backgroundColor: chipBg,
-                  },
-                  active && {
-                    backgroundColor: "#1d4ed8",
-                    borderColor: "#60a5fa",
-                  },
+                  styles.directionText,
+                  { color: direction === "BUY" ? "#f9fafb" : inputTextColor },
                 ]}
-                onPress={() =>
-                  setEmotion((prev) => (prev === e.key ? undefined : e.key))
-                }
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: active ? "#f9fafb" : chipTextColor },
-                  ]}
-                >
-                  {e.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.qualityLabel")}
-        </Text>
-        <View style={styles.row}>
-          {(["A", "B", "C"] as Quality[]).map((q) => {
-            const active = quality === q;
-            return (
-              <TouchableOpacity
-                key={q}
-                style={[
-                  styles.chip,
-                  {
-                    borderColor: chipBorder,
-                    backgroundColor: chipBg,
-                  },
-                  active && {
-                    backgroundColor: "#1d4ed8",
-                    borderColor: "#60a5fa",
-                  },
-                ]}
-                onPress={() => setQuality((prev) => (prev === q ? undefined : q))}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: active ? "#f9fafb" : chipTextColor },
-                  ]}
-                >
-                  {q}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.respectPlanLabel")}
-        </Text>
-        <View style={styles.row}>
-          <TouchableOpacity
-            style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              respectPlan === true && {
-                backgroundColor: "#16a34a",
-                borderColor: "#22c55e",
-              },
-            ]}
-            onPress={() => setRespectPlan(true)}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                { color: respectPlan === true ? "#f9fafb" : chipTextColor },
-              ]}
-            >
-              {t("tradeForm.respectPlanYes")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.chip,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-              respectPlan === false && {
-                backgroundColor: "#dc2626",
-                borderColor: "#ef4444",
-              },
-            ]}
-            onPress={() => setRespectPlan(false)}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                { color: respectPlan === false ? "#f9fafb" : chipTextColor },
-              ]}
-            >
-              {t("tradeForm.respectPlanNo")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.commentLabel")}
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            styles.textArea,
-            {
-              backgroundColor: inputBg,
-              borderColor: inputBorder,
-              color: inputTextColor,
-            },
-          ]}
-          multiline
-          numberOfLines={4}
-          placeholder={t("tradeForm.commentPlaceholder")}
-          placeholderTextColor="#6b7280"
-          value={comment}
-          onChangeText={setComment}
-        />
-
-        <Text style={[styles.label, { color: labelColor }]}>
-          {t("tradeForm.screenshotLabel")}
-        </Text>
-        <View style={styles.row}>
-          <TouchableOpacity
-            style={[
-              styles.imageButton,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-            ]}
-            onPress={handlePickImageFromGallery}
-          >
-            <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
-              {t("tradeForm.screenshotGallery")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.imageButton,
-              {
-                borderColor: chipBorder,
-                backgroundColor: chipBg,
-              },
-            ]}
-            onPress={handleTakePhoto}
-          >
-            <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
-              {t("tradeForm.screenshotCamera")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {screenshotUri && (
-          <View style={styles.screenshotPreviewContainer}>
-            <TouchableOpacity onPress={openImageFullScreen}>
-              <Image
-                source={{ uri: screenshotUri }}
-                style={[styles.screenshotPreview, { borderColor: inputBorder }]}
-              />
+                BUY
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setScreenshotUri(undefined)}>
-              <Text style={styles.removeScreenshotText}>
-                {t("tradeForm.screenshotRemove")}
+            <TouchableOpacity
+              style={[
+                styles.directionButton,
+                {
+                  borderColor: directionBorder,
+                  backgroundColor: directionBg,
+                },
+                direction === "SELL" && {
+                  backgroundColor: "#dc2626",
+                  borderColor: "#ef4444",
+                },
+              ]}
+              onPress={() => setDirection("SELL")}
+            >
+              <Text
+                style={[
+                  styles.directionText,
+                  { color: direction === "SELL" ? "#f9fafb" : inputTextColor },
+                ]}
+              >
+                SELL
               </Text>
             </TouchableOpacity>
           </View>
-        )}
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>
-            {isEdit ? t("tradeForm.updateButton") : t("tradeForm.saveButton")}
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.resultLabelPrefix")} ({currency})
           </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            keyboardType="numeric"
+            placeholder={t("tradeForm.pnlExamplePlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={pnl}
+            onChangeText={setPnl}
+          />
 
-      {/* MODAL PLEIN ÉCRAN POUR LE SCREENSHOT */}
-      <Modal
-        visible={isImageModalVisible && !!screenshotUri}
-        transparent
-        animationType="fade"
-        onRequestClose={closeImageFullScreen}
-      >
-        <Pressable style={styles.modalOverlay} onPress={closeImageFullScreen}>
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.lotLabel")}
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            keyboardType="numeric"
+            placeholder={t("tradeForm.lotExamplePlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={lotSize}
+            onChangeText={setLotSize}
+          />
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.priceLabel")}
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            keyboardType="numeric"
+            placeholder={t("tradeForm.entryPlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={entryPrice}
+            onChangeText={setEntryPrice}
+          />
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            keyboardType="numeric"
+            placeholder={t("tradeForm.tpPlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={tpPrice}
+            onChangeText={setTpPrice}
+          />
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            keyboardType="numeric"
+            placeholder={t("tradeForm.slPlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={slPrice}
+            onChangeText={setSlPrice}
+          />
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.rrLabel")}
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            keyboardType="numeric"
+            placeholder={t("tradeForm.rrExamplePlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={rr}
+            onChangeText={setRr}
+          />
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.emotionLabel")}
+          </Text>
+          <View style={styles.rowWrap}>
+            {emotions.map((e) => {
+              const active = emotion === e.key;
+              return (
+                <TouchableOpacity
+                  key={e.key}
+                  style={[
+                    styles.chip,
+                    { borderColor: chipBorder, backgroundColor: chipBg },
+                    active && {
+                      backgroundColor: "#1d4ed8",
+                      borderColor: "#60a5fa",
+                    },
+                  ]}
+                  onPress={() =>
+                    setEmotion((prev) => (prev === e.key ? undefined : e.key))
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: active ? "#f9fafb" : chipTextColor },
+                    ]}
+                  >
+                    {e.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.qualityLabel")}
+          </Text>
+          <View style={styles.row}>
+            {(["A", "B", "C"] as Quality[]).map((q) => {
+              const active = quality === q;
+              return (
+                <TouchableOpacity
+                  key={q}
+                  style={[
+                    styles.chip,
+                    { borderColor: chipBorder, backgroundColor: chipBg },
+                    active && {
+                      backgroundColor: "#1d4ed8",
+                      borderColor: "#60a5fa",
+                    },
+                  ]}
+                  onPress={() => setQuality((prev) => (prev === q ? undefined : q))}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: active ? "#f9fafb" : chipTextColor },
+                    ]}
+                  >
+                    {q}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.respectPlanLabel")}
+          </Text>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                { borderColor: chipBorder, backgroundColor: chipBg },
+                respectPlan === true && {
+                  backgroundColor: "#16a34a",
+                  borderColor: "#22c55e",
+                },
+              ]}
+              onPress={() => setRespectPlan(true)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: respectPlan === true ? "#f9fafb" : chipTextColor },
+                ]}
+              >
+                {t("tradeForm.respectPlanYes")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                { borderColor: chipBorder, backgroundColor: chipBg },
+                respectPlan === false && {
+                  backgroundColor: "#dc2626",
+                  borderColor: "#ef4444",
+                },
+              ]}
+              onPress={() => setRespectPlan(false)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: respectPlan === false ? "#f9fafb" : chipTextColor },
+                ]}
+              >
+                {t("tradeForm.respectPlanNo")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.label, { color: labelColor }]}>
+            {t("tradeForm.commentLabel")}
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              styles.textArea,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: inputTextColor,
+              },
+            ]}
+            multiline
+            numberOfLines={4}
+            placeholder={t("tradeForm.commentPlaceholder")}
+            placeholderTextColor="#6b7280"
+            value={comment}
+            onChangeText={setComment}
+          />
+
+          {/* ✅ V1 : on retire les boutons Galerie + Caméra */}
+          {/* On garde uniquement la preview si un trade existant a déjà un screenshotUri */}
           {screenshotUri && (
-            <Image
-              source={{ uri: screenshotUri }}
-              style={styles.fullscreenImage}
-              resizeMode="contain"
-            />
+            <>
+              <Text style={[styles.label, { color: labelColor }]}>
+                {t("tradeForm.screenshotLabel")}
+              </Text>
+
+              <View style={styles.screenshotPreviewContainer}>
+                <TouchableOpacity onPress={openImageFullScreen}>
+                  <Image
+                    source={{ uri: screenshotUri }}
+                    style={[styles.screenshotPreview, { borderColor: inputBorder }]}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setScreenshotUri(undefined)}>
+                  <Text style={styles.removeScreenshotText}>
+                    {t("tradeForm.screenshotRemove")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
-        </Pressable>
-      </Modal>
-    </KeyboardAvoidingView>
+
+          {/* ✅ V2 : tu pourras remettre les boutons ici derrière FEATURES.TRADE_SCREENSHOT
+              (en reprenant tes handlers handlePickImageFromGallery / handleTakePhoto) */}
+          {FEATURES.TRADE_SCREENSHOT && (
+            <View style={[styles.row, { marginTop: 8 }]}>
+              <TouchableOpacity
+                style={[
+                  styles.imageButton,
+                  { borderColor: chipBorder, backgroundColor: chipBg },
+                ]}
+                onPress={handlePickImageFromGallery}
+              >
+                <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
+                  {t("tradeForm.screenshotGallery")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.imageButton,
+                  { borderColor: chipBorder, backgroundColor: chipBg },
+                ]}
+                onPress={handleTakePhoto}
+              >
+                <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
+                  {t("tradeForm.screenshotCamera")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>
+              {isEdit ? t("tradeForm.updateButton") : t("tradeForm.saveButton")}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* MODAL PLEIN ÉCRAN POUR LE SCREENSHOT */}
+        <Modal
+          visible={isImageModalVisible && !!screenshotUri}
+          transparent
+          animationType="fade"
+          onRequestClose={closeImageFullScreen}
+        >
+          <Pressable style={styles.modalOverlay} onPress={closeImageFullScreen}>
+            {screenshotUri && (
+              <Image
+                source={{ uri: screenshotUri }}
+                style={styles.fullscreenImage}
+                resizeMode="contain"
+              />
+            )}
+          </Pressable>
+        </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
