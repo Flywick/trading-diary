@@ -73,7 +73,7 @@ const getAgeFromBirthdate = (birthdate: string): number | null => {
   return age;
 };
 
-const SUPPORT_EMAIL = "tradingdiary.app@gmail.com";
+const SUPPORT_EMAIL = "trading.diary.sup@gmail.com";
 
 const SettingsScreen: React.FC = () => {
   const router = useRouter();
@@ -1196,49 +1196,50 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         {/* SECTION VERSION */}
-        <Text style={[styles.sectionTitle, { color: mainText }]}>
-          {t("settings.versionSectionTitle")}
-        </Text>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardBg, borderColor: cardBorder },
-          ]}
-        >
-          <Text
-            style={[
-              styles.value,
-              { fontWeight: "600", marginBottom: 4, color: mainText },
-            ]}
-          >
-            {t("settings.versionName")}
-          </Text>
-          <Text style={[styles.label, { color: subText }]}>
-            {t("settings.versionDescription")}
-          </Text>
-          <Text style={[styles.label, { marginTop: 6, color: subText }]}>
-            {t("settings.versionProNote")}
-          </Text>
+<Text style={[styles.sectionTitle, { color: mainText }]}>
+  {t("settings.versionSectionTitle")}
+</Text>
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              styles.buttonSecondaryLight,
-              { marginTop: 12 },
-            ]}
-            activeOpacity={0.7}
-            onPress={() => {
-              Alert.alert(
-                t("settings.versionProAlertTitle"),
-                t("settings.versionProAlertMessage")
-              );
-            }}
-          >
-            <Text style={styles.buttonText}>
-              {t("settings.versionProButton")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+<View
+  style={[
+    styles.card,
+    { backgroundColor: cardBg, borderColor: cardBorder },
+  ]}
+>
+  <Text
+    style={[
+      styles.value,
+      { fontWeight: "600", marginBottom: 6, color: mainText },
+    ]}
+  >
+    {t("settings.versionName")}
+  </Text>
+
+  <Text style={[styles.label, { color: subText }]}>
+    {t("settings.versionDescription")}
+  </Text>
+
+  <TouchableOpacity
+    style={[
+      styles.button,
+      styles.buttonSecondaryLight,
+      { marginTop: 14 },
+    ]}
+    activeOpacity={0.8}
+    onPress={() =>
+      Alert.alert(
+        t("settings.donationAlertTitle"),
+        t("settings.donationAlertMessage"),
+        [{ text: t("common.ok") }]
+      )
+    }
+  >
+    <Text style={styles.buttonText}>
+      {t("settings.donationButton")}
+    </Text>
+  </TouchableOpacity>
+</View>
+
 
         {/* SECTION EXPORT CSV (V1: masquée, V2: réactivable) */}
         {FEATURES.EXPORT_CSV && (

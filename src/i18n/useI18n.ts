@@ -197,12 +197,16 @@ const fr = {
 
     // version
     versionName: "Trading Diary — version locale",
-    versionDescription: "Toutes les données sont stockées sur votre appareil.",
-    versionProNote: "La version Pro offrira sauvegarde cloud, multi-appareils.",
-    versionProButton: "Trading Diary Pro (bientôt)",
-    versionProAlertTitle: "Trading Diary Pro",
-    versionProAlertMessage:
-      "La version Pro sera disponible dans une future mise à jour.",
+    versionDescription:
+  "Toutes les données sont stockées sur votre appareil.\n\n" +
+  "La version Pro apportera de nouvelles fonctionnalités pour les abonnés et arrivera avec la V2.\n\n" +
+  "En attendant, vous pouvez soutenir le projet avec des dons.",
+
+donationButton: "Faire un don",
+donationAlertTitle: "Soutenir le projet",
+donationAlertMessage:
+  "Merci pour votre soutien 🙏\n\nLes dons permettent de financer le développement et les futures fonctionnalités."
+
   },
 
   // ✅ NEW — LEGAL (CGU / PRIVACY)
@@ -487,12 +491,16 @@ const en = {
       "Remove all trades and statistics but keep your account.",
 
     versionName: "Trading Diary — local version",
-    versionDescription: "All your data is stored on this device.",
-    versionProNote: "Pro version will include cloud sync and multi-device.",
-    versionProButton: "Trading Diary Pro (soon)",
-    versionProAlertTitle: "Trading Diary Pro",
-    versionProAlertMessage:
-      "The Pro version will be available in a future update.",
+    versionDescription:
+  "All data is stored locally on your device.\n\n" +
+  "The Pro version will bring new features for subscribers and will arrive with V2.\n\n" +
+  "In the meantime, you can support the project with donations.",
+
+donationButton: "Donate",
+donationAlertTitle: "Support the project",
+donationAlertMessage:
+  "Thank you for your support 🙏\n\nDonations help fund development and future features."
+
   },
 
   // ✅ NEW — LEGAL (TERMS / PRIVACY)

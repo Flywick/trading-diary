@@ -425,7 +425,7 @@ const AgendaScreen: React.FC = () => {
 
         <ScrollView contentContainerStyle={styles.calendarContainer}>
           {daysMatrix.map((week, rowIndex) => (
-            <View key={rowIndex} style={styles.weekRow}>
+            <View key={`week-${year}-${month}-${rowIndex}`} style={styles.weekRow}>
               {week.map((dayNumber, colIndex) => {
                 const summary =
                   dayNumber !== null ? getSummaryForDay(dayNumber) : undefined;
@@ -433,12 +433,19 @@ const AgendaScreen: React.FC = () => {
                 const isTodayCell =
                   isCurrentMonth && dayNumber === today.getDate();
 
+                // ✅ clé unique par case + mois affiché (évite réutilisation d’instance)
+                const cellKey =
+                  dayNumber === null
+                    ? `empty-${year}-${month}-${rowIndex}-${colIndex}`
+                    : summary?.dateStr ?? `day-${year}-${month}-${dayNumber}`;
+
                 return (
-                  <View key={colIndex} style={styles.dayWrapper}>
+                  <View key={cellKey} style={styles.dayWrapper}>
                     {dayNumber === null ? (
                       <View style={[styles.cell, styles.emptyCell]} />
                     ) : (
                       <DayCell
+                        key={cellKey}
                         dayNumber={dayNumber}
                         hasTrades={summary?.hasTrades ?? false}
                         pnl={summary?.hasTrades ? summary?.pnl : undefined}
