@@ -63,7 +63,7 @@ export default function TabsLayout() {
         headerShown: false,
 
         // ✅ Empêche le contenu d'aller sous la status bar (notch / notifications)
-        sceneContainerStyle: {
+        sceneStyle: {
           backgroundColor: isDark ? "#020617" : "#F8FAFC",
         },
 

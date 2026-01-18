@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSettings } from "../context/SettingsContext";
@@ -27,7 +27,7 @@ const DaySummaryScreen: React.FC = () => {
 
   const dayTrades = useMemo(
     () => trades.filter((t) => t.date === dateStr),
-    [trades, dateStr]
+    [trades, dateStr],
   );
 
   const totalPnl = dayTrades.reduce((sum, t) => sum + t.pnl, 0);
@@ -45,7 +45,7 @@ const DaySummaryScreen: React.FC = () => {
       day: "2-digit",
       month: "long",
       year: "numeric",
-    }
+    },
   );
 
   const textMainColor = isDark ? "#e5e7eb" : "#0f172a";
@@ -86,17 +86,13 @@ const DaySummaryScreen: React.FC = () => {
           style: "cancel",
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
   const renderTradeItem = ({ item }: { item: Trade }) => {
     const pnlColor =
-      item.pnl > 0
-        ? "#22c55e"
-        : item.pnl < 0
-        ? "#ef4444"
-        : neutralPnlColor;
+      item.pnl > 0 ? "#22c55e" : item.pnl < 0 ? "#ef4444" : neutralPnlColor;
 
     return (
       <TouchableOpacity onPress={() => handlePressTrade(item)}>

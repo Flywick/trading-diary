@@ -36,29 +36,17 @@ const DayCell: React.FC<DayCellProps> = ({
     currency === "EUR"
       ? "€"
       : currency === "USD"
-      ? "$"
-      : currency === "GBP"
-      ? "£"
-      : currency;
+        ? "$"
+        : currency === "GBP"
+          ? "£"
+          : currency;
 
   // Couleurs de texte : plus contrastées en mode clair sur les cases grises
-  const dayNumberColor = hasTrades
-    ? "#f9fafb"
-    : isDark
-    ? "#e5e7eb"
-    : "#0f172a";
+  const dayNumberColor = hasTrades ? "#f9fafb" : isDark ? "#e5e7eb" : "#0f172a";
 
-  const pnlTextColor = hasTrades
-    ? "#f9fafb"
-    : isDark
-    ? "#e5e7eb"
-    : "#0f172a";
+  const pnlTextColor = hasTrades ? "#f9fafb" : isDark ? "#e5e7eb" : "#0f172a";
 
-  const rrTextColor = hasTrades
-    ? "#e5e7eb"
-    : isDark
-    ? "#9ca3af"
-    : "#6b7280";
+  const rrTextColor = hasTrades ? "#e5e7eb" : isDark ? "#9ca3af" : "#6b7280";
 
   return (
     <Pressable

@@ -16,7 +16,14 @@ import { SettingsProvider, useSettings } from "../src/context/SettingsContext";
 import { TradesProvider } from "../src/context/TradesContext";
 
 function RootNavigator() {
-  const { theme } = useSettings();
+  const { theme, isSettingsLoaded } = useSettings();
+
+  // ✅ Anti-flash : tant que les settings ne sont pas chargés,
+  // on ne rend rien (le splash natif couvre ce moment).
+  if (!isSettingsLoaded) {
+    return null;
+  }
+
   const navTheme = theme === "dark" ? DarkTheme : DefaultTheme;
 
   return (

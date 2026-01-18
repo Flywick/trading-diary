@@ -37,15 +37,13 @@ interface JournalContextValue {
 }
 
 const JournalContext = createContext<JournalContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 const makeStorageKey = (accountId: string) =>
   `${JOURNALS_KEY_PREFIX}${accountId}`;
 
-const loadJournalsState = async (
-  accountId: string
-): Promise<JournalsState> => {
+const loadJournalsState = async (accountId: string): Promise<JournalsState> => {
   const key = makeStorageKey(accountId);
   try {
     const stored = await AsyncStorage.getItem(key);
@@ -68,7 +66,7 @@ const loadJournalsState = async (
 
 const saveJournalsState = async (
   accountId: string,
-  state: JournalsState
+  state: JournalsState,
 ): Promise<void> => {
   const key = makeStorageKey(accountId);
   try {
@@ -103,7 +101,6 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
         let journals = loaded.journals ?? [];
         let activeJournalId = loaded.activeJournalId;
 
-        // Si aucun journal → crée "Journal principal"
         if (journals.length === 0) {
           const now = new Date();
           const id =
@@ -144,7 +141,7 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeAccount?.id]);
+  }, [activeAccount]);
 
   const persist = async (next: JournalsState) => {
     setState(next);
@@ -154,9 +151,9 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
 
   const activeJournal =
     state.activeJournalId && state.journals.length > 0
-      ? state.journals.find((j) => j.id === state.activeJournalId) ??
-        state.journals[0]
-      : state.journals[0] ?? null;
+      ? (state.journals.find((j) => j.id === state.activeJournalId) ??
+        state.journals[0])
+      : (state.journals[0] ?? null);
 
   const createJournal: JournalContextValue["createJournal"] = (name) => {
     if (!activeAccount) return false;
@@ -170,8 +167,7 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
     const finalName = trimmed.length > 0 ? trimmed : "Nouveau journal";
 
     const now = new Date();
-    const id =
-      now.getTime().toString(36) + Math.random().toString(36).slice(2);
+    const id = now.getTime().toString(36) + Math.random().toString(36).slice(2);
 
     const newJournal: Journal = {
       id,
@@ -188,10 +184,7 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  const renameJournal: JournalContextValue["renameJournal"] = (
-    id,
-    newName
-  ) => {
+  const renameJournal: JournalContextValue["renameJournal"] = (id, newName) => {
     const trimmed = newName.trim();
     if (!trimmed) return;
 
@@ -201,7 +194,7 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
             ...j,
             name: trimmed,
           }
-        : j
+        : j,
     );
 
     const next: JournalsState = {
@@ -260,9 +253,7 @@ export const JournalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <JournalContext.Provider value={value}>
-      {children}
-    </JournalContext.Provider>
+    <JournalContext.Provider value={value}>{children}</JournalContext.Provider>
   );
 };
 

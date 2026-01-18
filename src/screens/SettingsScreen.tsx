@@ -4,7 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Linking,
@@ -88,20 +88,16 @@ const SettingsScreen: React.FC = () => {
   } = useSettings();
   const { trades, resetTrades } = useTrades();
   const { journals, activeJournal } = useJournal();
-  const {
-    activeAccount,
-    updateActiveAccount,
-    deleteActiveAccount,
-    logout,
-  } = useAccount();
+  const { activeAccount, updateActiveAccount, deleteActiveAccount, logout } =
+    useAccount();
   const { setLanguage } = useLanguage();
   const { t, language } = useI18n();
 
   const [usernameInput, setUsernameInput] = useState(
-    activeAccount?.username ?? ""
+    activeAccount?.username ?? "",
   );
   const [birthdateInput, setBirthdateInput] = useState(
-    activeAccount?.birthdate ?? ""
+    activeAccount?.birthdate ?? "",
   );
   const [emailInput, setEmailInput] = useState(activeAccount?.email ?? "");
   const [isEditingAccount, setIsEditingAccount] = useState(false);
@@ -116,20 +112,58 @@ const SettingsScreen: React.FC = () => {
   const [deletePasswordInput, setDeletePasswordInput] = useState("");
   const [deleteError, setDeleteError] = useState("");
 
-  useEffect(() => {
+  // -----------------------------
+  // Helpers reset (rollback UI)
+  // -----------------------------
+  const resetAccountInputsFromActiveAccount = useCallback(() => {
     setUsernameInput(activeAccount?.username ?? "");
     setBirthdateInput(activeAccount?.birthdate ?? "");
     setEmailInput(activeAccount?.email ?? "");
-    setIsEditingAccount(false);
-    setIsEditingPassword(false);
+  }, [activeAccount]);
+
+  const resetPasswordInputs = () => {
     setCurrentPasswordInput("");
     setNewPasswordInput("");
     setConfirmPasswordInput("");
+  };
+
+  // Reset global quand on change de compte actif
+  useEffect(() => {
+    resetAccountInputsFromActiveAccount();
+    setIsEditingAccount(false);
+
+    setIsEditingPassword(false);
+    resetPasswordInputs();
 
     setShowDeleteConfirmModal(false);
     setDeletePasswordInput("");
     setDeleteError("");
-  }, [activeAccount]);
+  }, [activeAccount, resetAccountInputsFromActiveAccount]);
+
+  // ✅ IMPORTANT : quand on ENTRE en mode édition, on resynchronise les champs
+  // pour éviter que des valeurs "tapées puis cancel" restent dans le state.
+  useEffect(() => {
+    if (isEditingAccount) {
+      resetAccountInputsFromActiveAccount();
+    }
+  }, [isEditingAccount, resetAccountInputsFromActiveAccount]);
+
+  useEffect(() => {
+    if (isEditingPassword) {
+      resetPasswordInputs();
+    }
+  }, [isEditingPassword]);
+
+  // Handlers cancel propres (rollback + fermeture)
+  const handleCancelEditAccount = () => {
+    resetAccountInputsFromActiveAccount();
+    setIsEditingAccount(false);
+  };
+
+  const handleCancelEditPassword = () => {
+    resetPasswordInputs();
+    setIsEditingPassword(false);
+  };
 
   const liveAge = getAgeFromBirthdate(birthdateInput);
   const accountAge = activeAccount
@@ -166,7 +200,7 @@ const SettingsScreen: React.FC = () => {
     if (!username || !birthdate || !email) {
       Alert.alert(
         t("settings.accountInfosMissingTitle"),
-        t("settings.accountInfosMissingMessage")
+        t("settings.accountInfosMissingMessage"),
       );
       return;
     }
@@ -175,7 +209,7 @@ const SettingsScreen: React.FC = () => {
     if (!birthdateRegex.test(birthdate)) {
       Alert.alert(
         t("settings.accountInvalidBirthdateTitle"),
-        t("settings.accountInvalidBirthdateMessage")
+        t("settings.accountInvalidBirthdateMessage"),
       );
       return;
     }
@@ -206,7 +240,7 @@ const SettingsScreen: React.FC = () => {
 
     Alert.alert(
       t("settings.accountUpdatedTitle"),
-      t("settings.accountUpdatedMessage")
+      t("settings.accountUpdatedMessage"),
     );
   };
 
@@ -219,7 +253,7 @@ const SettingsScreen: React.FC = () => {
     if (!activeAccount.password) {
       Alert.alert(
         t("settings.passwordNotDefinedTitle"),
-        t("settings.passwordNotDefinedMessage")
+        t("settings.passwordNotDefinedMessage"),
       );
       return;
     }
@@ -231,7 +265,7 @@ const SettingsScreen: React.FC = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert(
         t("errors.missingLoginFields"),
-        t("errors.missingLoginFields")
+        t("errors.missingLoginFields"),
       );
       return;
     }
@@ -239,7 +273,7 @@ const SettingsScreen: React.FC = () => {
     if (currentPassword !== activeAccount.password) {
       Alert.alert(
         t("settings.passwordIncorrect"),
-        t("settings.passwordIncorrect")
+        t("settings.passwordIncorrect"),
       );
       return;
     }
@@ -252,7 +286,7 @@ const SettingsScreen: React.FC = () => {
     if (newPassword !== confirmPassword) {
       Alert.alert(
         t("errors.passwordConfirmMismatch"),
-        t("errors.passwordConfirmMismatch")
+        t("errors.passwordConfirmMismatch"),
       );
       return;
     }
@@ -260,13 +294,11 @@ const SettingsScreen: React.FC = () => {
     updateActiveAccount({ password: newPassword } as any);
 
     setIsEditingPassword(false);
-    setCurrentPasswordInput("");
-    setNewPasswordInput("");
-    setConfirmPasswordInput("");
+    resetPasswordInputs();
 
     Alert.alert(
       t("settings.passwordUpdatedTitle"),
-      t("settings.passwordUpdatedMessage")
+      t("settings.passwordUpdatedMessage"),
     );
   };
 
@@ -319,32 +351,32 @@ const SettingsScreen: React.FC = () => {
           escapeCsv(
             typeof tTrade.pnl === "number"
               ? tTrade.pnl.toString().replace(".", ",")
-              : ""
+              : "",
           ),
           escapeCsv(
             typeof tTrade.rr === "number"
               ? tTrade.rr.toString().replace(".", ",")
-              : ""
+              : "",
           ),
           escapeCsv(
             typeof tTrade.lotSize === "number"
               ? tTrade.lotSize.toString().replace(".", ",")
-              : ""
+              : "",
           ),
           escapeCsv(
             typeof tTrade.entryPrice === "number"
               ? tTrade.entryPrice.toString().replace(".", ",")
-              : ""
+              : "",
           ),
           escapeCsv(
             typeof tTrade.tpPrice === "number"
               ? tTrade.tpPrice.toString().replace(".", ",")
-              : ""
+              : "",
           ),
           escapeCsv(
             typeof tTrade.slPrice === "number"
               ? tTrade.slPrice.toString().replace(".", ",")
-              : ""
+              : "",
           ),
           escapeCsv(tTrade.emotion ?? ""),
           escapeCsv(tTrade.quality ?? ""),
@@ -353,7 +385,7 @@ const SettingsScreen: React.FC = () => {
               ? tTrade.respectPlan
                 ? "oui"
                 : "non"
-              : ""
+              : "",
           ),
           escapeCsv(tTrade.comment ?? ""),
         ];
@@ -384,14 +416,14 @@ const SettingsScreen: React.FC = () => {
       } else {
         Alert.alert(
           t("settings.exportCsvDoneTitle"),
-          t("settings.exportCsvDoneMessage")
+          t("settings.exportCsvDoneMessage"),
         );
       }
     } catch (error) {
       console.error("Erreur export CSV", error);
       Alert.alert(
         t("settings.exportCsvErrorTitle"),
-        t("settings.exportCsvErrorMessage")
+        t("settings.exportCsvErrorMessage"),
       );
     }
   };
@@ -449,14 +481,14 @@ const SettingsScreen: React.FC = () => {
       } else {
         Alert.alert(
           t("settings.importJsonDoneTitle"),
-          t("settings.importJsonDoneMessage")
+          t("settings.importJsonDoneMessage"),
         );
       }
     } catch (error) {
       console.error("Erreur export JSON", error);
       Alert.alert(
         t("settings.importJsonErrorTitle"),
-        t("settings.importJsonErrorMessage")
+        t("settings.importJsonErrorMessage"),
       );
     }
   };
@@ -483,7 +515,7 @@ const SettingsScreen: React.FC = () => {
       if (!asset || !asset.uri) {
         Alert.alert(
           t("settings.exportJsonErrorTitle"),
-          t("settings.exportJsonErrorMessage")
+          t("settings.exportJsonErrorMessage"),
         );
         return;
       }
@@ -492,10 +524,10 @@ const SettingsScreen: React.FC = () => {
       let data: any;
       try {
         data = JSON.parse(content);
-      } catch (e) {
+      } catch {
         Alert.alert(
           t("settings.importJsonInvalidFileTitle"),
-          t("settings.importJsonInvalidFileMessage")
+          t("settings.importJsonInvalidFileMessage"),
         );
         return;
       }
@@ -503,7 +535,7 @@ const SettingsScreen: React.FC = () => {
       if (!data || typeof data !== "object") {
         Alert.alert(
           t("settings.importJsonInvalidFileTitle"),
-          t("settings.importJsonInvalidContentMessage")
+          t("settings.importJsonInvalidContentMessage"),
         );
         return;
       }
@@ -538,7 +570,10 @@ const SettingsScreen: React.FC = () => {
         if (typeof data.settings.timeFormat24h === "boolean") {
           setTimeFormat24h(data.settings.timeFormat24h);
         }
-        if (data.settings.language === "fr" || data.settings.language === "en") {
+        if (
+          data.settings.language === "fr" ||
+          data.settings.language === "en"
+        ) {
           setLanguage(data.settings.language);
         }
       }
@@ -566,13 +601,13 @@ const SettingsScreen: React.FC = () => {
 
       Alert.alert(
         t("settings.importJsonDoneTitle"),
-        t("settings.importJsonDoneMessage")
+        t("settings.importJsonDoneMessage"),
       );
     } catch (error) {
       console.error("Erreur import JSON", error);
       Alert.alert(
         t("settings.importJsonErrorTitle"),
-        t("settings.importJsonErrorMessage")
+        t("settings.importJsonErrorMessage"),
       );
     }
   };
@@ -587,7 +622,7 @@ const SettingsScreen: React.FC = () => {
           resetTrades();
           Alert.alert(
             t("settings.resetAppDoneTitle"),
-            t("settings.resetAppDoneMessage")
+            t("settings.resetAppDoneMessage"),
           );
         },
       },
@@ -598,7 +633,7 @@ const SettingsScreen: React.FC = () => {
     if (!activeAccount) {
       Alert.alert(
         t("settings.deleteAccountNoAccount"),
-        t("settings.deleteAccountNoAccount")
+        t("settings.deleteAccountNoAccount"),
       );
       return;
     }
@@ -617,7 +652,7 @@ const SettingsScreen: React.FC = () => {
             setShowDeleteConfirmModal(true);
           },
         },
-      ]
+      ],
     );
   };
 
@@ -652,7 +687,7 @@ const SettingsScreen: React.FC = () => {
             deleteActiveAccount();
           },
         },
-      ]
+      ],
     );
   };
 
@@ -660,7 +695,7 @@ const SettingsScreen: React.FC = () => {
     if (!activeAccount) {
       Alert.alert(
         t("settings.deleteAccountNoAccount"),
-        t("settings.deleteAccountNoAccount")
+        t("settings.deleteAccountNoAccount"),
       );
       return;
     }
@@ -681,7 +716,7 @@ const SettingsScreen: React.FC = () => {
                   logout();
                 },
               },
-            ]
+            ],
           );
         },
       },
@@ -695,16 +730,14 @@ const SettingsScreen: React.FC = () => {
 
   const openSupportEmail = async () => {
     const subject =
-      language === "en"
-        ? "Support - Trading Diary"
-        : "Support - Trading Diary";
+      language === "en" ? "Support - Trading Diary" : "Support - Trading Diary";
     const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
 
     const can = await Linking.canOpenURL(url);
     if (!can) {
       Alert.alert(
         t("settings.supportErrorTitle"),
-        t("settings.supportErrorMessage")
+        t("settings.supportErrorMessage"),
       );
       return;
     }
@@ -721,14 +754,14 @@ const SettingsScreen: React.FC = () => {
         ? "Hi,\n\nI have a suggestion:\n\n"
         : "Bonjour,\n\nJ’ai une suggestion :\n\n";
     const url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-      subject
+      subject,
     )}&body=${encodeURIComponent(body)}`;
 
     const can = await Linking.canOpenURL(url);
     if (!can) {
       Alert.alert(
         t("settings.supportErrorTitle"),
-        t("settings.supportErrorMessage")
+        t("settings.supportErrorMessage"),
       );
       return;
     }
@@ -742,7 +775,11 @@ const SettingsScreen: React.FC = () => {
     >
       <ScrollView
         style={[styles.container, { backgroundColor: screenBg }]}
-        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 32 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingTop: 0,
+          paddingBottom: 32,
+        }}
       >
         {/* SECTION COMPTE */}
         <Text style={[styles.sectionTitle, { color: mainText }]}>
@@ -835,7 +872,7 @@ const SettingsScreen: React.FC = () => {
 
             <TouchableOpacity
               style={[styles.button, styles.buttonGhost]}
-              onPress={() => setIsEditingAccount(false)}
+              onPress={handleCancelEditAccount}
             >
               <Text style={styles.buttonGhostText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
@@ -919,7 +956,7 @@ const SettingsScreen: React.FC = () => {
 
             <TouchableOpacity
               style={[styles.button, styles.buttonGhost]}
-              onPress={() => setIsEditingPassword(false)}
+              onPress={handleCancelEditPassword}
             >
               <Text style={styles.buttonGhostText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
@@ -1196,50 +1233,49 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         {/* SECTION VERSION */}
-<Text style={[styles.sectionTitle, { color: mainText }]}>
-  {t("settings.versionSectionTitle")}
-</Text>
+        <Text style={[styles.sectionTitle, { color: mainText }]}>
+          {t("settings.versionSectionTitle")}
+        </Text>
 
-<View
-  style={[
-    styles.card,
-    { backgroundColor: cardBg, borderColor: cardBorder },
-  ]}
->
-  <Text
-    style={[
-      styles.value,
-      { fontWeight: "600", marginBottom: 6, color: mainText },
-    ]}
-  >
-    {t("settings.versionName")}
-  </Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+          ]}
+        >
+          <Text
+            style={[
+              styles.value,
+              { fontWeight: "600", marginBottom: 6, color: mainText },
+            ]}
+          >
+            {t("settings.versionName")}
+          </Text>
 
-  <Text style={[styles.label, { color: subText }]}>
-    {t("settings.versionDescription")}
-  </Text>
+          <Text style={[styles.label, { color: subText }]}>
+            {t("settings.versionDescription")}
+          </Text>
 
-  <TouchableOpacity
-    style={[
-      styles.button,
-      styles.buttonSecondaryLight,
-      { marginTop: 14 },
-    ]}
-    activeOpacity={0.8}
-    onPress={() =>
-      Alert.alert(
-        t("settings.donationAlertTitle"),
-        t("settings.donationAlertMessage"),
-        [{ text: t("common.ok") }]
-      )
-    }
-  >
-    <Text style={styles.buttonText}>
-      {t("settings.donationButton")}
-    </Text>
-  </TouchableOpacity>
-</View>
-
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 14 },
+            ]}
+            activeOpacity={0.8}
+            onPress={() =>
+              Alert.alert(
+                t("settings.donationAlertTitle"),
+                t("settings.donationAlertMessage"),
+                [{ text: t("common.ok") }],
+              )
+            }
+          >
+            <Text style={styles.buttonText}>
+              {t("settings.donationButton")}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* SECTION EXPORT CSV (V1: masquée, V2: réactivable) */}
         {FEATURES.EXPORT_CSV && (
@@ -1257,10 +1293,7 @@ const SettingsScreen: React.FC = () => {
                 {t("settings.exportCsvDescription")}
               </Text>
               <Text
-                style={[
-                  styles.helperText,
-                  { marginBottom: 0, color: subText },
-                ]}
+                style={[styles.helperText, { marginBottom: 0, color: subText }]}
               >
                 {t("settings.exportCsvHelper")}
               </Text>
@@ -1341,7 +1374,11 @@ const SettingsScreen: React.FC = () => {
           ]}
         >
           <TouchableOpacity
-            style={[styles.button, styles.buttonSecondaryLight, { marginTop: 0 }]}
+            style={[
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 0 },
+            ]}
             activeOpacity={0.7}
             onPress={() => router.push("/legal")}
           >
@@ -1351,7 +1388,11 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.buttonSecondaryLight, { marginTop: 10 }]}
+            style={[
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 10 },
+            ]}
             activeOpacity={0.7}
             onPress={openSupportEmail}
           >
@@ -1359,7 +1400,11 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.buttonSecondaryLight, { marginTop: 10 }]}
+            style={[
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 10 },
+            ]}
             activeOpacity={0.7}
             onPress={openSuggestionsEmail}
           >
@@ -1382,7 +1427,9 @@ const SettingsScreen: React.FC = () => {
           style={[styles.button, styles.buttonWarning]}
           onPress={handleResetApp}
         >
-          <Text style={styles.buttonText}>{t("settings.resetTradesButton")}</Text>
+          <Text style={styles.buttonText}>
+            {t("settings.resetTradesButton")}
+          </Text>
         </TouchableOpacity>
         <Text style={[styles.helperText, { color: subText }]}>
           {t("settings.resetTradesHelper")}

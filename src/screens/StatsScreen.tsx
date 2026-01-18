@@ -160,7 +160,7 @@ const StatsScreen: React.FC = () => {
     const worstTrade = losses.length
       ? losses.reduce(
           (worst: Trade, t) => (t.pnl < worst.pnl ? t : worst),
-          losses[0]
+          losses[0],
         )
       : undefined;
 
@@ -211,7 +211,7 @@ const StatsScreen: React.FC = () => {
     });
 
     const months = Array.from(monthMap.values()).sort((a, b) =>
-      a.key.localeCompare(b.key)
+      a.key.localeCompare(b.key),
     );
 
     const topMonths = months
@@ -410,7 +410,11 @@ const StatsScreen: React.FC = () => {
     >
       <ScrollView
         style={[styles.container, { backgroundColor: bgColor }]}
-        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 100 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingTop: 0,
+          paddingBottom: 100,
+        }}
       >
         {/* Titre + profil */}
         <View style={styles.titleRow}>
@@ -453,7 +457,9 @@ const StatsScreen: React.FC = () => {
                   <>
                     <View
                       style={{ height: 200, marginTop: 8 }}
-                      onLayout={(e) => setChartWidthPx(e.nativeEvent.layout.width)}
+                      onLayout={(e) =>
+                        setChartWidthPx(e.nativeEvent.layout.width)
+                      }
                     >
                       <View style={{ flex: 1, position: "relative" }}>
                         <Svg width="100%" height="100%" viewBox="0 0 100 100">
@@ -497,8 +503,8 @@ const StatsScreen: React.FC = () => {
                                 p.cumulative > 0
                                   ? "#22c55e"
                                   : p.cumulative < 0
-                                  ? "#ef4444"
-                                  : "#9ca3af"
+                                    ? "#ef4444"
+                                    : "#9ca3af"
                               }
                             />
                           ))}
@@ -520,7 +526,7 @@ const StatsScreen: React.FC = () => {
                               >
                                 {`${formatSigned(selectedPoint.tradePnl, 2)} (${formatSigned(
                                   selectedPoint.cumulative,
-                                  2
+                                  2,
                                 )})`}
                               </SvgText>
                             </>
@@ -544,7 +550,9 @@ const StatsScreen: React.FC = () => {
                     </View>
                   </>
                 ) : (
-                  <Text style={[styles.label, { marginTop: 8, color: textSub }]}>
+                  <Text
+                    style={[styles.label, { marginTop: 8, color: textSub }]}
+                  >
                     {t("stats.notEnoughData")}
                   </Text>
                 )}
@@ -683,7 +691,8 @@ const StatsScreen: React.FC = () => {
                       {t("stats.worst")}
                     </Text>
                     <Text style={[styles.value, { color: textMain }]}>
-                      {stats.worstTrade.instrument} ({stats.worstTrade.direction})
+                      {stats.worstTrade.instrument} (
+                      {stats.worstTrade.direction})
                     </Text>
                   </View>
                   <Text style={[styles.value, { color: "#ef4444" }]}>
@@ -710,9 +719,13 @@ const StatsScreen: React.FC = () => {
                 </Text>
 
                 {stats.byInstrument.length > 3 && (
-                  <Pressable onPress={() => setShowAllInstruments((prev) => !prev)}>
+                  <Pressable
+                    onPress={() => setShowAllInstruments((prev) => !prev)}
+                  >
                     <Text style={[styles.label, { color: "#38bdf8" }]}>
-                      {showAllInstruments ? t("stats.seeLess") : t("stats.seeAll")}
+                      {showAllInstruments
+                        ? t("stats.seeLess")
+                        : t("stats.seeAll")}
                     </Text>
                   </Pressable>
                 )}
@@ -768,13 +781,24 @@ const StatsScreen: React.FC = () => {
                 onPress={openMonthPicker}
               >
                 <View>
-                  <Text style={[styles.value, { fontWeight: "600", color: textMain }]}>
+                  <Text
+                    style={[
+                      styles.value,
+                      { fontWeight: "600", color: textMain },
+                    ]}
+                  >
                     {selectedMonth
-                      ? formatMonthLabel(selectedMonth.year, selectedMonth.month, language)
+                      ? formatMonthLabel(
+                          selectedMonth.year,
+                          selectedMonth.month,
+                          language,
+                        )
                       : "-"}
                   </Text>
                   <Text style={[styles.label, { color: textSub }]}>
-                    {selectedMonth ? `${selectedMonth.count} ${t("stats.tradesLabel")}` : ""}
+                    {selectedMonth
+                      ? `${selectedMonth.count} ${t("stats.tradesLabel")}`
+                      : ""}
                   </Text>
                 </View>
                 <Text style={{ color: "#9ca3af", fontSize: 18 }}>⌵</Text>
@@ -784,19 +808,34 @@ const StatsScreen: React.FC = () => {
                 <View
                   style={[
                     styles.monthPicker,
-                    { backgroundColor: cardBackground, borderColor: cardBorder },
+                    {
+                      backgroundColor: cardBackground,
+                      borderColor: cardBorder,
+                    },
                   ]}
                 >
                   <View style={[styles.rowBetween, { marginBottom: 8 }]}>
-                    <Pressable style={styles.yearButton} onPress={() => changeYear(-1)}>
+                    <Pressable
+                      style={styles.yearButton}
+                      onPress={() => changeYear(-1)}
+                    >
                       <Text style={{ color: "#9ca3af", fontSize: 18 }}>‹</Text>
                     </Pressable>
 
-                    <Text style={{ color: textMain, fontSize: 14, fontWeight: "600" }}>
+                    <Text
+                      style={{
+                        color: textMain,
+                        fontSize: 14,
+                        fontWeight: "600",
+                      }}
+                    >
                       {pickerYear ?? currentYear}
                     </Text>
 
-                    <Pressable style={styles.yearButton} onPress={() => changeYear(1)}>
+                    <Pressable
+                      style={styles.yearButton}
+                      onPress={() => changeYear(1)}
+                    >
                       <Text style={{ color: "#9ca3af", fontSize: 18 }}>›</Text>
                     </Pressable>
                   </View>
@@ -814,8 +853,8 @@ const StatsScreen: React.FC = () => {
                                 `${pickerYear ?? currentYear}-${String(index + 1).padStart(2, "0")}`
                                   ? "#38bdf8"
                                   : isDark
-                                  ? "#1f2937"
-                                  : "#cbd5e1",
+                                    ? "#1f2937"
+                                    : "#cbd5e1",
                               backgroundColor:
                                 selectedMonthKey ===
                                 `${pickerYear ?? currentYear}-${String(index + 1).padStart(2, "0")}`
@@ -825,11 +864,13 @@ const StatsScreen: React.FC = () => {
                           ]}
                           onPress={() => handleSelectMonth(index)}
                         >
-                          <Text style={[styles.monthItemText, { color: textMain }]}>
+                          <Text
+                            style={[styles.monthItemText, { color: textMain }]}
+                          >
                             {label}
                           </Text>
                         </Pressable>
-                      )
+                      ),
                     )}
                   </View>
                 </View>
@@ -855,7 +896,9 @@ const StatsScreen: React.FC = () => {
 
               <View style={[styles.cardSeparator, { marginTop: 12 }]} />
 
-              <Text style={[styles.cardTitle, { marginTop: 8, color: textMain }]}>
+              <Text
+                style={[styles.cardTitle, { marginTop: 8, color: textMain }]}
+              >
                 {t("stats.bestMonthsTitle")}
               </Text>
               {stats.topMonths.length === 0 ? (
@@ -867,7 +910,8 @@ const StatsScreen: React.FC = () => {
                   <View key={m.key} style={styles.rowBetween}>
                     <View>
                       <Text style={[styles.value, { color: textMain }]}>
-                        #{index + 1} {formatMonthLabel(m.year, m.month, language)}
+                        #{index + 1}{" "}
+                        {formatMonthLabel(m.year, m.month, language)}
                       </Text>
                       <Text style={[styles.label, { color: textSub }]}>
                         {m.count} {t("stats.tradesLabel")}

@@ -29,10 +29,7 @@ import { useI18n } from "../i18n/useI18n";
 
 // ✅ IMPORTANT V1 : on évite d'importer expo-image-picker (permissions sensibles)
 // V2 : FEATURES.TRADE_SCREENSHOT = true => le module est chargé
-const ImagePicker: any = FEATURES.TRADE_SCREENSHOT
-  ? // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require("expo-image-picker")
-  : null;
+const ImagePicker: any = null;
 
 const TradeFormScreen: React.FC = () => {
   const { date, tradeId } = useLocalSearchParams<{
@@ -62,16 +59,8 @@ const TradeFormScreen: React.FC = () => {
   const directionBorder = chipBorder;
   const directionBg = chipBg;
 
-  // ✅ Fallback compatible toutes versions (évite crash si MediaType n'existe pas)
-  // V1 : ImagePicker = null => on retourne un fallback simple.
-  const IMAGE_MEDIA_TYPES = useMemo(() => {
-    if (!FEATURES.TRADE_SCREENSHOT || !ImagePicker) return "images";
-    return (
-      ImagePicker?.MediaType?.Images ??
-      ImagePicker?.MediaTypeOptions?.Images ??
-      "images"
-    );
-  }, []);
+  // ✅ V1 : feature screenshot OFF => mediaTypes fixe
+  const IMAGE_MEDIA_TYPES = useMemo(() => "images", []);
 
   const existingTrade: Trade | undefined = tradeIdStr
     ? trades.find((t) => t.id === tradeIdStr)
@@ -91,7 +80,7 @@ const TradeFormScreen: React.FC = () => {
   const [respectPlan, setRespectPlan] = useState<boolean | undefined>();
   const [comment, setComment] = useState("");
   const [screenshotUri, setScreenshotUri] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
 
@@ -114,22 +103,22 @@ const TradeFormScreen: React.FC = () => {
       setLotSize(
         existingTrade.lotSize !== undefined
           ? existingTrade.lotSize.toString()
-          : ""
+          : "",
       );
       setEntryPrice(
         existingTrade.entryPrice !== undefined
           ? existingTrade.entryPrice.toString()
-          : ""
+          : "",
       );
       setTpPrice(
         existingTrade.tpPrice !== undefined
           ? existingTrade.tpPrice.toString()
-          : ""
+          : "",
       );
       setSlPrice(
         existingTrade.slPrice !== undefined
           ? existingTrade.slPrice.toString()
-          : ""
+          : "",
       );
       setRr(existingTrade.rr !== undefined ? existingTrade.rr.toString() : "");
       setEmotion(existingTrade.emotion);
@@ -142,7 +131,7 @@ const TradeFormScreen: React.FC = () => {
 
   const now = new Date();
   const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes()
+    now.getMinutes(),
   ).padStart(2, "0")}`;
 
   const handleSave = () => {
@@ -150,7 +139,7 @@ const TradeFormScreen: React.FC = () => {
     if (!instrument || isNaN(numericPnl) || !dateStr) {
       Alert.alert(
         t("tradeForm.missingRequiredFieldsTitle"),
-        t("tradeForm.missingRequiredFieldsMessage")
+        t("tradeForm.missingRequiredFieldsMessage"),
       );
       return;
     }
@@ -196,7 +185,7 @@ const TradeFormScreen: React.FC = () => {
     if (status !== "granted") {
       Alert.alert(
         t("tradeForm.permissionNeededTitle"),
-        t("tradeForm.galleryPermissionMessage")
+        t("tradeForm.galleryPermissionMessage"),
       );
       return false;
     }
@@ -210,7 +199,7 @@ const TradeFormScreen: React.FC = () => {
     if (status !== "granted") {
       Alert.alert(
         t("tradeForm.permissionNeededTitle"),
-        t("tradeForm.cameraPermissionMessage")
+        t("tradeForm.cameraPermissionMessage"),
       );
       return false;
     }
@@ -259,7 +248,10 @@ const TradeFormScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: screenBg }} edges={["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: screenBg }}
+      edges={["top"]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -280,7 +272,9 @@ const TradeFormScreen: React.FC = () => {
           <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
 
           <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
-            {isEdit ? t("tradeForm.editTradeTitle") : t("tradeForm.newTradeTitle")}
+            {isEdit
+              ? t("tradeForm.editTradeTitle")
+              : t("tradeForm.newTradeTitle")}
           </Text>
 
           <Text style={[styles.label, { color: labelColor }]}>
@@ -510,7 +504,9 @@ const TradeFormScreen: React.FC = () => {
                       borderColor: "#60a5fa",
                     },
                   ]}
-                  onPress={() => setQuality((prev) => (prev === q ? undefined : q))}
+                  onPress={() =>
+                    setQuality((prev) => (prev === q ? undefined : q))
+                  }
                 >
                   <Text
                     style={[
@@ -604,7 +600,10 @@ const TradeFormScreen: React.FC = () => {
                 <TouchableOpacity onPress={openImageFullScreen}>
                   <Image
                     source={{ uri: screenshotUri }}
-                    style={[styles.screenshotPreview, { borderColor: inputBorder }]}
+                    style={[
+                      styles.screenshotPreview,
+                      { borderColor: inputBorder },
+                    ]}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setScreenshotUri(undefined)}>
@@ -616,8 +615,7 @@ const TradeFormScreen: React.FC = () => {
             </>
           )}
 
-          {/* ✅ V2 : tu pourras remettre les boutons ici derrière FEATURES.TRADE_SCREENSHOT
-              (en reprenant tes handlers handlePickImageFromGallery / handleTakePhoto) */}
+          {/* ✅ V2 : tu pourras remettre les boutons ici derrière FEATURES.TRADE_SCREENSHOT */}
           {FEATURES.TRADE_SCREENSHOT && (
             <View style={[styles.row, { marginTop: 8 }]}>
               <TouchableOpacity
@@ -627,7 +625,9 @@ const TradeFormScreen: React.FC = () => {
                 ]}
                 onPress={handlePickImageFromGallery}
               >
-                <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
+                <Text
+                  style={[styles.imageButtonText, { color: chipTextColor }]}
+                >
                   {t("tradeForm.screenshotGallery")}
                 </Text>
               </TouchableOpacity>
@@ -639,7 +639,9 @@ const TradeFormScreen: React.FC = () => {
                 ]}
                 onPress={handleTakePhoto}
               >
-                <Text style={[styles.imageButtonText, { color: chipTextColor }]}>
+                <Text
+                  style={[styles.imageButtonText, { color: chipTextColor }]}
+                >
                   {t("tradeForm.screenshotCamera")}
                 </Text>
               </TouchableOpacity>

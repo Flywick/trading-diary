@@ -49,7 +49,7 @@ interface TradesContextValue {
   addTrade: (trade: Omit<Trade, "id" | "journalId">) => void;
   updateTrade: (
     id: string,
-    updates: Partial<Omit<Trade, "id" | "journalId">>
+    updates: Partial<Omit<Trade, "id" | "journalId">>,
   ) => void;
   deleteTrade: (id: string) => void;
   resetTrades: () => void; // pour le compte et tous ses journaux
@@ -64,9 +64,7 @@ const TRADES_KEY_PREFIX = "@trading-diary-trades-v1-";
 const makeStorageKey = (accountId: string) =>
   `${TRADES_KEY_PREFIX}${accountId}`;
 
-const loadTradesForAccount = async (
-  accountId: string
-): Promise<Trade[]> => {
+const loadTradesForAccount = async (accountId: string): Promise<Trade[]> => {
   const storageKey = makeStorageKey(accountId);
   const stored = await AsyncStorage.getItem(storageKey);
   if (!stored) return [];
@@ -82,7 +80,7 @@ const loadTradesForAccount = async (
 
 const saveTradesForAccount = async (
   accountId: string,
-  trades: Trade[]
+  trades: Trade[],
 ): Promise<void> => {
   const storageKey = makeStorageKey(accountId);
   try {
@@ -100,10 +98,7 @@ export const TradesProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]); // filtrés par journal
 
   // Utilitaire pour filtrer les trades par journal actif
-  const filterByJournal = (
-    source: Trade[],
-    journalId?: string
-  ): Trade[] => {
+  const filterByJournal = (source: Trade[], journalId?: string): Trade[] => {
     if (!journalId) return source;
     return source.filter((t) => t.journalId === journalId);
   };
@@ -142,10 +137,7 @@ export const TradesProvider = ({ children }: { children: ReactNode }) => {
 
         if (!cancelled) {
           setAllTrades(upgradedTrades);
-          const filtered = filterByJournal(
-            upgradedTrades,
-            activeJournal?.id
-          );
+          const filtered = filterByJournal(upgradedTrades, activeJournal?.id);
           setTrades(filtered);
         }
       } catch (e) {
@@ -162,7 +154,7 @@ export const TradesProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeAccount?.id, activeJournal?.id]);
+  }, [activeAccount, activeJournal]);
 
   // Quand le journal actif change, on recalcule juste le filtre
   useEffect(() => {
@@ -172,7 +164,7 @@ export const TradesProvider = ({ children }: { children: ReactNode }) => {
     }
     const filtered = filterByJournal(allTrades, activeJournal.id);
     setTrades(filtered);
-  }, [activeJournal?.id, allTrades]);
+  }, [activeJournal, allTrades]);
 
   // 🧠 Mise à jour + sauvegarde pour le compte courant
   const persistForCurrentAccount = async (nextAllTrades: Trade[]) => {
@@ -186,21 +178,16 @@ export const TradesProvider = ({ children }: { children: ReactNode }) => {
 
   const addTrade: TradesContextValue["addTrade"] = (tradeWithoutId) => {
     if (!activeAccount) {
-      console.warn(
-        "Impossible d'ajouter un trade : aucun compte actif."
-      );
+      console.warn("Impossible d'ajouter un trade : aucun compte actif.");
       return;
     }
     if (!activeJournal) {
-      console.warn(
-        "Impossible d'ajouter un trade : aucun journal actif."
-      );
+      console.warn("Impossible d'ajouter un trade : aucun journal actif.");
       return;
     }
 
     const now = new Date();
-    const id =
-      now.getTime().toString(36) + Math.random().toString(36).slice(2);
+    const id = now.getTime().toString(36) + Math.random().toString(36).slice(2);
 
     const newTrade: Trade = {
       id,
@@ -212,17 +199,14 @@ export const TradesProvider = ({ children }: { children: ReactNode }) => {
     persistForCurrentAccount(next);
   };
 
-  const updateTrade: TradesContextValue["updateTrade"] = (
-    id,
-    updates
-  ) => {
+  const updateTrade: TradesContextValue["updateTrade"] = (id, updates) => {
     const next = allTrades.map((t) =>
       t.id === id
         ? {
             ...t,
             ...updates,
           }
-        : t
+        : t,
     );
     persistForCurrentAccount(next);
   };

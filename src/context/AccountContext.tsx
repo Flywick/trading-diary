@@ -36,13 +36,13 @@ interface AccountContextValue {
   login: (identifier: string, password: string) => void;
   logout: () => void;
   updateActiveAccount: (
-    partial: Partial<Pick<Account, "username" | "birthdate" | "email">>
+    partial: Partial<Pick<Account, "username" | "birthdate" | "email">>,
   ) => void;
   deleteActiveAccount: () => void;
 }
 
 const AccountContext = createContext<AccountContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 // 🧱 Petite “couche repo” locale pour les comptes
@@ -70,10 +70,7 @@ const loadAccountsState = async (): Promise<AccountsState> => {
 
 const saveAccountsState = async (state: AccountsState): Promise<void> => {
   try {
-    await AsyncStorage.setItem(
-      ACCOUNTS_STORAGE_KEY,
-      JSON.stringify(state)
-    );
+    await AsyncStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     console.warn("Erreur sauvegarde comptes (storage)", e);
   }
@@ -124,10 +121,9 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     await saveAccountsState(next);
   };
 
-  const activeAccount =
-    state.activeAccountId
-      ? state.accounts.find((a) => a.id === state.activeAccountId) ?? null
-      : null;
+  const activeAccount = state.activeAccountId
+    ? (state.accounts.find((a) => a.id === state.activeAccountId) ?? null)
+    : null;
 
   // 🆕 Création d’un compte local (V1 offline)
   const register: AccountContextValue["register"] = ({
@@ -142,17 +138,14 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const exists = state.accounts.some(
       (a) =>
         a.username.toLowerCase() === uname.toLowerCase() ||
-        a.email.toLowerCase() === mail
+        a.email.toLowerCase() === mail,
     );
     if (exists) {
-      throw new Error(
-        "Un compte avec ce pseudo ou cet email existe déjà."
-      );
+      throw new Error("Un compte avec ce pseudo ou cet email existe déjà.");
     }
 
     const now = new Date();
-    const id =
-      now.getTime().toString(36) + Math.random().toString(36).slice(2);
+    const id = now.getTime().toString(36) + Math.random().toString(36).slice(2);
 
     const account: Account = {
       id,
@@ -177,7 +170,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const account = state.accounts.find((a) =>
       ident.includes("@")
         ? a.email.toLowerCase() === ident
-        : a.username.toLowerCase() === ident
+        : a.username.toLowerCase() === ident,
     );
 
     if (!account || account.password !== password) {
@@ -200,7 +193,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateActiveAccount: AccountContextValue["updateActiveAccount"] = (
-    partial
+    partial,
   ) => {
     if (!activeAccount) return;
 
@@ -222,7 +215,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const accounts = state.accounts.map((a) =>
-      a.id === updated.id ? updated : a
+      a.id === updated.id ? updated : a,
     );
     const next: AccountsState = { ...state, accounts };
     persist(next);
@@ -231,9 +224,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
   const deleteActiveAccount = () => {
     if (!activeAccount) return;
 
-    const accounts = state.accounts.filter(
-      (a) => a.id !== activeAccount.id
-    );
+    const accounts = state.accounts.filter((a) => a.id !== activeAccount.id);
     const next: AccountsState = {
       accounts,
       activeAccountId: undefined,
@@ -253,9 +244,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AccountContext.Provider value={value}>
-      {children}
-    </AccountContext.Provider>
+    <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   );
 };
 

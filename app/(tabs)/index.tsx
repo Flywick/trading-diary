@@ -43,7 +43,8 @@ const getAgeFromBirthdate = (birthdate: string): number | null => {
 
   const hasHadBirthdayThisYear =
     today.getMonth() > birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+    (today.getMonth() === birth.getMonth() &&
+      today.getDate() >= birth.getDate());
 
   if (!hasHadBirthdayThisYear) {
     age -= 1;
@@ -112,7 +113,7 @@ const Home: React.FC = () => {
     if (!uname || !bdate || !mail || !pwd || !passwordConfirm) {
       Alert.alert(
         "Champs manquants",
-        "Tous les champs sont obligatoires pour créer un compte."
+        "Tous les champs sont obligatoires pour créer un compte.",
       );
       return;
     }
@@ -121,37 +122,37 @@ const Home: React.FC = () => {
     if (!birthdateRegex.test(bdate)) {
       Alert.alert(
         "Format de date invalide",
-        "Merci d'entrer la date de naissance au format AAAA-MM-JJ (ex : 1995-04-23)."
+        "Merci d'entrer la date de naissance au format AAAA-MM-JJ (ex : 1995-04-23).",
       );
       return;
     }
 
     const age = getAgeFromBirthdate(bdate);
     if (age === null) {
-      Alert.alert("Date invalide", "La date de naissance ne semble pas valide.");
+      Alert.alert(
+        "Date invalide",
+        "La date de naissance ne semble pas valide.",
+      );
       return;
     }
     if (age < 18) {
       Alert.alert(
         "Âge insuffisant",
-        "Tu dois avoir au moins 18 ans pour utiliser cette application."
+        "Tu dois avoir au moins 18 ans pour utiliser cette application.",
       );
       return;
     }
 
     const emailRegex = /.+@.+\..+/;
     if (!emailRegex.test(mail)) {
-      Alert.alert(
-        "Email invalide",
-        "Merci d'entrer une adresse email valide."
-      );
+      Alert.alert("Email invalide", "Merci d'entrer une adresse email valide.");
       return;
     }
 
     if (pwd.length < 6) {
       Alert.alert(
         "Mot de passe trop court",
-        "Le mot de passe doit contenir au moins 6 caractères."
+        "Le mot de passe doit contenir au moins 6 caractères.",
       );
       return;
     }
@@ -159,7 +160,7 @@ const Home: React.FC = () => {
     if (pwd !== passwordConfirm) {
       Alert.alert(
         "Confirmation",
-        "La confirmation du mot de passe ne correspond pas."
+        "La confirmation du mot de passe ne correspond pas.",
       );
       return;
     }
@@ -190,7 +191,7 @@ const Home: React.FC = () => {
     if (!email || !pwd) {
       Alert.alert(
         "Champs manquants",
-        "Merci d'entrer ton email et ton mot de passe."
+        "Merci d'entrer ton email et ton mot de passe.",
       );
       return;
     }
@@ -201,7 +202,10 @@ const Home: React.FC = () => {
       setLoginPassword("");
       setShowAccountModal(false);
     } catch (e: any) {
-      Alert.alert("Erreur de connexion", e?.message ?? "Identifiants incorrects.");
+      Alert.alert(
+        "Erreur de connexion",
+        e?.message ?? "Identifiants incorrects.",
+      );
     }
   };
 
@@ -332,7 +336,9 @@ const Home: React.FC = () => {
         style={[styles.button, styles.buttonGhost]}
         onPress={() => setMode("choice")}
       >
-        <Text style={styles.buttonGhostText}>⟵ {language === "en" ? "Back" : "Retour"}</Text>
+        <Text style={styles.buttonGhostText}>
+          ⟵ {language === "en" ? "Back" : "Retour"}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -348,9 +354,7 @@ const Home: React.FC = () => {
           : "Entre ton email, puis ton mot de passe."}
       </Text>
 
-      <Text style={styles.label}>
-        {language === "en" ? "email" : "email"}
-      </Text>
+      <Text style={styles.label}>{language === "en" ? "email" : "email"}</Text>
       <TextInput
         style={styles.input}
         placeholder={language === "en" ? "email" : "email"}
@@ -385,7 +389,9 @@ const Home: React.FC = () => {
         style={[styles.button, styles.buttonGhost]}
         onPress={() => setMode("choice")}
       >
-        <Text style={styles.buttonGhostText}>⟵ {language === "en" ? "Back" : "Retour"}</Text>
+        <Text style={styles.buttonGhostText}>
+          ⟵ {language === "en" ? "Back" : "Retour"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -438,8 +444,8 @@ const Home: React.FC = () => {
             {mode === "choice"
               ? renderChoice()
               : mode === "register"
-              ? renderRegister()
-              : renderLogin()}
+                ? renderRegister()
+                : renderLogin()}
           </View>
         </KeyboardAvoidingView>
       </Modal>

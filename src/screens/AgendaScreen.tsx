@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import DayCell from "../components/DayCell";
 import { FEATURES } from "../config/features";
 import { useJournal } from "../context/JournalContext";
@@ -55,8 +55,6 @@ function getDaysMatrix(year: number, month: number) {
 }
 
 const AgendaScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
-
   const { trades } = useTrades();
   const { theme, currency } = useSettings();
   const isDark = theme === "dark";
@@ -175,7 +173,7 @@ const AgendaScreen: React.FC = () => {
         month: "long",
         year: "numeric",
       }),
-    [currentDate, language]
+    [currentDate, language],
   );
 
   const changeMonth = (direction: "prev" | "next") => {
@@ -261,7 +259,7 @@ const AgendaScreen: React.FC = () => {
     if (journals.length <= 1) {
       Alert.alert(
         t("agenda.cannotDeleteLastProfileTitle"),
-        t("agenda.cannotDeleteLastProfileMessage")
+        t("agenda.cannotDeleteLastProfileMessage"),
       );
       return;
     }
@@ -279,7 +277,7 @@ const AgendaScreen: React.FC = () => {
             setRenameValue("");
           },
         },
-      ]
+      ],
     );
   };
 
@@ -331,10 +329,7 @@ const AgendaScreen: React.FC = () => {
             onPress={openJournalModal}
           >
             <Text
-              style={[
-                styles.journalChipText,
-                { color: journalChipTextColor },
-              ]}
+              style={[styles.journalChipText, { color: journalChipTextColor }]}
             >
               {activeJournal?.name ?? t("agenda.profilePlaceholder")}
             </Text>
@@ -365,10 +360,10 @@ const AgendaScreen: React.FC = () => {
                       monthStats.totalPnl > 0
                         ? "#22c55e"
                         : monthStats.totalPnl < 0
-                        ? "#ef4444"
-                        : isDark
-                        ? "#e5e7eb"
-                        : "#0f172a",
+                          ? "#ef4444"
+                          : isDark
+                            ? "#e5e7eb"
+                            : "#0f172a",
                   },
                 ]}
               >
@@ -425,7 +420,10 @@ const AgendaScreen: React.FC = () => {
 
         <ScrollView contentContainerStyle={styles.calendarContainer}>
           {daysMatrix.map((week, rowIndex) => (
-            <View key={`week-${year}-${month}-${rowIndex}`} style={styles.weekRow}>
+            <View
+              key={`week-${year}-${month}-${rowIndex}`}
+              style={styles.weekRow}
+            >
               {week.map((dayNumber, colIndex) => {
                 const summary =
                   dayNumber !== null ? getSummaryForDay(dayNumber) : undefined;
@@ -437,7 +435,7 @@ const AgendaScreen: React.FC = () => {
                 const cellKey =
                   dayNumber === null
                     ? `empty-${year}-${month}-${rowIndex}-${colIndex}`
-                    : summary?.dateStr ?? `day-${year}-${month}-${dayNumber}`;
+                    : (summary?.dateStr ?? `day-${year}-${month}-${dayNumber}`);
 
                 return (
                   <View key={cellKey} style={styles.dayWrapper}>

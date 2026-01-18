@@ -80,8 +80,7 @@ const fr = {
     suggestionsButton: "Suggestions",
     helpEmailNote: "Contact : {{email}}",
     supportErrorTitle: "Impossible d’ouvrir l’email",
-    supportErrorMessage:
-      "Aucune application mail disponible sur cet appareil.",
+    supportErrorMessage: "Aucune application mail disponible sur cet appareil.",
 
     // account display
     accountLocalInfo: "Compte local",
@@ -98,7 +97,8 @@ const fr = {
     emailPlaceholder: "ton.email@example.com",
 
     accountInfosMissingTitle: "Informations manquantes",
-    accountInfosMissingMessage: "Veuillez remplir tous les champs obligatoires.",
+    accountInfosMissingMessage:
+      "Veuillez remplir tous les champs obligatoires.",
     accountInvalidBirthdateTitle: "Date invalide",
     accountInvalidBirthdateMessage:
       "Veuillez entrer une date au format YYYY-MM-DD.",
@@ -198,30 +198,58 @@ const fr = {
     // version
     versionName: "Trading Diary — version locale",
     versionDescription:
-  "Toutes les données sont stockées sur votre appareil.\n\n" +
-  "La version Pro apportera de nouvelles fonctionnalités pour les abonnés et arrivera avec la V2.\n\n" +
-  "En attendant, vous pouvez soutenir le projet avec des dons.",
+      "Toutes les données sont stockées sur votre appareil.\n\n" +
+      "La version Pro apportera de nouvelles fonctionnalités pour les abonnés et arrivera avec la V2.\n\n" +
+      "En attendant, vous pouvez soutenir le projet avec des dons.",
 
-donationButton: "Faire un don",
-donationAlertTitle: "Soutenir le projet",
-donationAlertMessage:
-  "Merci pour votre soutien 🙏\n\nLes dons permettent de financer le développement et les futures fonctionnalités."
-
+    donationButton: "Faire un don",
+    donationAlertTitle: "Soutenir le projet",
+    donationAlertMessage:
+      "Merci pour votre soutien 🙏\n\nLes dons permettent de financer le développement et les futures fonctionnalités.",
   },
 
-  // ✅ NEW — LEGAL (CGU / PRIVACY)
+  // ✅ LEGAL — CGU / PRIVACY (V1 - Google Play ready)
   legal: {
     title: "CGU & Confidentialité",
     lastUpdated: "Dernière mise à jour : 14/01/2026",
-    privacyTitle: "Confidentialité",
+
+    // ---------------- CONFIDENTIALITÉ ----------------
+    privacyTitle: "Politique de confidentialité",
     privacyBody:
-      "Cette application stocke vos données uniquement sur votre appareil. Aucune donnée n’est envoyée vers un serveur, aucun suivi (tracking) n’est effectué et aucune donnée n’est vendue.",
+      "Trading Diary respecte votre vie privée. Toutes les données saisies dans l’application (trades, statistiques, paramètres) sont stockées exclusivement sur votre appareil.\n\n" +
+      "Aucune donnée personnelle n’est collectée, transmise à un serveur, partagée avec des tiers ou utilisée à des fins de suivi, de publicité ou d’analyse.\n\n" +
+      "L’application fonctionne entièrement hors ligne et ne nécessite aucune création de compte en ligne.",
+
+    // ---------------- DONNÉES & SÉCURITÉ ----------------
+    dataSecurityTitle: "Sécurité des données",
+    dataSecurityBody:
+      "Vous êtes seul responsable de la sauvegarde et de la conservation de vos données. En cas de désinstallation de l’application ou de perte de l’appareil, les données locales peuvent être définitivement perdues.\n\n" +
+      "Trading Diary ne peut être tenu responsable de toute perte de données.",
+
+    // ---------------- CONDITIONS ----------------
     termsTitle: "Conditions d’utilisation",
     termsBody:
-      "Trading Diary fournit des outils de journalisation et de statistiques. Les informations affichées ne constituent pas des conseils financiers. Vous êtes seul responsable de vos décisions et de l’utilisation de l’application.",
-    contactTitle: "Contact",
+      "Trading Diary est une application de journalisation et d’analyse personnelle destinée au suivi de vos activités de trading.\n\n" +
+      "Les informations, statistiques et résultats affichés sont fournis à titre informatif uniquement et ne constituent en aucun cas un conseil financier, une recommandation d’investissement ou une incitation à trader.\n\n" +
+      "Vous êtes seul responsable de vos décisions financières et de l’utilisation que vous faites de l’application.",
+
+    // ---------------- DON / MONÉTISATION ----------------
+    donationTitle: "Dons et soutien",
+    donationBody:
+      "L’application peut proposer un système de don volontaire afin de soutenir son développement.\n\n" +
+      "Les dons sont entièrement facultatifs et ne débloquent aucune fonctionnalité supplémentaire ni avantage particulier.\n\n" +
+      "Les paiements, lorsqu’ils sont disponibles, sont traités de manière sécurisée par Google Play Billing, conformément aux règles de Google Play.",
+
+    // ---------------- RESPONSABILITÉ ----------------
+    liabilityTitle: "Limitation de responsabilité",
+    liabilityBody:
+      'Trading Diary est fourni "en l’état", sans garantie de performance, d’exactitude ou d’adéquation à un usage particulier.\n\n' +
+      "L’éditeur de l’application ne saurait être tenu responsable de pertes financières, directes ou indirectes, résultant de l’utilisation de l’application.",
+
+    // ---------------- CONTACT ----------------
+    contactTitle: "Contact et support",
     contactBody:
-      "Pour toute question, assistance ou suggestion, contactez-nous via le bouton Support dans les paramètres.",
+      "Pour toute question, assistance ou suggestion, vous pouvez nous contacter via le bouton Support disponible dans les paramètres de l’application.",
   },
 
   // ------------------ STATS -------------------------
@@ -287,7 +315,7 @@ donationAlertMessage:
     emotionCalm: "😌 calme",
     emotionStress: "😰 stress",
     emotionFomo: "🤯 FOMO",
-    emotionRevenge: "😡 revenge",
+    emotionRevenge: "😡 revanche",
     emotionTired: "😴 fatigué",
     emotionDisciplined: "✅ discipliné",
 
@@ -300,7 +328,7 @@ donationAlertMessage:
     commentPlaceholder: "Ajoute des notes sur ton trade...",
 
     screenshotLabel: "Screenshot",
-    screenshotGallery: "Choisir",
+    screenshotGallery: "Gallerie",
     screenshotCamera: "Camera",
     screenshotRemove: "Supprimer",
 
@@ -492,30 +520,58 @@ const en = {
 
     versionName: "Trading Diary — local version",
     versionDescription:
-  "All data is stored locally on your device.\n\n" +
-  "The Pro version will bring new features for subscribers and will arrive with V2.\n\n" +
-  "In the meantime, you can support the project with donations.",
+      "All data is stored locally on your device.\n\n" +
+      "The Pro version will bring new features for subscribers and will arrive with V2.\n\n" +
+      "In the meantime, you can support the project with donations.",
 
-donationButton: "Donate",
-donationAlertTitle: "Support the project",
-donationAlertMessage:
-  "Thank you for your support 🙏\n\nDonations help fund development and future features."
-
+    donationButton: "Donate",
+    donationAlertTitle: "Support the project",
+    donationAlertMessage:
+      "Thank you for your support 🙏\n\nDonations help fund development and future features.",
   },
 
-  // ✅ NEW — LEGAL (TERMS / PRIVACY)
+  // ✅ LEGAL — TERMS / PRIVACY (V1 - Google Play ready)
   legal: {
     title: "Terms & Privacy",
     lastUpdated: "Last updated: 2026-01-14",
-    privacyTitle: "Privacy",
+
+    // ---------------- PRIVACY ----------------
+    privacyTitle: "Privacy policy",
     privacyBody:
-      "This app stores your data only on your device. No data is sent to any server, no tracking is performed, and no data is sold.",
+      "Trading Diary respects your privacy. All data entered in the app (trades, statistics, settings) is stored exclusively on your device.\n\n" +
+      "No personal data is collected, sent to a server, shared with third parties, or used for tracking, advertising, or analytics.\n\n" +
+      "The app works fully offline and does not require any online account.",
+
+    // ---------------- DATA & SECURITY ----------------
+    dataSecurityTitle: "Data security",
+    dataSecurityBody:
+      "You are solely responsible for backing up and keeping your data safe. If you uninstall the app or lose your device, local data may be permanently lost.\n\n" +
+      "Trading Diary cannot be held responsible for any data loss.",
+
+    // ---------------- TERMS ----------------
     termsTitle: "Terms of use",
     termsBody:
-      "Trading Diary provides journaling and statistics tools. The information shown is not financial advice. You are solely responsible for your decisions and for using the app.",
-    contactTitle: "Contact",
+      "Trading Diary is a personal journaling and analysis app designed to help you track your trading activity.\n\n" +
+      "The information, statistics, and results shown are provided for informational purposes only and do not constitute financial advice, an investment recommendation, or an invitation to trade.\n\n" +
+      "You are solely responsible for your financial decisions and for how you use the app.",
+
+    // ---------------- DONATIONS ----------------
+    donationTitle: "Donations & support",
+    donationBody:
+      "The app may offer an optional donation system to support its development.\n\n" +
+      "Donations are entirely voluntary and do not unlock any additional features or benefits.\n\n" +
+      "When available, payments are processed securely through Google Play Billing, in accordance with Google Play rules.",
+
+    // ---------------- LIABILITY ----------------
+    liabilityTitle: "Limitation of liability",
+    liabilityBody:
+      'Trading Diary is provided "as is", without any warranty of performance, accuracy, or fitness for a particular purpose.\n\n' +
+      "The publisher of the app cannot be held liable for any direct or indirect financial losses resulting from the use of the app.",
+
+    // ---------------- CONTACT ----------------
+    contactTitle: "Contact & support",
     contactBody:
-      "For questions, support or suggestions, contact us using the Support button in Settings.",
+      "For any questions, assistance, or suggestions, you can contact us using the Support button available in the app settings.",
   },
 
   stats: {
@@ -592,7 +648,7 @@ donationAlertMessage:
     commentPlaceholder: "Add some notes about this trade...",
 
     screenshotLabel: "Screenshot",
-    screenshotGallery: "Choose",
+    screenshotGallery: "Gallery",
     screenshotCamera: "Camera",
     screenshotRemove: "Remove",
 
