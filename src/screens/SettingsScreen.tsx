@@ -24,12 +24,34 @@ import { useSettings } from "../context/SettingsContext";
 import { useTrades } from "../context/TradesContext";
 import { useI18n } from "../i18n/useI18n";
 
-const formatBirthdate = (text: string) => {
+const formatBirthdateISO = (text: string) => {
   const cleaned = text.replace(/\D/g, "").slice(0, 8);
   if (cleaned.length <= 4) return cleaned;
   if (cleaned.length <= 6) return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
   return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6)}`;
 };
+
+const formatBirthdateFR = (text: string) => {
+  const cleaned = text.replace(/\D/g, "").slice(0, 8);
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 4) return `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+  return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4)}`;
+};
+
+const isoToFr = (iso: string) => {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso;
+  const [, y, mo, d] = m;
+  return `${d}-${mo}-${y}`;
+};
+
+const frToIso = (fr: string) => {
+  const m = fr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return null;
+  const [, d, mo, y] = m;
+  return `${y}-${mo}-${d}`;
+};
+
 
 const getAgeFromBirthdate = (birthdate: string): number | null => {
   if (!birthdate) return null;
@@ -97,8 +119,11 @@ const SettingsScreen: React.FC = () => {
     activeAccount?.username ?? "",
   );
   const [birthdateInput, setBirthdateInput] = useState(
-    activeAccount?.birthdate ?? "",
-  );
+  language === "fr"
+    ? isoToFr(activeAccount?.birthdate ?? "")
+    : activeAccount?.birthdate ?? "",
+);
+
   const [emailInput, setEmailInput] = useState(activeAccount?.email ?? "");
   const [isEditingAccount, setIsEditingAccount] = useState(false);
 
@@ -117,9 +142,13 @@ const SettingsScreen: React.FC = () => {
   // -----------------------------
   const resetAccountInputsFromActiveAccount = useCallback(() => {
     setUsernameInput(activeAccount?.username ?? "");
-    setBirthdateInput(activeAccount?.birthdate ?? "");
+    setBirthdateInput(
+  language === "fr"
+    ? isoToFr(activeAccount?.birthdate ?? "")
+    : activeAccount?.birthdate ?? "",
+);
     setEmailInput(activeAccount?.email ?? "");
-  }, [activeAccount]);
+  }, [activeAccount, language]);
 
   const resetPasswordInputs = () => {
     setCurrentPasswordInput("");
@@ -165,7 +194,10 @@ const SettingsScreen: React.FC = () => {
     setIsEditingPassword(false);
   };
 
-  const liveAge = getAgeFromBirthdate(birthdateInput);
+  const isoBirthdateForCalc =
+  language === "fr" ? frToIso(birthdateInput) ?? "" : birthdateInput;
+
+const liveAge = getAgeFromBirthdate(isoBirthdateForCalc);
   const accountAge = activeAccount
     ? getAgeFromBirthdate(activeAccount.birthdate)
     : null;
@@ -194,7 +226,9 @@ const SettingsScreen: React.FC = () => {
     }
 
     const username = usernameInput.trim();
-    const birthdate = birthdateInput.trim();
+    const rawBirthdate = birthdateInput.trim();
+const birthdate =
+  language === "fr" ? frToIso(rawBirthdate)?.trim() ?? "" : rawBirthdate;
     const email = emailInput.trim();
 
     if (!username || !birthdate || !email) {
@@ -830,8 +864,13 @@ const SettingsScreen: React.FC = () => {
               placeholder={t("settings.birthdatePlaceholder")}
               placeholderTextColor="#6b7280"
               value={birthdateInput}
-              onChangeText={(text) => setBirthdateInput(formatBirthdate(text))}
-              keyboardType="numeric"
+onChangeText={(text) =>
+  setBirthdateInput(
+    language === "fr" ? formatBirthdateFR(text) : formatBirthdateISO(text),
+  )
+}
+keyboardType="numeric"
+
             />
             {liveAge !== null && (
               <Text style={[styles.helperText, { color: subText }]}>
@@ -983,10 +1022,15 @@ const SettingsScreen: React.FC = () => {
                 </Text>
 
                 {accountAge !== null && (
-                  <Text style={[styles.helperText, { color: subText }]}>
-                    {accountAge} ans – {activeAccount?.birthdate}
-                  </Text>
-                )}
+  <Text style={[styles.helperText, { color: subText }]}>
+    {accountAge} {language === "fr" ? "ans" : "years"} –{" "}
+    {activeAccount?.birthdate
+      ? language === "fr"
+        ? isoToFr(activeAccount.birthdate)
+        : activeAccount.birthdate
+      : ""}
+  </Text>
+)}
               </View>
             </View>
 

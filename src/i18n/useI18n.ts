@@ -93,7 +93,7 @@ const fr = {
     birthdateLabel: "Date de naissance",
     emailLabel: "Adresse email",
     usernamePlaceholder: "Ton pseudo",
-    birthdatePlaceholder: "1995-04-23",
+    birthdatePlaceholder: "JJ-MM-AAAA",
     emailPlaceholder: "ton.email@example.com",
 
     accountInfosMissingTitle: "Informations manquantes",
@@ -101,7 +101,7 @@ const fr = {
       "Veuillez remplir tous les champs obligatoires.",
     accountInvalidBirthdateTitle: "Date invalide",
     accountInvalidBirthdateMessage:
-      "Veuillez entrer une date au format YYYY-MM-DD.",
+      "Veuillez entrer une date au format JJ-MM-AAAA.",
     accountUpdatedTitle: "Compte mis à jour",
     accountUpdatedMessage:
       "Les informations de votre compte ont été modifiées.",
@@ -429,7 +429,7 @@ const en = {
     birthdateLabel: "Birthdate",
     emailLabel: "Email",
     usernamePlaceholder: "Your username",
-    birthdatePlaceholder: "1995-04-23",
+    birthdatePlaceholder: "YYYY-MM-DD",
     emailPlaceholder: "your.email@example.com",
 
     accountInfosMissingTitle: "Missing information",
