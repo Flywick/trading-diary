@@ -268,9 +268,9 @@ const fr = {
     breakeven: "Break-even",
     winrate: "Winrate (%)",
 
-    pnlTitle: "PnL",
-    pnlTotal: "PnL total",
-    pnlAvgPerTrade: "PnL moyen / trade",
+    pnlTitle: "Résultat",
+    pnlTotal: "Résultat total",
+    pnlAvgPerTrade: "Résultat moyen / trade",
     rrAvg: "RR moyen",
 
     bestWorstTitle: "Meilleur & pire trade",
@@ -279,14 +279,14 @@ const fr = {
     noWinningTrade: "Aucun trade gagnant.",
     noLosingTrade: "Aucun trade perdant.",
 
-    byInstrumentTitle: "Par instrument",
+    byInstrumentTitle: "Par actif",
     tradesLabel: "trades",
     seeAll: "Voir tout",
     seeLess: "Voir moins",
-    noInstruments: "Aucun instrument trouvé.",
+    noInstruments: "Aucun actif trouvé.",
 
     monthlyDetailTitle: "Détail mensuel",
-    pnlThisMonth: "PnL du mois",
+    pnlThisMonth: "Résultat du mois",
     bestMonthsTitle: "Meilleurs mois",
     noPositiveMonth: "Aucun mois positif.",
   },
@@ -296,7 +296,7 @@ const fr = {
     dateLabel: "Date",
     newTradeTitle: "Nouveau trade",
     editTradeTitle: "Modifier le trade",
-    instrumentLabel: "Instrument",
+    instrumentLabel: "Actif",
     instrumentPlaceholder: "Ex : EUR/USD",
     directionLabel: "Direction",
     resultLabelPrefix: "Résultat",
@@ -312,12 +312,12 @@ const fr = {
     rrExamplePlaceholder: "Ex : 2.35",
 
     emotionLabel: "Émotion",
-    emotionCalm: "😌 calme",
-    emotionStress: "😰 stress",
+    emotionCalm: "😌 Calme",
+    emotionStress: "😰 Stress",
     emotionFomo: "🤯 FOMO",
-    emotionRevenge: "😡 revanche",
-    emotionTired: "😴 fatigué",
-    emotionDisciplined: "✅ discipliné",
+    emotionRevenge: "😡 Enervé",
+    emotionTired: "😴 Fatigué",
+    emotionDisciplined: "✅ Discipliné",
 
     qualityLabel: "Qualité",
     respectPlanLabel: "Respect du plan",
@@ -337,7 +337,7 @@ const fr = {
 
     missingRequiredFieldsTitle: "Champs requis manquants",
     missingRequiredFieldsMessage:
-      "Veuillez remplir instrument et PnL pour enregistrer le trade.",
+      "Veuillez remplir Actif et Résultat pour enregistrer le trade.",
     permissionNeededTitle: "Permission requise",
     galleryPermissionMessage: "L’accès à la galerie est nécessaire.",
     cameraPermissionMessage: "L’accès à la caméra est nécessaire.",
@@ -589,9 +589,9 @@ const en = {
     breakeven: "Breakeven",
     winrate: "Winrate (%)",
 
-    pnlTitle: "PnL",
-    pnlTotal: "Total PnL",
-    pnlAvgPerTrade: "Average PnL per trade",
+    pnlTitle: "Result",
+    pnlTotal: "Total Result",
+    pnlAvgPerTrade: "Average Result per trade",
     rrAvg: "Avg RR",
 
     bestWorstTitle: "Best & Worst trades",
@@ -600,14 +600,14 @@ const en = {
     noWinningTrade: "No winning trade.",
     noLosingTrade: "No losing trade.",
 
-    byInstrumentTitle: "By instrument",
+    byInstrumentTitle: "By asset",
     tradesLabel: "trades",
     seeAll: "See all",
     seeLess: "See less",
-    noInstruments: "No instruments found.",
+    noInstruments: "No Assets found.",
 
     monthlyDetailTitle: "Monthly detail",
-    pnlThisMonth: "Month PnL",
+    pnlThisMonth: "Month Result",
     bestMonthsTitle: "Best months",
     noPositiveMonth: "No positive month.",
   },
@@ -616,7 +616,7 @@ const en = {
     dateLabel: "Date",
     newTradeTitle: "New trade",
     editTradeTitle: "Edit trade",
-    instrumentLabel: "Instrument",
+    instrumentLabel: "Asset",
     instrumentPlaceholder: "Ex: EUR/USD",
     directionLabel: "Direction",
     resultLabelPrefix: "Result",
@@ -632,12 +632,12 @@ const en = {
     rrExamplePlaceholder: "Ex: 2.35",
 
     emotionLabel: "Emotion",
-    emotionCalm: "😌 calm",
-    emotionStress: "😰 stress",
+    emotionCalm: "😌 Calm",
+    emotionStress: "😰 Stress",
     emotionFomo: "🤯 FOMO",
-    emotionRevenge: "😡 revenge",
-    emotionTired: "😴 tired",
-    emotionDisciplined: "✅ disciplined",
+    emotionRevenge: "😡 Revenge",
+    emotionTired: "😴 Tired",
+    emotionDisciplined: "✅ Disciplined",
 
     qualityLabel: "Quality",
     respectPlanLabel: "Plan respected",
@@ -657,7 +657,7 @@ const en = {
 
     missingRequiredFieldsTitle: "Missing required fields",
     missingRequiredFieldsMessage:
-      "Please fill instrument and PnL to save the trade.",
+      "Please fill Asset and Result to save the trade.",
     permissionNeededTitle: "Permission needed",
     galleryPermissionMessage: "Gallery access is required.",
     cameraPermissionMessage: "Camera access is required.",
