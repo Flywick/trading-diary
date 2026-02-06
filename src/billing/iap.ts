@@ -1,0 +1,145 @@
+// src/billing/iap.ts
+import type { Product, Purchase } from "expo-iap";
+import * as IAP from "expo-iap";
+import { Platform } from "react-native";
+
+/**
+ * IDs prévus (consommables)
+ * - don_1, don_3, don_5, don_10, don_20, don_50
+ */
+export const DONATION_PRODUCT_IDS = [
+  "don_1",
+  "don_3",
+  "don_5",
+  "don_10",
+  "don_20",
+  "don_50",
+] as const;
+
+export type DonationProductId = (typeof DONATION_PRODUCT_IDS)[number];
+export type { Product };
+
+let isConnected = false;
+
+function isUserCancelled(err: any): boolean {
+  const code = String(err?.code ?? err?.message ?? "").toUpperCase();
+  return code.includes("USER_CANCELLED") || code.includes("E_USER_CANCELLED");
+}
+
+export async function iapConnect(): Promise<void> {
+  if (isConnected) return;
+
+  const init = (IAP as any).initConnection;
+  if (typeof init !== "function") {
+    throw new Error("IAP initConnection is not available (requires dev build / store build).");
+  }
+
+  await init();
+  isConnected = true;
+}
+
+export async function iapDisconnect(): Promise<void> {
+  if (!isConnected) return;
+
+  const end = (IAP as any).endConnection;
+  if (typeof end === "function") {
+    await end();
+  }
+  isConnected = false;
+}
+
+/**
+ * Récupère les produits (Google Play / App Store).
+ * Tant que les produits ne sont pas créés/activés dans la Play Console, ça peut renvoyer [].
+ */
+export async function fetchDonationProducts(): Promise<Product[]> {
+  await iapConnect();
+
+  const fetchFn =
+    (IAP as any).fetchProducts ||
+    (IAP as any).getProducts ||
+    (IAP as any).getSubscriptions;
+
+  if (typeof fetchFn !== "function") return [];
+
+  const products = await fetchFn([...DONATION_PRODUCT_IDS]);
+  return (products ?? []) as Product[];
+}
+
+export type PurchaseDonationResult = {
+  ok: boolean;
+  cancelled: boolean;
+  message?: string;
+};
+
+/**
+ * Lance l'achat d'un don (consommable).
+ * IMPORTANT : même si c'est un "don", côté store c'est un produit consommable.
+ *
+ * Note: En local (expo run:android), la feuille de paiement Google Play peut ne pas s'ouvrir.
+ * Le vrai test doit se faire sur une version installée via Google Play (piste de test).
+ */
+export async function purchaseDonation(
+  productId: DonationProductId,
+): Promise<PurchaseDonationResult> {
+  try {
+    await iapConnect();
+
+    const request = (IAP as any).requestPurchase;
+    if (typeof request !== "function") {
+      return {
+        ok: false,
+        cancelled: false,
+        message: "IAP requestPurchase is not available.",
+      };
+    }
+
+    const purchase: Purchase | null = await request({ sku: productId });
+
+    // Sur certains environnements, ça peut retourner null sans erreur
+    if (!purchase) {
+      return {
+        ok: false,
+        cancelled: false,
+        message:
+          "Purchase did not start. Make sure the app is installed from Google Play (testing track) and products are created/enabled.",
+      };
+    }
+
+    // Android: consume/acknowledge (consommable)
+    const token = (purchase as any)?.purchaseToken as string | undefined;
+    const receipt =
+      (purchase as any)?.transactionReceipt ?? (purchase as any)?.originalJson ?? undefined;
+
+    // Si on n'a aucun token/receipt, on considère que l'achat n'a pas réellement démarré
+    // (cas fréquent en build local non installé via Google Play).
+    if (!token && !receipt) {
+      return {
+        ok: false,
+        cancelled: false,
+        message:
+          "Purchase did not start (no token/receipt). Install the app from Google Play (testing track) and ensure donation products are created/enabled.",
+      };
+    }
+
+    const ack = (IAP as any).acknowledgePurchaseAndroid;
+    const consume = (IAP as any).consumePurchaseAndroid;
+
+    // Pour un consommable Android : consume (et ack en safe)
+    if (Platform.OS === "android" && token && typeof ack === "function") {
+      await ack({ token }).catch(() => undefined);
+    }
+    if (Platform.OS === "android" && token && typeof consume === "function") {
+      await consume({ token }).catch(() => undefined);
+    }
+
+    return { ok: true, cancelled: false };
+  } catch (err: any) {
+    if (isUserCancelled(err)) return { ok: false, cancelled: true };
+    return {
+      ok: false,
+      cancelled: false,
+      message: String(err?.message ?? err),
+    };
+  }
+}

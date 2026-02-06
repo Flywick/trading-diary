@@ -16,6 +16,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  fetchDonationProducts,
+  iapDisconnect,
+  purchaseDonation,
+  type DonationProductId,
+  type Product,
+} from "../billing/iap";
 import { FEATURES } from "../config/features";
 import { useAccount } from "../context/AccountContext";
 import { useJournal } from "../context/JournalContext";
@@ -115,6 +122,14 @@ const SettingsScreen: React.FC = () => {
   const { setLanguage } = useLanguage();
   const { t, language } = useI18n();
 
+  // ---------------------------
+  // DONATIONS (Google Play Billing)
+  // ---------------------------
+
+  const [iapReady, setIapReady] = useState(false);
+  const [iapProducts, setIapProducts] = useState<Record<string, Product>>({});
+  const [showDonationModal, setShowDonationModal] = useState(false);
+
   const [usernameInput, setUsernameInput] = useState(
     activeAccount?.username ?? "",
   );
@@ -182,6 +197,95 @@ const SettingsScreen: React.FC = () => {
       resetPasswordInputs();
     }
   }, [isEditingPassword]);
+
+
+// Init Google Play Billing connection (Dev Build / Production only)
+useEffect(() => {
+  let isMounted = true;
+
+  (async () => {
+    try {
+      const products = await fetchDonationProducts();
+      if (!isMounted) return;
+
+      setIapReady(true);
+
+      const map: Record<string, Product> = {};
+      for (const p of products ?? []) {
+        if (p?.productId) map[p.productId] = p;
+      }
+      setIapProducts(map);
+    } catch {
+      if (!isMounted) return;
+      setIapReady(false);
+    }
+  })();
+
+  return () => {
+    isMounted = false;
+    iapDisconnect().catch(() => undefined);
+  };
+}, []);
+;
+
+const showDonationNotAvailable = () => {
+  Alert.alert(
+    t("settings.donationAlertTitle"),
+    t("settings.donationAlertMessage"),
+    [{ text: t("common.ok") }],
+  );
+};
+
+const getDonationLabel = (
+  productId: DonationProductId,
+  fallback: string,
+): string => {
+  const p = iapProducts[productId];
+  return (p as any)?.localizedPrice ?? (p as any)?.priceString ?? (p as any)?.price ?? fallback;
+};
+
+const handleDonate = async (productId: DonationProductId) => {
+  try {
+    if (!iapReady) {
+      showDonationNotAvailable();
+      return;
+    }
+
+    const res = await purchaseDonation(productId);
+
+    if (res.cancelled) return;
+
+    if (!res.ok) {
+      // Message utile tant que l'app n'est pas installée depuis Google Play (test) ou que les produits n'existent pas
+      Alert.alert(
+        t("settings.donationAlertTitle"),
+        res.message ??
+          (language === "fr"
+            ? "Le paiement n’est pas disponible pour le moment. Installe l’app via Google Play (test fermé) et vérifie que les produits DON sont créés/activés."
+            : "Payment is not available right now. Install the app via Google Play (closed test) and make sure donation products are created/enabled."),
+        [{ text: t("common.ok") }],
+      );
+      return;
+    }
+
+    setShowDonationModal(false);
+
+    Alert.alert(
+      t("settings.donationAlertTitle"),
+      language === "fr" ? "Merci pour ton soutien ❤️" : "Thanks for your support ❤️",
+      [{ text: t("common.ok") }],
+    );
+  } catch (err) {
+    console.error("Donation purchase error", err);
+    Alert.alert(
+      t("settings.donationAlertTitle"),
+      language === "fr"
+        ? "Impossible de finaliser le don. Réessaie plus tard."
+        : "Unable to complete the donation. Please try again later.",
+      [{ text: t("common.ok") }],
+    );
+  }
+};
 
   // Handlers cancel propres (rollback + fermeture)
   const handleCancelEditAccount = () => {
@@ -1491,6 +1595,67 @@ keyboardType="numeric"
           {t("settings.deleteAccountWarning")}
         </Text>
       </ScrollView>
+
+
+{/* 💝 MODAL DONATIONS (Other amount) */}
+{showDonationModal && (
+  <View style={styles.donationModalOverlay}>
+    <View
+      style={[
+        styles.donationModalCard,
+        { backgroundColor: cardBg, borderColor: cardBorder },
+      ]}
+    >
+      <Text style={[styles.donationModalTitle, { color: mainText }]}>
+        {t("settings.donationAlertTitle")}
+      </Text>
+
+      <Text style={[styles.donationModalMessage, { color: subText }]}>
+        {t("settings.donationAlertMessage")}
+      </Text>
+
+      <View style={styles.donationRow}>
+        <TouchableOpacity
+          style={[styles.donationAmountButton, { borderColor: cardBorder }]}
+          activeOpacity={0.8}
+          onPress={() => handleDonate("don_10")}
+        >
+          <Text style={[styles.donationAmountText, { color: mainText }]}>
+            {getDonationLabel("don_10", "10 €")}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.donationAmountButton, { borderColor: cardBorder }]}
+          activeOpacity={0.8}
+          onPress={() => handleDonate("don_20")}
+        >
+          <Text style={[styles.donationAmountText, { color: mainText }]}>
+            {getDonationLabel("don_20", "20 €")}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.donationAmountButton, { borderColor: cardBorder }]}
+          activeOpacity={0.8}
+          onPress={() => handleDonate("don_50")}
+        >
+          <Text style={[styles.donationAmountText, { color: mainText }]}>
+            {getDonationLabel("don_50", "50 €")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.button, styles.buttonGhost, { marginTop: 12 }]}
+        onPress={() => setShowDonationModal(false)}
+      >
+        <Text style={styles.buttonGhostText}>{t("common.close")}</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
 
       {/* 🔐 MODAL CONFIRMATION MOT DE PASSE SUPPRESSION COMPTE */}
       {showDeleteConfirmModal && (
