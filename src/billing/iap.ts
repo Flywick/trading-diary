@@ -31,7 +31,9 @@ export async function iapConnect(): Promise<void> {
 
   const init = (IAP as any).initConnection;
   if (typeof init !== "function") {
-    throw new Error("IAP initConnection is not available (requires dev build / store build).");
+    throw new Error(
+      "IAP initConnection is not available (requires dev build / store build).",
+    );
   }
 
   await init();
@@ -55,14 +57,29 @@ export async function iapDisconnect(): Promise<void> {
 export async function fetchDonationProducts(): Promise<Product[]> {
   await iapConnect();
 
-  const fetchFn =
-    (IAP as any).fetchProducts ||
+  // expo-iap (récent) expose souvent fetchProducts({ skus, type })
+  const fetchProducts = (IAP as any).fetchProducts;
+  if (typeof fetchProducts === "function") {
+    try {
+      const res = await fetchProducts({
+        skus: [...DONATION_PRODUCT_IDS],
+        type: "in-app",
+      });
+      return (res ?? []) as Product[];
+    } catch {
+      // fallback plus bas
+    }
+  }
+
+  // Fallback anciens noms / signatures
+  const legacyFetch =
     (IAP as any).getProducts ||
+    (IAP as any).fetchProducts ||
     (IAP as any).getSubscriptions;
 
-  if (typeof fetchFn !== "function") return [];
+  if (typeof legacyFetch !== "function") return [];
 
-  const products = await fetchFn([...DONATION_PRODUCT_IDS]);
+  const products = await legacyFetch([...DONATION_PRODUCT_IDS]);
   return (products ?? []) as Product[];
 }
 
@@ -76,8 +93,7 @@ export type PurchaseDonationResult = {
  * Lance l'achat d'un don (consommable).
  * IMPORTANT : même si c'est un "don", côté store c'est un produit consommable.
  *
- * Note: En local (expo run:android), la feuille de paiement Google Play peut ne pas s'ouvrir.
- * Le vrai test doit se faire sur une version installée via Google Play (piste de test).
+ * Note: Le vrai test doit se faire sur une version installée via Google Play (piste de test).
  */
 export async function purchaseDonation(
   productId: DonationProductId,
@@ -94,9 +110,32 @@ export async function purchaseDonation(
       };
     }
 
-    const purchase: Purchase | null = await request({ sku: productId });
+    // ✅ API expo-iap récente (v2.7+): requestPurchase({ request: { google: { skus: [...] } } })
+    // ✅ iOS: sku unique
+    // On tente d’abord la forme moderne, puis fallback legacy.
+    let purchase: Purchase | null | undefined;
 
-    // Sur certains environnements, ça peut retourner null sans erreur
+    try {
+      purchase = (await request({
+        request: {
+          apple: { sku: productId },
+          google: { skus: [productId] },
+        },
+      })) as Purchase | null | undefined;
+    } catch (e) {
+      // fallback legacy (certaines versions acceptent encore { sku } / string)
+      try {
+        purchase = (await request({ sku: productId })) as Purchase | null | undefined;
+      } catch {
+        try {
+          purchase = (await request(productId)) as Purchase | null | undefined;
+        } catch (finalErr: any) {
+          throw finalErr;
+        }
+      }
+    }
+
+    // Sur certains environnements, ça peut retourner null/undefined sans erreur
     if (!purchase) {
       return {
         ok: false,
@@ -109,10 +148,11 @@ export async function purchaseDonation(
     // Android: consume/acknowledge (consommable)
     const token = (purchase as any)?.purchaseToken as string | undefined;
     const receipt =
-      (purchase as any)?.transactionReceipt ?? (purchase as any)?.originalJson ?? undefined;
+      (purchase as any)?.transactionReceipt ??
+      (purchase as any)?.originalJson ??
+      undefined;
 
     // Si on n'a aucun token/receipt, on considère que l'achat n'a pas réellement démarré
-    // (cas fréquent en build local non installé via Google Play).
     if (!token && !receipt) {
       return {
         ok: false,

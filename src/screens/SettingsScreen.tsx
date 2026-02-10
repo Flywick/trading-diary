@@ -129,6 +129,7 @@ const SettingsScreen: React.FC = () => {
   const [iapReady, setIapReady] = useState(false);
   const [iapProducts, setIapProducts] = useState<Record<string, Product>>({});
   const [showDonationModal, setShowDonationModal] = useState(false);
+  const [showDonationQuickModal, setShowDonationQuickModal] = useState(false);
 
   const [usernameInput, setUsernameInput] = useState(
     activeAccount?.username ?? "",
@@ -1411,13 +1412,13 @@ keyboardType="numeric"
               { marginTop: 14 },
             ]}
             activeOpacity={0.8}
-            onPress={() =>
-              Alert.alert(
-                t("settings.donationAlertTitle"),
-                t("settings.donationAlertMessage"),
-                [{ text: t("common.ok") }],
-              )
-            }
+            onPress={() => {
+              if (!iapReady) {
+                showDonationNotAvailable();
+                return;
+              }
+              setShowDonationQuickModal(true);
+            }}
           >
             <Text style={styles.buttonText}>
               {t("settings.donationButton")}
@@ -1595,6 +1596,80 @@ keyboardType="numeric"
           {t("settings.deleteAccountWarning")}
         </Text>
       </ScrollView>
+
+
+
+{/* 💝 MODAL DONATIONS (Quick amounts) */}
+{showDonationQuickModal && (
+  <View style={styles.donationModalOverlay}>
+    <View
+      style={[
+        styles.donationModalCard,
+        { backgroundColor: cardBg, borderColor: cardBorder },
+      ]}
+    >
+      <Text style={[styles.donationModalTitle, { color: mainText }]}>
+        {t("settings.donationAlertTitle")}
+      </Text>
+
+      <Text style={[styles.donationModalMessage, { color: subText }]}>
+        {t("settings.donationAlertMessage")}
+      </Text>
+
+      <View style={styles.donationRow}>
+        <TouchableOpacity
+          style={[styles.donationAmountButton, { borderColor: cardBorder }]}
+          activeOpacity={0.8}
+          onPress={() => handleDonate("don_1")}
+        >
+          <Text style={[styles.donationAmountText, { color: mainText }]}>
+            {getDonationLabel("don_1", "1 €")}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.donationAmountButton, { borderColor: cardBorder }]}
+          activeOpacity={0.8}
+          onPress={() => handleDonate("don_3")}
+        >
+          <Text style={[styles.donationAmountText, { color: mainText }]}>
+            {getDonationLabel("don_3", "3 €")}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.donationAmountButton, { borderColor: cardBorder }]}
+          activeOpacity={0.8}
+          onPress={() => handleDonate("don_5")}
+        >
+          <Text style={[styles.donationAmountText, { color: mainText }]}>
+            {getDonationLabel("don_5", "5 €")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.button, styles.buttonSecondaryLight, { marginTop: 12 }]}
+        activeOpacity={0.8}
+        onPress={() => {
+          setShowDonationQuickModal(false);
+          setShowDonationModal(true);
+        }}
+      >
+        <Text style={styles.buttonText}>
+          (language === "fr" ? "Autre montant" : "Other amount")
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, styles.buttonGhost, { marginTop: 12 }]}
+        onPress={() => setShowDonationQuickModal(false)}
+      >
+        <Text style={styles.buttonGhostText}>{t("common.close")}</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
 
 
 {/* 💝 MODAL DONATIONS (Other amount) */}
