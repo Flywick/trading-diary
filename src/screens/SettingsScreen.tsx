@@ -1417,7 +1417,7 @@ keyboardType="numeric"
                 showDonationNotAvailable();
                 return;
               }
-              setShowDonationQuickModal(true);
+              setShowDonationModal(true);
             }}
           >
             <Text style={styles.buttonText}>
@@ -1599,10 +1599,16 @@ keyboardType="numeric"
 
 
 
-{/* 💝 MODAL DONATIONS (Quick amounts) */}
-{showDonationQuickModal && (
-  <View style={styles.donationModalOverlay}>
-    <View
+      {/* 💝 MODAL DONATIONS (Unified) */}
+      {showDonationModal && (
+  <TouchableOpacity
+    activeOpacity={1}
+    style={styles.donationModalOverlay}
+    onPress={() => setShowDonationModal(false)}
+  >
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={() => {}}
       style={[
         styles.donationModalCard,
         { backgroundColor: cardBg, borderColor: cardBorder },
@@ -1616,10 +1622,10 @@ keyboardType="numeric"
         {t("settings.donationAlertMessage")}
       </Text>
 
-      <View style={styles.donationRow}>
+      <View style={styles.donationGrid}>
         <TouchableOpacity
           style={[styles.donationAmountButton, { borderColor: cardBorder }]}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={() => handleDonate("don_1")}
         >
           <Text style={[styles.donationAmountText, { color: mainText }]}>
@@ -1629,7 +1635,7 @@ keyboardType="numeric"
 
         <TouchableOpacity
           style={[styles.donationAmountButton, { borderColor: cardBorder }]}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={() => handleDonate("don_3")}
         >
           <Text style={[styles.donationAmountText, { color: mainText }]}>
@@ -1639,60 +1645,17 @@ keyboardType="numeric"
 
         <TouchableOpacity
           style={[styles.donationAmountButton, { borderColor: cardBorder }]}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={() => handleDonate("don_5")}
         >
           <Text style={[styles.donationAmountText, { color: mainText }]}>
             {getDonationLabel("don_5", "5 €")}
           </Text>
         </TouchableOpacity>
-      </View>
 
-      <TouchableOpacity
-        style={[styles.button, styles.buttonSecondaryLight, { marginTop: 12 }]}
-        activeOpacity={0.8}
-        onPress={() => {
-          setShowDonationQuickModal(false);
-          setShowDonationModal(true);
-        }}
-      >
-        <Text style={styles.buttonText}>
-          (language === "fr" ? "Autre montant" : "Other amount")
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, styles.buttonGhost, { marginTop: 12 }]}
-        onPress={() => setShowDonationQuickModal(false)}
-      >
-        <Text style={styles.buttonGhostText}>{t("common.close")}</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-)}
-
-
-{/* 💝 MODAL DONATIONS (Other amount) */}
-{showDonationModal && (
-  <View style={styles.donationModalOverlay}>
-    <View
-      style={[
-        styles.donationModalCard,
-        { backgroundColor: cardBg, borderColor: cardBorder },
-      ]}
-    >
-      <Text style={[styles.donationModalTitle, { color: mainText }]}>
-        {t("settings.donationAlertTitle")}
-      </Text>
-
-      <Text style={[styles.donationModalMessage, { color: subText }]}>
-        {t("settings.donationAlertMessage")}
-      </Text>
-
-      <View style={styles.donationRow}>
         <TouchableOpacity
           style={[styles.donationAmountButton, { borderColor: cardBorder }]}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={() => handleDonate("don_10")}
         >
           <Text style={[styles.donationAmountText, { color: mainText }]}>
@@ -1702,7 +1665,7 @@ keyboardType="numeric"
 
         <TouchableOpacity
           style={[styles.donationAmountButton, { borderColor: cardBorder }]}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={() => handleDonate("don_20")}
         >
           <Text style={[styles.donationAmountText, { color: mainText }]}>
@@ -1712,7 +1675,7 @@ keyboardType="numeric"
 
         <TouchableOpacity
           style={[styles.donationAmountButton, { borderColor: cardBorder }]}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={() => handleDonate("don_50")}
         >
           <Text style={[styles.donationAmountText, { color: mainText }]}>
@@ -1722,15 +1685,14 @@ keyboardType="numeric"
       </View>
 
       <TouchableOpacity
-        style={[styles.button, styles.buttonGhost, { marginTop: 12 }]}
+        style={[styles.button, styles.buttonGhost, { marginTop: 14 }]}
         onPress={() => setShowDonationModal(false)}
       >
         <Text style={styles.buttonGhostText}>{t("common.close")}</Text>
       </TouchableOpacity>
-    </View>
-  </View>
+    </TouchableOpacity>
+  </TouchableOpacity>
 )}
-
 
       {/* 🔐 MODAL CONFIRMATION MOT DE PASSE SUPPRESSION COMPTE */}
       {showDeleteConfirmModal && (
