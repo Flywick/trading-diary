@@ -4,6 +4,7 @@ import React from "react";
 import { Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSettings } from "../../src/context/SettingsContext";
+import { useI18n } from "../../src/i18n/useI18n";
 
 // ⚠️ Mets ici TES chemins exacts (ceux qui marchent chez toi)
 const ICONS = {
@@ -45,6 +46,7 @@ function TabIcon({ name, size = 22, theme }: TabIconProps) {
 export default function TabsLayout() {
   const { theme } = useSettings();
   const insets = useSafeAreaInsets();
+  const { t } = useI18n();
 
   const isDark = theme === "dark";
 
@@ -92,7 +94,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Agenda",
+          title: t("agenda.title"),
           tabBarIcon: ({ size }) => (
             <TabIcon name="agenda" size={size ?? 22} theme={theme} />
           ),
@@ -102,7 +104,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="stats"
         options={{
-          title: "Stats",
+          title: t("stats.title"),
           tabBarIcon: ({ size }) => (
             <TabIcon name="stats" size={size ?? 22} theme={theme} />
           ),
@@ -112,7 +114,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Paramètres",
+          title: t("settings.title"),
           tabBarIcon: ({ size }) => (
             <TabIcon name="settings" size={size ?? 22} theme={theme} />
           ),

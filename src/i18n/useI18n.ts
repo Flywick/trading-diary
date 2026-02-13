@@ -10,11 +10,49 @@ const fr = {
     delete: "Supprimer",
     edit: "Modifier",
     close: "Fermer",
+    modalTemplateTitle: "Modal",
+    modalTemplateGoHome: "Aller à l’accueil",
   },
 
   // --------------------- AUTH ---------------------
   auth: {
+    chooseLanguageTitle: "Choisis ta langue",
+    chooseLanguageSubtitle:
+      "Tu pourras changer la langue plus tard dans les paramètres.",
+    french: "Français",
+    english: "English",
+
+    welcomeTitle: "Bienvenue dans Trading Diary 📈",
+    welcomeSubtitle:
+      "Un journal pensé pour les traders sérieux : agenda, stats, RR, émotions, screenshots, et plus encore.",
+    createAccountButton: "Créer un compte",
+    loginButton: "Se connecter",
+
+    registerTitle: "Créer un compte",
+    registerSubtitle:
+      "Un compte par trader, plusieurs comptes possibles sur le même appareil.",
+    usernameLabel: "Pseudo",
+    usernamePlaceholder: "Ton pseudo",
+    birthdateLabel: "Date de naissance",
+    birthdateHint: "(JJ-MM-AAAA)",
+    birthdatePlaceholder: "23-04-1995",
+    yearsOld: "{{age}} ans",
+    emailLabel: "Email",
+    emailPlaceholder: "email@example.com",
+    passwordLabel: "Mot de passe",
+    confirmPasswordLabel: "Confirmer le mot de passe",
+    createAccountSubmit: "Créer le compte",
+    back: "Retour",
+
+    loginTitle: "Se connecter",
+    loginSubtitle: "Entre ton email, puis ton mot de passe.",
+    loginIdentifierLabel: "Email ou pseudo",
+    loginIdentifierPlaceholder: "email@example.com",
+    loginPasswordLabel: "Mot de passe",
+    loginSubmit: "Se connecter",
+
     missingFieldsTitle: "Champs manquants",
+
     missingFieldsRegisterMessage: "Tous les champs sont obligatoires pour créer un compte.",
     missingFieldsLoginMessage: "Merci d'entrer ton email et ton mot de passe.",
 
@@ -86,6 +124,8 @@ const fr = {
 
   // ------------------ SETTINGS ----------------------
   settings: {
+    title: "Paramètres",
+
     // sections
     accountSectionTitle: "Compte",
     preferencesSectionTitle: "Préférences",
@@ -116,6 +156,8 @@ const fr = {
     usernamePlaceholder: "Ton pseudo",
     birthdatePlaceholder: "JJ-MM-AAAA",
     emailPlaceholder: "ton.email@example.com",
+
+    calculatedAge: "Âge calculé : {{age}} ans",
 
     accountInfosMissingTitle: "Informations manquantes",
     accountInfosMissingMessage:
@@ -226,7 +268,13 @@ const fr = {
     donationButton: "Faire un don",
     donationAlertTitle: "Soutenir le projet",
     donationAlertMessage:
-      "Merci pour votre soutien 🙏\n\nLes dons permettent de financer le développement et les futures fonctionnalités.",
+      `Merci pour votre soutien 🙏
+
+Les dons permettent de financer le développement et les futures fonctionnalités.`,
+    donationNotAvailableMessage:
+      "Le paiement n’est pas disponible pour le moment. Installe l’app via Google Play (test fermé) et vérifie que les produits DON sont créés et activés.",
+    donationThanksMessage: "Merci pour ton soutien ❤️",
+    donationErrorMessage: "Impossible de finaliser le don. Réessaie plus tard.",
   },
 
   // ✅ LEGAL — CGU / PRIVACY (V1 - Google Play ready)
@@ -379,11 +427,47 @@ const en = {
     delete: "Delete",
     edit: "Edit",
     close: "Close",
+    modalTemplateTitle: "Modal",
+    modalTemplateGoHome: "Go to home",
   },
 
   // --------------------- AUTH ---------------------
   auth: {
+    chooseLanguageTitle: "Choose your language",
+    chooseLanguageSubtitle: "You can change the language later in settings.",
+    french: "Français",
+    english: "English",
+
+    welcomeTitle: "Welcome to Trading Diary 📈",
+    welcomeSubtitle:
+      "A journal built for serious traders: agenda, stats, RR, emotions, screenshots, and more.",
+    createAccountButton: "Create an account",
+    loginButton: "Log in",
+
+    registerTitle: "Create an account",
+    registerSubtitle: "One account per trader, multiple accounts on the same device.",
+    usernameLabel: "Username",
+    usernamePlaceholder: "Your username",
+    birthdateLabel: "Birthdate",
+    birthdateHint: "(YYYY-MM-DD)",
+    birthdatePlaceholder: "1995-04-23",
+    yearsOld: "{{age}} years old",
+    emailLabel: "Email",
+    emailPlaceholder: "email@example.com",
+    passwordLabel: "Password",
+    confirmPasswordLabel: "Confirm password",
+    createAccountSubmit: "Create account",
+    back: "Back",
+
+    loginTitle: "Log in",
+    loginSubtitle: "Enter your email, then your password.",
+    loginIdentifierLabel: "Email or username",
+    loginIdentifierPlaceholder: "email@example.com",
+    loginPasswordLabel: "Password",
+    loginSubmit: "Log in",
+
     missingFieldsTitle: "Missing fields",
+
     missingFieldsRegisterMessage: "All fields are required to create an account.",
     missingFieldsLoginMessage: "Please enter your email and password.",
 
@@ -451,6 +535,8 @@ const en = {
   },
 
   settings: {
+    title: "Settings",
+
     accountSectionTitle: "Account",
     preferencesSectionTitle: "Preferences",
     exportCsvSectionTitle: "Export CSV",
@@ -478,6 +564,8 @@ const en = {
     usernamePlaceholder: "Your username",
     birthdatePlaceholder: "YYYY-MM-DD",
     emailPlaceholder: "your.email@example.com",
+
+    calculatedAge: "Calculated age: {{age}} years",
 
     accountInfosMissingTitle: "Missing information",
     accountInfosMissingMessage: "Please fill all required fields.",
@@ -574,7 +662,13 @@ const en = {
     donationButton: "Donate",
     donationAlertTitle: "Support the project",
     donationAlertMessage:
-      "Thank you for your support 🙏\n\nDonations help fund development and future features.",
+      `Thank you for your support 🙏
+
+Donations help fund development and future features.`,
+    donationNotAvailableMessage:
+      "Payment is not available right now. Install the app via Google Play (closed test) and make sure donation products are created and enabled.",
+    donationThanksMessage: "Thanks for your support ❤️",
+    donationErrorMessage: "Unable to complete the donation. Please try again later.",
   },
 
   // ✅ LEGAL — TERMS / PRIVACY (V1 - Google Play ready)

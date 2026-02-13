@@ -232,9 +232,7 @@ useEffect(() => {
 const showDonationNotAvailable = () => {
   Alert.alert(
     t("settings.donationAlertTitle"),
-    language === "fr"
-      ? "Le paiement n’est pas disponible pour le moment. Installe l’app via Google Play (test fermé) et vérifie que les produits DON sont créés/activés."
-      : "Payment is not available right now. Install the app via Google Play (closed test) and make sure donation products are created/enabled.",
+    t("settings.donationNotAvailableMessage"),
     [{ text: t("common.ok") }],
   );
 };
@@ -262,10 +260,7 @@ const handleDonate = async (productId: DonationProductId) => {
       // Message utile tant que l'app n'est pas installée depuis Google Play (test) ou que les produits n'existent pas
       Alert.alert(
         t("settings.donationAlertTitle"),
-        res.message ??
-          (language === "fr"
-            ? "Le paiement n’est pas disponible pour le moment. Installe l’app via Google Play (test fermé) et vérifie que les produits DON sont créés/activés."
-            : "Payment is not available right now. Install the app via Google Play (closed test) and make sure donation products are created/enabled."),
+        t("settings.donationNotAvailableMessage"),
         [{ text: t("common.ok") }],
       );
       return;
@@ -276,16 +271,14 @@ const handleDonate = async (productId: DonationProductId) => {
 
     Alert.alert(
       t("settings.donationAlertTitle"),
-      language === "fr" ? "Merci pour ton soutien ❤️" : "Thanks for your support ❤️",
+      t("settings.donationThanksMessage"),
       [{ text: t("common.ok") }],
     );
   } catch (err) {
     console.error("Donation purchase error", err);
     Alert.alert(
       t("settings.donationAlertTitle"),
-      language === "fr"
-        ? "Impossible de finaliser le don. Réessaie plus tard."
-        : "Unable to complete the donation. Please try again later.",
+      t("settings.donationErrorMessage"),
       [{ text: t("common.ok") }],
     );
   }
@@ -982,9 +975,7 @@ keyboardType="numeric"
             />
             {liveAge !== null && (
               <Text style={[styles.helperText, { color: subText }]}>
-                {language === "en"
-                  ? `Calculated age: ${liveAge} years`
-                  : `Âge calculé : ${liveAge} ans`}
+                {t("settings.calculatedAge", { age: liveAge })}
               </Text>
             )}
 

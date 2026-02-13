@@ -218,14 +218,10 @@ const Home: React.FC = () => {
   const renderChoice = () => (
     <View>
       <Text style={styles.title}>
-        {language === "en"
-          ? "Welcome to Trading Diary 📈"
-          : "Bienvenue dans Trading Diary 📈"}
+        {t("auth.welcomeTitle")}
       </Text>
       <Text style={styles.subtitle}>
-        {language === "en"
-          ? "A journal built for serious traders: agenda, stats, RR, emotions, screenshots, and more."
-          : "Un journal pensé pour les traders sérieux : agenda, stats, RR, émotions, screenshots, et plus encore."}
+        {t("auth.welcomeSubtitle")}
       </Text>
 
       <TouchableOpacity
@@ -233,7 +229,7 @@ const Home: React.FC = () => {
         onPress={() => setMode("register")}
       >
         <Text style={styles.buttonText}>
-          {language === "en" ? "Create an account" : "Créer un compte"}
+          {t("auth.createAccountButton")}
         </Text>
       </TouchableOpacity>
 
@@ -242,7 +238,7 @@ const Home: React.FC = () => {
         onPress={() => setMode("login")}
       >
         <Text style={styles.buttonText}>
-          {language === "en" ? "Log in" : "Se connecter"}
+          {t("auth.loginButton")}
         </Text>
       </TouchableOpacity>
     </View>
@@ -254,31 +250,29 @@ const Home: React.FC = () => {
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>
-        {language === "en" ? "Create an account" : "Créer un compte"}
+        {t("auth.createAccountButton")}
       </Text>
       <Text style={styles.subtitle}>
-        {language === "en"
-          ? "One account per trader, multiple accounts on the same device."
-          : "Un compte par trader, plusieurs comptes possibles sur le même appareil."}
+        {t("auth.registerSubtitle")}
       </Text>
 
       <Text style={styles.label}>
-        {language === "en" ? "Username *" : "Pseudo *"}
+        {t("auth.usernameLabel")} *
       </Text>
       <TextInput
         style={styles.input}
-        placeholder={language === "en" ? "Your username" : "Ton pseudo"}
+        placeholder={t("auth.usernamePlaceholder")}
         placeholderTextColor="#6b7280"
         value={username}
         onChangeText={setUsername}
       />
 
       <Text style={styles.label}>
-        {language === "en" ? "Birthdate * (YYYY-MM-DD)" : "Date de naissance * (JJ-MM-AAAA)"}
+        {t("auth.birthdateLabel")} * {t("auth.birthdateHint")}
       </Text>
       <TextInput
         style={styles.input}
-        placeholder={language === "en" ? "1995-04-23" : "23-04-1995"}
+        placeholder={t("auth.birthdatePlaceholder")}
         placeholderTextColor="#6b7280"
         value={birthdate}
         onChangeText={(text) =>
@@ -288,14 +282,14 @@ const Home: React.FC = () => {
       />
       {liveAge !== null && (
         <Text style={styles.helperText}>
-          {liveAge} {language === "en" ? "years old" : "ans"}
+          {t("auth.yearsOld", { age: liveAge })}
         </Text>
       )}
 
-      <Text style={styles.label}>Email *</Text>
+      <Text style={styles.label}>{t("auth.emailLabel")} *</Text>
       <TextInput
         style={styles.input}
-        placeholder="email@example.com"
+        placeholder={t("auth.emailPlaceholder")}
         placeholderTextColor="#6b7280"
         value={email}
         onChangeText={setEmail}
@@ -304,7 +298,7 @@ const Home: React.FC = () => {
       />
 
       <Text style={styles.label}>
-        {language === "en" ? "Password *" : "Mot de passe *"}
+        {t("auth.passwordLabel")} *
       </Text>
       <TextInput
         style={styles.input}
@@ -316,9 +310,7 @@ const Home: React.FC = () => {
       />
 
       <Text style={styles.label}>
-        {language === "en"
-          ? "Confirm password *"
-          : "Confirmer le mot de passe *"}
+        {t("auth.confirmPasswordLabel")} *
       </Text>
       <TextInput
         style={styles.input}
@@ -334,7 +326,7 @@ const Home: React.FC = () => {
         onPress={handleRegisterSubmit}
       >
         <Text style={styles.buttonText}>
-          {language === "en" ? "Create account" : "Créer le compte"}
+          {t("auth.createAccountSubmit")}
         </Text>
       </TouchableOpacity>
 
@@ -343,7 +335,7 @@ const Home: React.FC = () => {
         onPress={() => setMode("choice")}
       >
         <Text style={styles.buttonGhostText}>
-          ⟵ {language === "en" ? "Back" : "Retour"}
+          ⟵ {t("auth.back")}
         </Text>
       </TouchableOpacity>
     </ScrollView>
@@ -352,18 +344,16 @@ const Home: React.FC = () => {
   const renderLogin = () => (
     <View>
       <Text style={styles.title}>
-        {language === "en" ? "Log in" : "Se connecter"}
+        {t("auth.loginTitle")}
       </Text>
       <Text style={styles.subtitle}>
-        {language === "en"
-          ? "Enter your email, then your password."
-          : "Entre ton email, puis ton mot de passe."}
+        {t("auth.loginSubtitle")}
       </Text>
 
-      <Text style={styles.label}>{language === "en" ? "email" : "email"}</Text>
+      <Text style={styles.label}>{t("auth.loginIdentifierLabel")}</Text>
       <TextInput
         style={styles.input}
-        placeholder={language === "en" ? "email" : "email"}
+        placeholder={t("auth.loginIdentifierPlaceholder")}
         placeholderTextColor="#6b7280"
         value={loginIdentifier}
         onChangeText={setLoginIdentifier}
@@ -371,7 +361,7 @@ const Home: React.FC = () => {
       />
 
       <Text style={styles.label}>
-        {language === "en" ? "Password" : "Mot de passe"}
+        {t("auth.loginPasswordLabel")}
       </Text>
       <TextInput
         style={styles.input}
@@ -387,7 +377,7 @@ const Home: React.FC = () => {
         onPress={handleLoginSubmit}
       >
         <Text style={styles.buttonText}>
-          {language === "en" ? "Log in" : "Se connecter"}
+          {t("auth.loginSubmit")}
         </Text>
       </TouchableOpacity>
 
@@ -396,7 +386,7 @@ const Home: React.FC = () => {
         onPress={() => setMode("choice")}
       >
         <Text style={styles.buttonGhostText}>
-          ⟵ {language === "en" ? "Back" : "Retour"}
+          ⟵ {t("auth.back")}
         </Text>
       </TouchableOpacity>
     </View>
@@ -411,10 +401,10 @@ const Home: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.title}>
-              Choisis ta langue / Choose your language
+              {t("auth.chooseLanguageTitle")}
             </Text>
             <Text style={styles.subtitle}>
-              Tu pourras changer la langue plus tard dans les paramètres.
+              {t("auth.chooseLanguageSubtitle")}
             </Text>
 
             <TouchableOpacity
@@ -424,7 +414,7 @@ const Home: React.FC = () => {
                 setShowLangModal(false);
               }}
             >
-              <Text style={styles.buttonText}>Français</Text>
+              <Text style={styles.buttonText}>{t("auth.french")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -434,7 +424,7 @@ const Home: React.FC = () => {
                 setShowLangModal(false);
               }}
             >
-              <Text style={styles.buttonText}>English</Text>
+              <Text style={styles.buttonText}>{t("auth.english")}</Text>
             </TouchableOpacity>
           </View>
         </View>
