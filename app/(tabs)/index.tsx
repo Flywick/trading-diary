@@ -13,18 +13,40 @@ import {
 } from "react-native";
 import { useAccount } from "../../src/context/AccountContext";
 import { useLanguage } from "../../src/context/LanguageContext";
+import { useI18n } from "../../src/i18n/useI18n";
 import AgendaScreen from "../../src/screens/AgendaScreen";
 
-const formatBirthdate = (text: string) => {
+const formatBirthdateISO = (text: string) => {
+  // YYYY-MM-DD (EN)
   const cleaned = text.replace(/\D/g, "").slice(0, 8);
-  if (cleaned.length <= 4) {
-    return cleaned;
-  } else if (cleaned.length <= 6) {
-    return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
-  } else {
-    return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6)}`;
-  }
+  if (cleaned.length <= 4) return cleaned;
+  if (cleaned.length <= 6) return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+  return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6)}`;
 };
+
+const formatBirthdateFR = (text: string) => {
+  // DD-MM-YYYY (FR)
+  const cleaned = text.replace(/\D/g, "").slice(0, 8);
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 4) return `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+  return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4)}`;
+};
+
+const toBirthdateISO = (input: string, language: string): string | null => {
+  const v = input.trim();
+
+  if (language === "fr") {
+    const frRegex = /^\d{2}-\d{2}-\d{4}$/;
+    if (!frRegex.test(v)) return null;
+    const [dd, mm, yyyy] = v.split("-");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!isoRegex.test(v)) return null;
+  return v;
+};
+
 
 const getAgeFromBirthdate = (birthdate: string): number | null => {
   const birthdateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -54,6 +76,13 @@ const getAgeFromBirthdate = (birthdate: string): number | null => {
   return age;
 };
 
+const getAgeFromBirthdateInput = (input: string, language: string): number | null => {
+  const iso = toBirthdateISO(input, language);
+  if (!iso) return null;
+  return getAgeFromBirthdate(iso);
+};
+
+
 const Home: React.FC = () => {
   const {
     activeAccount,
@@ -67,6 +96,7 @@ const Home: React.FC = () => {
     isLoaded: isLangLoaded,
     hasChosenLanguage,
   } = useLanguage();
+  const { t } = useI18n();
 
   const [showLangModal, setShowLangModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -83,7 +113,7 @@ const Home: React.FC = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  const liveAge = getAgeFromBirthdate(birthdate);
+  const liveAge = getAgeFromBirthdateInput(birthdate, language);
 
   // Affichage du modal de langue au premier lancement
   useEffect(() => {
@@ -111,64 +141,46 @@ const Home: React.FC = () => {
     const pwd = password;
 
     if (!uname || !bdate || !mail || !pwd || !passwordConfirm) {
-      Alert.alert(
-        "Champs manquants",
-        "Tous les champs sont obligatoires pour créer un compte.",
-      );
+      Alert.alert(t("auth.missingFieldsTitle"), t("auth.missingFieldsRegisterMessage"));
       return;
     }
 
-    const birthdateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!birthdateRegex.test(bdate)) {
-      Alert.alert(
-        "Format de date invalide",
-        "Merci d'entrer la date de naissance au format AAAA-MM-JJ (ex : 1995-04-23).",
-      );
+    const isoBirthdate = toBirthdateISO(bdate, language);
+    if (!isoBirthdate) {
+      Alert.alert(t("auth.invalidBirthdateFormatTitle"), t("auth.invalidBirthdateFormatMessage"));
       return;
     }
 
-    const age = getAgeFromBirthdate(bdate);
+    const age = getAgeFromBirthdate(isoBirthdate);
     if (age === null) {
-      Alert.alert(
-        "Date invalide",
-        "La date de naissance ne semble pas valide.",
-      );
+      Alert.alert(t("auth.invalidBirthdateTitle"), t("auth.invalidBirthdateMessage"));
       return;
     }
     if (age < 18) {
-      Alert.alert(
-        "Âge insuffisant",
-        "Tu dois avoir au moins 18 ans pour utiliser cette application.",
-      );
+      Alert.alert(t("auth.ageTooLowTitle"), t("auth.ageTooLowMessage"));
       return;
     }
 
     const emailRegex = /.+@.+\..+/;
     if (!emailRegex.test(mail)) {
-      Alert.alert("Email invalide", "Merci d'entrer une adresse email valide.");
+      Alert.alert(t("auth.invalidEmailTitle"), t("auth.invalidEmailMessage"));
       return;
     }
 
     if (pwd.length < 6) {
-      Alert.alert(
-        "Mot de passe trop court",
-        "Le mot de passe doit contenir au moins 6 caractères.",
-      );
+      Alert.alert(t("auth.passwordTooShortTitle"), t("auth.passwordTooShortMessage"));
       return;
     }
 
     if (pwd !== passwordConfirm) {
-      Alert.alert(
-        "Confirmation",
-        "La confirmation du mot de passe ne correspond pas.",
-      );
+      Alert.alert(t("auth.passwordConfirmTitle"), t("auth.passwordConfirmMessage"));
       return;
     }
 
     try {
       register({
         username: uname,
-        birthdate: bdate,
+        birthdate: isoBirthdate,
         email: mail,
         password: pwd,
       });
@@ -180,7 +192,7 @@ const Home: React.FC = () => {
       setPasswordConfirm("");
       setShowAccountModal(false);
     } catch (e: any) {
-      Alert.alert("Erreur", e?.message ?? "Impossible de créer le compte.");
+      Alert.alert(t("auth.createAccountErrorTitle"), e?.message ?? t("auth.createAccountErrorMessage"));
     }
   };
 
@@ -189,10 +201,7 @@ const Home: React.FC = () => {
     const pwd = loginPassword;
 
     if (!email || !pwd) {
-      Alert.alert(
-        "Champs manquants",
-        "Merci d'entrer ton email et ton mot de passe.",
-      );
+      Alert.alert(t("auth.missingFieldsTitle"), t("auth.missingFieldsLoginMessage"));
       return;
     }
 
@@ -202,10 +211,7 @@ const Home: React.FC = () => {
       setLoginPassword("");
       setShowAccountModal(false);
     } catch (e: any) {
-      Alert.alert(
-        "Erreur de connexion",
-        e?.message ?? "Identifiants incorrects.",
-      );
+      Alert.alert(t("auth.loginErrorTitle"), e?.message ?? t("auth.loginErrorMessage"));
     }
   };
 
@@ -268,16 +274,16 @@ const Home: React.FC = () => {
       />
 
       <Text style={styles.label}>
-        {language === "en"
-          ? "Birthdate * (YYYY-MM-DD)"
-          : "Date de naissance * (AAAA-MM-JJ)"}
+        {language === "en" ? "Birthdate * (YYYY-MM-DD)" : "Date de naissance * (JJ-MM-AAAA)"}
       </Text>
       <TextInput
         style={styles.input}
-        placeholder={language === "en" ? "1995-04-23" : "1995-04-23"}
+        placeholder={language === "en" ? "1995-04-23" : "23-04-1995"}
         placeholderTextColor="#6b7280"
         value={birthdate}
-        onChangeText={(text) => setBirthdate(formatBirthdate(text))}
+        onChangeText={(text) =>
+          setBirthdate(language === "fr" ? formatBirthdateFR(text) : formatBirthdateISO(text))
+        }
         keyboardType="numeric"
       />
       {liveAge !== null && (

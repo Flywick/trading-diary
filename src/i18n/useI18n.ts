@@ -1,9 +1,4 @@
-// src/i18n/useI18n.ts
 import { useLanguage } from "../context/LanguageContext";
-
-// --------------------------------------------------
-// FRANÇAIS
-// --------------------------------------------------
 
 const fr = {
   // tableau abrégé des jours (Lun → Dim)
@@ -15,6 +10,32 @@ const fr = {
     delete: "Supprimer",
     edit: "Modifier",
     close: "Fermer",
+  },
+
+  // --------------------- AUTH ---------------------
+  auth: {
+    missingFieldsTitle: "Champs manquants",
+    missingFieldsRegisterMessage: "Tous les champs sont obligatoires pour créer un compte.",
+    missingFieldsLoginMessage: "Merci d'entrer ton email et ton mot de passe.",
+
+    invalidBirthdateFormatTitle: "Format de date invalide",
+    invalidBirthdateFormatMessage: "Merci d'entrer la date de naissance au format JJ-MM-AAAA (ex : 23-04-1995).",
+    invalidBirthdateTitle: "Date invalide",
+    invalidBirthdateMessage: "La date de naissance ne semble pas valide.",
+    ageTooLowTitle: "Âge insuffisant",
+    ageTooLowMessage: "Tu dois avoir au moins 18 ans pour utiliser cette application.",
+
+    invalidEmailTitle: "Email invalide",
+    invalidEmailMessage: "Merci d'entrer une adresse email valide.",
+    passwordTooShortTitle: "Mot de passe trop court",
+    passwordTooShortMessage: "Le mot de passe doit contenir au moins 6 caractères.",
+    passwordConfirmTitle: "Confirmation",
+    passwordConfirmMessage: "La confirmation du mot de passe ne correspond pas.",
+
+    createAccountErrorTitle: "Erreur",
+    createAccountErrorMessage: "Impossible de créer le compte.",
+    loginErrorTitle: "Erreur de connexion",
+    loginErrorMessage: "Identifiants incorrects.",
   },
 
   // --------------------- AGENDA ---------------------
@@ -358,6 +379,32 @@ const en = {
     delete: "Delete",
     edit: "Edit",
     close: "Close",
+  },
+
+  // --------------------- AUTH ---------------------
+  auth: {
+    missingFieldsTitle: "Missing fields",
+    missingFieldsRegisterMessage: "All fields are required to create an account.",
+    missingFieldsLoginMessage: "Please enter your email and password.",
+
+    invalidBirthdateFormatTitle: "Invalid date format",
+    invalidBirthdateFormatMessage: "Please enter your birthdate in YYYY-MM-DD format (e.g. 1995-04-23).",
+    invalidBirthdateTitle: "Invalid date",
+    invalidBirthdateMessage: "The birthdate does not seem valid.",
+    ageTooLowTitle: "Age requirement",
+    ageTooLowMessage: "You must be at least 18 years old to use this app.",
+
+    invalidEmailTitle: "Invalid email",
+    invalidEmailMessage: "Please enter a valid email address.",
+    passwordTooShortTitle: "Password too short",
+    passwordTooShortMessage: "Password must be at least 6 characters long.",
+    passwordConfirmTitle: "Confirmation",
+    passwordConfirmMessage: "Password confirmation does not match.",
+
+    createAccountErrorTitle: "Error",
+    createAccountErrorMessage: "Unable to create the account.",
+    loginErrorTitle: "Login error",
+    loginErrorMessage: "Incorrect credentials.",
   },
 
   agenda: {
