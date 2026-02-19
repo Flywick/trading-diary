@@ -1,5 +1,4 @@
 import { useLanguage } from "../context/LanguageContext";
-
 const fr = {
   // tableau abrégé des jours (Lun → Dim)
   weekdaysShort: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
@@ -13,6 +12,15 @@ const fr = {
     modalTemplateTitle: "Modal",
     modalTemplateGoHome: "Aller à l’accueil",
   },
+
+  errors: {
+    missingLoginFields: "Veuillez remplir tous les champs obligatoires.",
+    invalidBirthdate: "Date de naissance invalide.",
+    invalidEmail: "Adresse email invalide.",
+    passwordConfirmMismatch: "Les mots de passe ne correspondent pas.",
+    passwordTooShort: "Le mot de passe est trop petit",
+  },
+
 
   // --------------------- AUTH ---------------------
   auth: {
@@ -430,6 +438,15 @@ const en = {
     modalTemplateTitle: "Modal",
     modalTemplateGoHome: "Go to home",
   },
+
+  errors: {
+    missingLoginFields: "Please fill all required fields.",
+    invalidBirthdate: "Invalid birthdate.",
+    invalidEmail: "Invalid email address.",
+    passwordConfirmMismatch: "Passwords do not match.",
+    passwordTooShort: "Password is too short",
+  },
+
 
   // --------------------- AUTH ---------------------
   auth: {

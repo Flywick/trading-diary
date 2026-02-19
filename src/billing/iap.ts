@@ -106,7 +106,7 @@ export async function purchaseDonation(
       return {
         ok: false,
         cancelled: false,
-        message: "IAP requestPurchase is not available.",
+        message: "In-app purchases are not available on this device.",
       };
     }
 
@@ -141,7 +141,7 @@ export async function purchaseDonation(
         ok: false,
         cancelled: false,
         message:
-          "Purchase did not start. Make sure the app is installed from Google Play (testing track) and products are created/enabled.",
+          "Purchase could not be started. Please try again in a moment.",
       };
     }
 
@@ -158,7 +158,7 @@ export async function purchaseDonation(
         ok: false,
         cancelled: false,
         message:
-          "Purchase did not start (no token/receipt). Install the app from Google Play (testing track) and ensure donation products are created/enabled.",
+          "Purchase could not be confirmed. Please try again later.",
       };
     }
 

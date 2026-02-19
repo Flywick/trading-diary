@@ -39,7 +39,9 @@ const DayCell: React.FC<DayCellProps> = ({
         ? "$"
         : currency === "GBP"
           ? "£"
-          : currency;
+          : currency === "JPY"
+            ? "¥"
+            : currency;
 
   // Couleurs de texte : plus contrastées en mode clair sur les cases grises
   const dayNumberColor = hasTrades ? "#f9fafb" : isDark ? "#e5e7eb" : "#0f172a";
@@ -76,7 +78,7 @@ const DayCell: React.FC<DayCellProps> = ({
             {pnl?.toFixed(2)} {currencySymbol}
           </Text>
           <Text style={[styles.rrText, { color: rrTextColor }]}>
-            RR {rr?.toFixed(2) ?? "0.00"}
+            RR {typeof rr === "number" && Number.isFinite(rr) ? String(Math.round(rr)) : "0"}
           </Text>
         </View>
       )}

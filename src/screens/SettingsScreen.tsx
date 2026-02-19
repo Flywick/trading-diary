@@ -232,7 +232,7 @@ useEffect(() => {
 const showDonationNotAvailable = () => {
   Alert.alert(
     t("settings.donationAlertTitle"),
-    t("settings.donationNotAvailableMessage"),
+    t("settings.donationErrorMessage"),
     [{ text: t("common.ok") }],
   );
 };
@@ -257,10 +257,10 @@ const handleDonate = async (productId: DonationProductId) => {
     if (res.cancelled) return;
 
     if (!res.ok) {
-      // Message utile tant que l'app n'est pas installée depuis Google Play (test) ou que les produits n'existent pas
+      // Achat indisponible (IAP non prêt / produits non chargés / erreur). Message générique (V1).
       Alert.alert(
         t("settings.donationAlertTitle"),
-        t("settings.donationNotAvailableMessage"),
+        t("settings.donationErrorMessage"),
         [{ text: t("common.ok") }],
       );
       return;

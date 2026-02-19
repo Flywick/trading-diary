@@ -60,6 +60,17 @@ const AgendaScreen: React.FC = () => {
   const isDark = theme === "dark";
   const { language, t, weekdaysShort } = useI18n();
 
+  const currencySymbol =
+    currency === "EUR"
+      ? "€"
+      : currency === "USD"
+        ? "$"
+        : currency === "GBP"
+          ? "£"
+          : currency === "JPY"
+            ? "¥"
+            : currency;
+
   // Couleurs dépendantes du thème
   const bgColor = isDark ? "#020617" : "#f1f5f9";
   const monthSummaryBg = isDark ? "#020617" : "#e5e7eb";
@@ -368,7 +379,7 @@ const AgendaScreen: React.FC = () => {
                 ]}
               >
                 {monthStats.totalPnl > 0 ? "+" : ""}
-                {monthStats.totalPnl.toFixed(2)} {currency}
+                {monthStats.totalPnl.toFixed(2)} {currencySymbol}
               </Text>
             </View>
 
