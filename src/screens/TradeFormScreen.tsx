@@ -39,11 +39,25 @@ const TradeFormScreen: React.FC = () => {
   const dateStr = typeof date === "string" ? date : "";
   const tradeIdStr = typeof tradeId === "string" ? tradeId : undefined;
 
+  const { t, language } = useI18n();
+
+  const displayDate = useMemo(() => {
+    if (!dateStr) return "";
+    // dateStr is stored/transmitted as YYYY-MM-DD. Display as DD-MM-YYYY in French.
+    const isEnglish = (language ?? "").toLowerCase().startsWith("en");
+    if (!isEnglish) {
+      const m = /^\d{4}-\d{2}-\d{2}$/.exec(dateStr);
+      if (m) {
+        const [y, mo, d] = dateStr.split("-");
+        return `${d}-${mo}-${y}`;
+      }
+    }
+    return dateStr;
+  }, [dateStr, language]);
+
   const { trades, addTrade, updateTrade } = useTrades();
   const { currency, theme } = useSettings();
   const router = useRouter();
-  const { t } = useI18n();
-
   const isDark = theme === "dark";
 
   // Couleurs dépendant du thème
@@ -269,7 +283,7 @@ const TradeFormScreen: React.FC = () => {
           <Text style={[styles.label, { color: labelColor }]}>
             {t("tradeForm.dateLabel")}
           </Text>
-          <Text style={[styles.value, { color: valueColor }]}>{dateStr}</Text>
+          <Text style={[styles.value, { color: valueColor }]}>{displayDate}</Text>
 
           <Text style={[styles.label, { color: labelColor, marginTop: 8 }]}>
             {isEdit
@@ -450,7 +464,7 @@ const TradeFormScreen: React.FC = () => {
             placeholder={t("tradeForm.rrExamplePlaceholder")}
             placeholderTextColor="#6b7280"
             value={rr}
-            onChangeText={setRr}
+            onChangeText={(v) => setRr(v.replace(/[^0-9]/g, ""))}
           />
 
           <Text style={[styles.label, { color: labelColor }]}>

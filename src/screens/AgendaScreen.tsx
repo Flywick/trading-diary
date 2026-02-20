@@ -71,6 +71,11 @@ const AgendaScreen: React.FC = () => {
             ? "¥"
             : currency;
 
+  const formatPnl = (value?: number) => {
+    if (typeof value !== "number" || Number.isNaN(value)) return "0";
+    return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
+  };
+
   // Couleurs dépendantes du thème
   const bgColor = isDark ? "#020617" : "#f1f5f9";
   const monthSummaryBg = isDark ? "#020617" : "#e5e7eb";
@@ -379,7 +384,7 @@ const AgendaScreen: React.FC = () => {
                 ]}
               >
                 {monthStats.totalPnl > 0 ? "+" : ""}
-                {monthStats.totalPnl.toFixed(2)} {currencySymbol}
+                {formatPnl(monthStats.totalPnl)} {currencySymbol}
               </Text>
             </View>
 

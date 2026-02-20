@@ -386,7 +386,7 @@ Les dons permettent de financer le développement et les futures fonctionnalité
 
     pnlExamplePlaceholder: "Ex : 25.50",
     lotExamplePlaceholder: "Ex : 0.25",
-    rrExamplePlaceholder: "Ex : 2.35",
+    rrExamplePlaceholder: "Ex : 2",
 
     emotionLabel: "Émotion",
     emotionCalm: "😌 Calme",
@@ -787,7 +787,7 @@ Donations help fund development and future features.`,
 
     pnlExamplePlaceholder: "Ex: 25.50",
     lotExamplePlaceholder: "Ex: 0.25",
-    rrExamplePlaceholder: "Ex: 2.35",
+    rrExamplePlaceholder: "Ex: 2",
 
     emotionLabel: "Emotion",
     emotionCalm: "😌 Calm",
