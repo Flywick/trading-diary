@@ -4,8 +4,7 @@ import * as IAP from "expo-iap";
 import { Platform } from "react-native";
 
 /**
- * IDs prévus (consommables)
- * - don_1, don_3, don_5, don_10, don_20, don_50
+ * IDs (consommables)
  */
 export const DONATION_PRODUCT_IDS = [
   "don_1",
@@ -19,11 +18,179 @@ export const DONATION_PRODUCT_IDS = [
 export type DonationProductId = (typeof DONATION_PRODUCT_IDS)[number];
 export type { Product };
 
+export type PurchaseDonationResult = {
+  ok: boolean;
+  cancelled: boolean;
+  message?: string;
+  code?: string;
+};
+
 let isConnected = false;
+let didAndroidPendingFlush = false;
+
+let purchaseUpdateSub: any = null;
+let purchaseErrorSub: any = null;
+
+// One in-flight purchase promise at a time (simple + robust for V1).
+let inflightResolve: ((v: PurchaseDonationResult) => void) | null = null;
+let inflightProductId: DonationProductId | null = null;
+let inflightTimer: any = null;
+
+function clearInflight() {
+  if (inflightTimer) {
+    clearTimeout(inflightTimer);
+    inflightTimer = null;
+  }
+  inflightResolve = null;
+  inflightProductId = null;
+}
 
 function isUserCancelled(err: any): boolean {
   const code = String(err?.code ?? err?.message ?? "").toUpperCase();
   return code.includes("USER_CANCELLED") || code.includes("E_USER_CANCELLED");
+}
+
+async function flushPendingAndroidIfNeeded(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  if (didAndroidPendingFlush) return;
+
+  const flush = (IAP as any).flushFailedPurchasesCachedAsPendingAndroid;
+  if (typeof flush === "function") {
+    try {
+      await flush();
+    } catch {
+      // ignore
+    }
+  }
+
+  didAndroidPendingFlush = true;
+}
+
+async function consumeOwnedDonationsAndroid(): Promise<void> {
+  if (Platform.OS !== "android") return;
+
+  const getAvailable = (IAP as any).getAvailablePurchases;
+  const consume = (IAP as any).consumePurchaseAndroid;
+  const ack = (IAP as any).acknowledgePurchaseAndroid;
+
+  if (typeof getAvailable !== "function") return;
+  if (typeof consume !== "function") return;
+
+  let purchases: any[] = [];
+  try {
+    purchases = (await getAvailable()) ?? [];
+  } catch {
+    return;
+  }
+
+  for (const p of purchases) {
+    const pid = String(p?.productId ?? p?.sku ?? "");
+    if (!pid) continue;
+    if (!(DONATION_PRODUCT_IDS as readonly string[]).includes(pid)) continue;
+
+    const token = p?.purchaseToken as string | undefined;
+    if (!token) continue;
+
+    if (typeof ack === "function") {
+      try {
+        await ack({ token });
+      } catch {
+        // ignore
+      }
+    }
+
+    try {
+      await consume({ token });
+    } catch {
+      // ignore
+    }
+  }
+}
+
+async function finalizeAndroidConsumable(purchase: any): Promise<void> {
+  const token =
+    (purchase as any)?.purchaseToken ??
+    (purchase as any)?.purchase?.purchaseToken ??
+    (purchase as any)?.token;
+
+  const ack = (IAP as any).acknowledgePurchaseAndroid;
+  const consume = (IAP as any).consumePurchaseAndroid;
+
+  if (Platform.OS === "android" && token) {
+    if (typeof ack === "function") {
+      await ack({ token }).catch(() => undefined);
+    }
+    if (typeof consume === "function") {
+      await consume({ token }).catch(() => undefined);
+    }
+  }
+}
+
+function ensureListeners() {
+  if (purchaseUpdateSub || purchaseErrorSub) return;
+
+  const purchaseUpdatedListener = (IAP as any).purchaseUpdatedListener;
+  const purchaseErrorListener = (IAP as any).purchaseErrorListener;
+  const finishTransaction = (IAP as any).finishTransaction;
+
+  if (typeof purchaseUpdatedListener === "function") {
+    purchaseUpdateSub = purchaseUpdatedListener(async (purchase: Purchase) => {
+      try {
+        const pid = String(
+          (purchase as any)?.productId ?? (purchase as any)?.sku ?? "",
+        );
+
+        const shouldResolve =
+          !!inflightResolve &&
+          !!inflightProductId &&
+          pid === inflightProductId;
+
+        // Finalize/consume even if not matching (safe), but only resolve if matching.
+        if (typeof finishTransaction === "function") {
+          try {
+            await finishTransaction({ purchase, isConsumable: true });
+          } catch {
+            // ignore
+          }
+        }
+        await finalizeAndroidConsumable(purchase);
+
+        if (shouldResolve && inflightResolve) {
+          inflightResolve({ ok: true, cancelled: false });
+          clearInflight();
+        }
+      } catch (e: any) {
+        if (inflightResolve) {
+          inflightResolve({
+            ok: false,
+            cancelled: false,
+            message: String(e?.message ?? e),
+          });
+          clearInflight();
+        }
+      }
+    });
+  }
+
+  if (typeof purchaseErrorListener === "function") {
+    purchaseErrorSub = purchaseErrorListener((err: any) => {
+      if (!inflightResolve) return;
+
+      if (isUserCancelled(err)) {
+        inflightResolve({ ok: false, cancelled: true });
+        clearInflight();
+        return;
+      }
+
+      inflightResolve({
+        ok: false,
+        cancelled: false,
+        code: String(err?.code ?? ""),
+        message: String(err?.message ?? err),
+      });
+      clearInflight();
+    });
+  }
 }
 
 export async function iapConnect(): Promise<void> {
@@ -31,33 +198,43 @@ export async function iapConnect(): Promise<void> {
 
   const init = (IAP as any).initConnection;
   if (typeof init !== "function") {
-    throw new Error(
-      "IAP initConnection is not available (requires dev build / store build).",
-    );
+    throw new Error("IAP initConnection is not available.");
   }
 
   await init();
   isConnected = true;
+
+  await flushPendingAndroidIfNeeded();
+  ensureListeners();
 }
 
 export async function iapDisconnect(): Promise<void> {
   if (!isConnected) return;
 
+  try {
+    if (purchaseUpdateSub?.remove) purchaseUpdateSub.remove();
+    if (purchaseErrorSub?.remove) purchaseErrorSub.remove();
+  } catch {
+    // ignore
+  } finally {
+    purchaseUpdateSub = null;
+    purchaseErrorSub = null;
+  }
+
   const end = (IAP as any).endConnection;
   if (typeof end === "function") {
-    await end();
+    await end().catch(() => undefined);
   }
   isConnected = false;
+  clearInflight();
 }
 
 /**
- * Récupère les produits (Google Play / App Store).
- * Tant que les produits ne sont pas créés/activés dans la Play Console, ça peut renvoyer [].
+ * Fetch donation products
  */
 export async function fetchDonationProducts(): Promise<Product[]> {
   await iapConnect();
 
-  // expo-iap (récent) expose souvent fetchProducts({ skus, type })
   const fetchProducts = (IAP as any).fetchProducts;
   if (typeof fetchProducts === "function") {
     try {
@@ -67,11 +244,10 @@ export async function fetchDonationProducts(): Promise<Product[]> {
       });
       return (res ?? []) as Product[];
     } catch {
-      // fallback plus bas
+      // fallback below
     }
   }
 
-  // Fallback anciens noms / signatures
   const legacyFetch =
     (IAP as any).getProducts ||
     (IAP as any).fetchProducts ||
@@ -83,103 +259,89 @@ export async function fetchDonationProducts(): Promise<Product[]> {
   return (products ?? []) as Product[];
 }
 
-export type PurchaseDonationResult = {
-  ok: boolean;
-  cancelled: boolean;
-  message?: string;
-};
-
 /**
- * Lance l'achat d'un don (consommable).
- * IMPORTANT : même si c'est un "don", côté store c'est un produit consommable.
+ * Purchase a donation
  *
- * Note: Le vrai test doit se faire sur une version installée via Google Play (piste de test).
+ * IMPORTANT:
+ * With Google Play Billing, the reliable success signal comes from purchaseUpdatedListener.
+ * requestPurchase() may return before the purchase is finalized, so we wait for the listener.
  */
 export async function purchaseDonation(
   productId: DonationProductId,
 ): Promise<PurchaseDonationResult> {
-  try {
-    await iapConnect();
+  await iapConnect();
 
-    const request = (IAP as any).requestPurchase;
-    if (typeof request !== "function") {
-      return {
+  // Avoid "already owned" by consuming any owned donations before starting.
+  await consumeOwnedDonationsAndroid();
+
+  if (inflightResolve) {
+    return {
+      ok: false,
+      cancelled: false,
+      message: "Another purchase is already in progress. Please try again.",
+    };
+  }
+
+  const request = (IAP as any).requestPurchase;
+  if (typeof request !== "function") {
+    return {
+      ok: false,
+      cancelled: false,
+      message: "In-app purchases are not available on this device.",
+    };
+  }
+
+  // Create a promise resolved by listeners.
+  const resultPromise = new Promise<PurchaseDonationResult>((resolve) => {
+    inflightResolve = resolve;
+    inflightProductId = productId;
+
+    // Safety timeout to avoid hanging forever if Play doesn't callback
+    inflightTimer = setTimeout(() => {
+      if (!inflightResolve) return;
+      inflightResolve({
         ok: false,
         cancelled: false,
-        message: "In-app purchases are not available on this device.",
-      };
-    }
+        message: "Purchase timeout. Please try again.",
+      });
+      clearInflight();
+    }, 30000);
+  });
 
-    // ✅ API expo-iap récente (v2.7+): requestPurchase({ request: { google: { skus: [...] } } })
-    // ✅ iOS: sku unique
-    // On tente d’abord la forme moderne, puis fallback legacy.
-    let purchase: Purchase | null | undefined;
-
+  // Start purchase (do not depend on returned value for confirmation).
+  try {
+    // Modern signature first
     try {
-      purchase = (await request({
+      await request({
         request: {
           apple: { sku: productId },
           google: { skus: [productId] },
         },
-      })) as Purchase | null | undefined;
-    } catch (e) {
-      // fallback legacy (certaines versions acceptent encore { sku } / string)
+      });
+    } catch {
+      // Legacy fallback
       try {
-        purchase = (await request({ sku: productId })) as Purchase | null | undefined;
+        await request({ sku: productId });
       } catch {
-        try {
-          purchase = (await request(productId)) as Purchase | null | undefined;
-        } catch (finalErr: any) {
-          throw finalErr;
-        }
+        await request(productId);
       }
     }
-
-    // Sur certains environnements, ça peut retourner null/undefined sans erreur
-    if (!purchase) {
-      return {
-        ok: false,
-        cancelled: false,
-        message:
-          "Purchase could not be started. Please try again in a moment.",
-      };
-    }
-
-    // Android: consume/acknowledge (consommable)
-    const token = (purchase as any)?.purchaseToken as string | undefined;
-    const receipt =
-      (purchase as any)?.transactionReceipt ??
-      (purchase as any)?.originalJson ??
-      undefined;
-
-    // Si on n'a aucun token/receipt, on considère que l'achat n'a pas réellement démarré
-    if (!token && !receipt) {
-      return {
-        ok: false,
-        cancelled: false,
-        message:
-          "Purchase could not be confirmed. Please try again later.",
-      };
-    }
-
-    const ack = (IAP as any).acknowledgePurchaseAndroid;
-    const consume = (IAP as any).consumePurchaseAndroid;
-
-    // Pour un consommable Android : consume (et ack en safe)
-    if (Platform.OS === "android" && token && typeof ack === "function") {
-      await ack({ token }).catch(() => undefined);
-    }
-    if (Platform.OS === "android" && token && typeof consume === "function") {
-      await consume({ token }).catch(() => undefined);
-    }
-
-    return { ok: true, cancelled: false };
   } catch (err: any) {
-    if (isUserCancelled(err)) return { ok: false, cancelled: true };
-    return {
-      ok: false,
-      cancelled: false,
-      message: String(err?.message ?? err),
-    };
+    // If start itself fails, resolve immediately
+    if (inflightResolve) {
+      if (isUserCancelled(err)) {
+        inflightResolve({ ok: false, cancelled: true });
+      } else {
+        inflightResolve({
+          ok: false,
+          cancelled: false,
+          code: String(err?.code ?? ""),
+          message: String(err?.message ?? err),
+        });
+      }
+      clearInflight();
+    }
   }
+
+  return await resultPromise;
 }

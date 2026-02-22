@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -128,7 +129,7 @@ const SettingsScreen: React.FC = () => {
 
   const [iapReady, setIapReady] = useState(false);
   const [iapProducts, setIapProducts] = useState<Record<string, Product>>({});
-  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [, setShowDonationModal] = useState(false);
   const [showDonationQuickModal, setShowDonationQuickModal] = useState(false);
 
   const [usernameInput, setUsernameInput] = useState(
@@ -563,45 +564,91 @@ const birthdate =
     }
   };
 
-  const handleExportJson = async () => {
+    const buildJsonBackupPayload = () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      account: {
+        id: activeAccount.id,
+        username: activeAccount.username,
+        birthdate: activeAccount.birthdate,
+        email: activeAccount.email,
+        createdAt: activeAccount.createdAt,
+      },
+      settings: {
+        theme,
+        currency,
+        timeFormat24h,
+        language,
+      },
+      journals: {
+        journals,
+        activeJournalId: activeJournal ? activeJournal.id : undefined,
+      },
+      trades,
+    };
+
+    const jsonContent = JSON.stringify(payload, null, 2);
+
+    const safeUsername = (activeAccount.username || "compte")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .slice(0, 20);
+    const dateTag = new Date().toISOString().slice(0, 10);
+    const fileName = `backup_${safeUsername}_${dateTag}.json`;
+
+    return { jsonContent, fileName };
+  };
+
+  const handleSaveJsonToDevice = async () => {
+    if (!activeAccount) {
+      Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
+      return;
+    }
+
+    // Android-only. On iOS (or if SAF not available), fallback to the classic share flow.
+    const SAF = (FileSystem as any).StorageAccessFramework;
+    if (Platform.OS !== "android" || !SAF) {
+      await handleExportJson();
+      return;
+    }
+
+    try {
+      const { jsonContent, fileName } = buildJsonBackupPayload();
+
+      const perm = await SAF.requestDirectoryPermissionsAsync();
+      if (!perm?.granted || !perm?.directoryUri) return;
+
+      const fileUri = await SAF.createFileAsync(
+        perm.directoryUri,
+        fileName,
+        "application/json",
+      );
+
+      await FileSystem.writeAsStringAsync(fileUri, jsonContent);
+
+      Alert.alert(
+        t("settings.exportJsonDoneTitle"),
+        t("settings.exportJsonDoneMessage"),
+      );
+    } catch (error) {
+      console.error("Erreur sauvegarde JSON", error);
+      Alert.alert(
+        t("settings.exportJsonErrorTitle"),
+        t("settings.exportJsonErrorMessage"),
+      );
+    }
+  };
+
+const handleExportJson = async () => {
     if (!activeAccount) {
       Alert.alert(t("settings.deleteAccountNoAccount"), t("errors.noAccount"));
       return;
     }
 
     try {
-      const payload = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        account: {
-          id: activeAccount.id,
-          username: activeAccount.username,
-          birthdate: activeAccount.birthdate,
-          email: activeAccount.email,
-          createdAt: activeAccount.createdAt,
-        },
-        settings: {
-          theme,
-          currency,
-          timeFormat24h,
-          language,
-        },
-        journals: {
-          journals,
-          activeJournalId: activeJournal ? activeJournal.id : undefined,
-        },
-        trades,
-      };
+            const { jsonContent, fileName } = buildJsonBackupPayload();
 
-      const jsonContent = JSON.stringify(payload, null, 2);
-
-      const safeUsername = (activeAccount.username || "compte")
-        .replace(/[^a-zA-Z0-9_-]/g, "_")
-        .slice(0, 20);
-      const dateTag = new Date().toISOString().slice(0, 10);
-      const fileName = `backup_${safeUsername}_${dateTag}.json`;
-
-      const baseDir =
+const baseDir =
         FileSystem.cacheDirectory || FileSystem.documentDirectory || "";
       const fileUri = baseDir + fileName;
 
@@ -1487,6 +1534,21 @@ keyboardType="numeric"
               {t("settings.exportJsonButton")}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.buttonSecondaryLight,
+              { marginTop: 8 },
+            ]}
+            activeOpacity={0.7}
+            onPress={handleSaveJsonToDevice}
+          >
+            <Text style={styles.buttonText}>
+              {t("settings.saveJsonToDeviceButton")}
+            </Text>
+          </TouchableOpacity>
+
 
           <TouchableOpacity
             style={[

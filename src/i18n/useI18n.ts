@@ -241,6 +241,10 @@ const fr = {
     exportJsonHelper:
       "Idéal pour transférer vos données sur un autre appareil.",
     exportJsonButton: "Exporter en JSON",
+    saveJsonToDeviceButton: "Enregistrer sur l’appareil",
+
+    exportJsonDoneTitle: "Export terminé",
+    exportJsonDoneMessage: "Le fichier JSON a été généré.",
     importJsonButton: "Importer un fichier JSON",
     importJsonDoneTitle: "Import réussi",
     importJsonDoneMessage: "Vos données ont été restaurées.",
@@ -649,6 +653,10 @@ const en = {
     exportJsonDescription: "Backup your account, journals and trades.",
     exportJsonHelper: "Useful to transfer your data to another device.",
     exportJsonButton: "Export JSON",
+    saveJsonToDeviceButton: "Save to device",
+
+    exportJsonDoneTitle: "Export done",
+    exportJsonDoneMessage: "JSON file generated.",
     importJsonButton: "Import JSON file",
     importJsonDoneTitle: "Import done",
     importJsonDoneMessage: "Your data has been restored.",
